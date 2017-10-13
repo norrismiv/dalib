@@ -12,6 +12,11 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MetaDataViewer", "Samples\M
 		{57DC0659-CA9A-47E0-BE98-4949C9021400} = {57DC0659-CA9A-47E0-BE98-4949C9021400}
 	EndProjectSection
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ItemViewer", "Samples\ItemViewer\ItemViewer.csproj", "{C9E01F81-CC9B-4699-9796-972090419FF4}"
+	ProjectSection(ProjectDependencies) = postProject
+		{57DC0659-CA9A-47E0-BE98-4949C9021400} = {57DC0659-CA9A-47E0-BE98-4949C9021400}
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -30,6 +35,10 @@ Global
 		{C0ED9ACE-8074-4782-B6AF-DE758D6A64EA}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C0ED9ACE-8074-4782-B6AF-DE758D6A64EA}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C0ED9ACE-8074-4782-B6AF-DE758D6A64EA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C9E01F81-CC9B-4699-9796-972090419FF4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C9E01F81-CC9B-4699-9796-972090419FF4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C9E01F81-CC9B-4699-9796-972090419FF4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C9E01F81-CC9B-4699-9796-972090419FF4}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

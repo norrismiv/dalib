@@ -15,16 +15,11 @@ namespace MetaDataViewer
             using (var dialog = new OpenFileDialog())
             {
                 if (dialog.ShowDialog() == DialogResult.OK)
-                {
                     OpenMetaDataFile(dialog.FileName);
-                }
             }
         }
 
-        private void ExitToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            Close();
-        }
+        private void ExitToolStripMenuItem_Click(object sender, EventArgs e) => Close();
 
         private void OpenMetaDataFile(string fileName)
         {
