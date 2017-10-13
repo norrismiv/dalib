@@ -58,8 +58,6 @@ namespace DALib.Data
 
             using (var reader = new BinaryReader(stream, encoding, true))
             {
-                stream.Seek(0, SeekOrigin.Begin);
-
                 var expectedNumberOfEntries = reader.ReadByte() << 8 | reader.ReadByte();
 
                 _entries = new List<MetaDataEntry>();

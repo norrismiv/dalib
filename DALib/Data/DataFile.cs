@@ -56,8 +56,6 @@ namespace DALib.Data
             _entriesReadOnly = new ReadOnlyCollection<DataFileEntry>(_entries);
             _entriesDictionary = new Dictionary<string, DataFileEntry>(StringComparer.CurrentCultureIgnoreCase);
 
-            stream.Seek(0, SeekOrigin.Begin);
-
             var expectedNumberOfEntries = DataFileReader.ReadInt32() - 1;
 
             for (var i = 0; i < expectedNumberOfEntries; ++i)

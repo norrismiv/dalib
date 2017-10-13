@@ -25,8 +25,6 @@ namespace DALib.Data
 
             using (var reader = new BinaryReader(stream))
             {
-                stream.Seek(0, SeekOrigin.Begin);
-
                 for (var y = 0; y < Height; ++y)
                 {
                     for (var x = 0; x < Width; ++x)

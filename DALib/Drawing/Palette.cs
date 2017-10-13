@@ -89,8 +89,6 @@ namespace DALib.Drawing
 
             using (var reader = new BinaryReader(stream, Encoding.Default, true))
             {
-                stream.Seek(0, SeekOrigin.Begin);
-
                 for (var i = 0; i < ColorsPerPalette; ++i)
                 {
                     _colors[i] = Color.FromArgb(reader.ReadByte(), reader.ReadByte(), reader.ReadByte());

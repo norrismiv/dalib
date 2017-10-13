@@ -7,9 +7,7 @@ namespace DALib
         public static short ReadInt16(this BinaryReader reader, bool bigEndian)
         {
             if (!bigEndian)
-            {
                 return reader.ReadInt16();
-            }
 
             var buffer = reader.ReadBytes(2);
             return (short)(buffer[1] | buffer[0] << 8);
@@ -18,9 +16,7 @@ namespace DALib
         public static ushort ReadUInt16(this BinaryReader reader, bool bigEndian)
         {
             if (!bigEndian)
-            {
                 return reader.ReadUInt16();
-            }
 
             var buffer = reader.ReadBytes(2);
             return (ushort)(buffer[1] | buffer[0] << 8);
@@ -29,9 +25,7 @@ namespace DALib
         public static int ReadInt32(this BinaryReader reader, bool bigEndian)
         {
             if (!bigEndian)
-            {
                 return reader.ReadInt32();
-            }
 
             var buffer = reader.ReadBytes(4);
             return buffer[3] | buffer[2] << 8 | buffer[1] << 16 | buffer[0] << 24;
@@ -40,9 +34,7 @@ namespace DALib
         public static uint ReadUInt32(this BinaryReader reader, bool bigEndian)
         {
             if (!bigEndian)
-            {
                 return reader.ReadUInt32();
-            }
 
             var buffer = reader.ReadBytes(4);
             return (uint)(buffer[3] | buffer[2] << 8 | buffer[1] << 16 | buffer[0] << 24);

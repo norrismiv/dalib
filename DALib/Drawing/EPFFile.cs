@@ -36,8 +36,6 @@ namespace DALib.Drawing
         {
             using (var reader = new BinaryReader(stream, Encoding.Default, true))
             {
-                stream.Seek(0, SeekOrigin.Begin);
-
                 var expectedNumberOfFrames = reader.ReadInt16();
                 Width = reader.ReadInt16();
                 Height = reader.ReadInt16();

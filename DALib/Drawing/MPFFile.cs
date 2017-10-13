@@ -66,8 +66,6 @@ namespace DALib.Drawing
         {
             using (var reader = new BinaryReader(stream, Encoding.UTF8, true))
             {
-                stream.Seek(0, SeekOrigin.Begin);
-
                 if (reader.ReadInt32() == -1)
                 {
                     var unknown = reader.ReadInt32();
