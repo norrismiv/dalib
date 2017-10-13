@@ -43,6 +43,7 @@ namespace DALib.Data
                 {
                     metaDataStream.Seek(2, SeekOrigin.Begin);
                     decompressionStream.CopyTo(decompressedMetaDataStream);
+                    decompressedMetaDataStream.Seek(0, SeekOrigin.Begin);
                     return new MetaData(decompressedMetaDataStream);
                 }
             }
