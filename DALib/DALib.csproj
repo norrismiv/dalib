@@ -43,6 +43,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="BinaryReaderExtensions.cs" />
+    <Compile Include="Cryptography\PacketCryptoProvider.cs" />
     <Compile Include="Data\DataFile.cs" />
     <Compile Include="Data\DataFileEntry.cs" />
     <Compile Include="Data\MapFile.cs" />
