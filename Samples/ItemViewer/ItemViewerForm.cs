@@ -15,7 +15,7 @@ namespace ItemViewer
 
         private DataFile _legend;
         private ColorTable _colorTable;
-        private ItemPaletteTable _paletteTable;
+        private PaletteTable _paletteTable;
         private List<FileSelectItem> _fileSelectItems;
         private List<ColorSelectItem> _colorSelectItems;
         private Dictionary<int, Palette> _palettes;
@@ -111,7 +111,7 @@ namespace ItemViewer
             }
 
             _colorTable = new ColorTable(_legend.GetEntry("color0.tbl"));
-            _paletteTable = new ItemPaletteTable(_legend.GetEntry("itempal.tbl"));
+            _paletteTable = new PaletteTable(_legend.GetEntry("itempal.tbl"));
 
             _fileSelectItems.Clear();
             foreach (var entry in _legend)

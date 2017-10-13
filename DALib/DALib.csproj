@@ -54,7 +54,7 @@
     <Compile Include="Drawing\EPFFile.cs" />
     <Compile Include="Drawing\EPFFrame.cs" />
     <Compile Include="Drawing\HPFFile.cs" />
-    <Compile Include="Drawing\ItemPaletteTable.cs" />
+    <Compile Include="Drawing\PaletteTable.cs" />
     <Compile Include="Drawing\MPFFile.cs" />
     <Compile Include="Drawing\MPFFrame.cs" />
     <Compile Include="Drawing\Palette.cs" />
