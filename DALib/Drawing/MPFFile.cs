@@ -9,58 +9,45 @@ using System.Text;
 
 namespace DALib.Drawing
 {
-    public partial class MPFFile
+    public partial class MpfFile
     {
-        private List<MPFFrame> _frames;
-        private ReadOnlyCollection<MPFFrame> _framesReadOnly;
+        private List<MpfFrame> _frames;
+        private ReadOnlyCollection<MpfFrame> _framesReadOnly;
 
-        public MPFFile(Stream stream) => Init(stream);
+        public MpfFile(Stream stream)
+        {
+            Init(stream);
+        }
 
-        public MPFFile(DataFileEntry entry) : this(entry.Open())
+        public MpfFile(DataFileEntry entry) : this(entry.Open())
         {
         }
 
-        public MPFFile(string fileName) : this(File.OpenRead(fileName))
+        public MpfFile(string fileName) : this(File.OpenRead(fileName))
         {
         }
 
         public int Width { get; private set; }
-
         public int Height { get; private set; }
-
         public Size Size => new Size(Width, Height);
-
         public byte[] UnknownBytes { get; private set; }
-
         public int StopFrameIndex { get; private set; }
-
         public int StopFrameCount { get; private set; }
-
         public int WalkFrameIndex { get; private set; }
-
         public int WalkFrameCount { get; private set; }
-
         public int AttackFrameIndex { get; private set; }
-
         public int AttackFrameCount { get; private set; }
-
         public int StopMotionFrameCount { get; private set; }
-
         public int StopMotionProbability { get; private set; }
-
         public int Attack2StartIndex { get; private set; }
-
         public int Attack2FrameCount { get; private set; }
-
         public int Attack3StartIndex { get; private set; }
-
         public int Attack3FrameCount { get; private set; }
-
         public int PaletteNumber { get; private set; }
 
-        public ReadOnlyCollection<MPFFrame> Frames => _framesReadOnly;
+        public ReadOnlyCollection<MpfFrame> Frames => _framesReadOnly;
 
-        public MPFFrame this[int index] => _frames[index];
+        public MpfFrame this[int index] => _frames[index];
 
         private void Init(Stream stream)
         {
@@ -79,8 +66,8 @@ namespace DALib.Drawing
 
                 var expectedNumberOfFrames = reader.ReadByte();
 
-                _frames = new List<MPFFrame>();
-                _framesReadOnly = new ReadOnlyCollection<MPFFrame>(_frames);
+                _frames = new List<MpfFrame>();
+                _framesReadOnly = new ReadOnlyCollection<MpfFrame>(_frames);
 
                 Width = reader.ReadInt16();
                 Height = reader.ReadInt16();
@@ -148,16 +135,15 @@ namespace DALib.Drawing
                     else
                         data = new byte[0];
 
-                    _frames.Add(new MPFFrame(top, left, bottom, right, xOffset, yOffset, data));
+                    _frames.Add(new MpfFrame(top, left, bottom, right, xOffset, yOffset, data));
                 }
             }
         }
     }
 
-    public partial class MPFFile : IEnumerable<MPFFrame>
+    public partial class MpfFile : IEnumerable<MpfFrame>
     {
-        public IEnumerator<MPFFrame> GetEnumerator() => ((IEnumerable<MPFFrame>)_frames).GetEnumerator();
-
-        IEnumerator IEnumerable.GetEnumerator() => ((IEnumerable<MPFFrame>)_frames).GetEnumerator();
+        public IEnumerator<MpfFrame> GetEnumerator() => ((IEnumerable<MpfFrame>)_frames).GetEnumerator();
+        IEnumerator IEnumerable.GetEnumerator() => ((IEnumerable<MpfFrame>)_frames).GetEnumerator();
     }
 }

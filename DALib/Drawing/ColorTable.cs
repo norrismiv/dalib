@@ -13,7 +13,17 @@ namespace DALib.Drawing
         private Dictionary<int, ColorTableEntry> _entries;
         private ReadOnlyDictionary<int, ColorTableEntry> _entriesReadOnly;
 
-        public ColorTable(Stream stream) => Init(stream);
+        public static int PaletteStartIndex => 98;
+        public int ColorsPerEntry => _colorsPerEntry;
+        public ReadOnlyDictionary<int, ColorTableEntry> Entries => _entriesReadOnly;
+        public ColorTableEntry this[int index] => _entries[index];
+        public bool ContainsColor(int colorNumber) => _entries.ContainsKey(colorNumber);
+        public bool TryGetEntry(int colorNumber, out ColorTableEntry entry) => _entries.TryGetValue(colorNumber, out entry);
+
+        public ColorTable(Stream stream)
+        {
+            Init(stream);
+        }
 
         public ColorTable(DataFileEntry dataFileEntry) : this(dataFileEntry.Open())
         {
@@ -22,18 +32,6 @@ namespace DALib.Drawing
         public ColorTable(string fileName) : this(File.OpenRead(fileName))
         {
         }
-
-        public static int PaletteStartIndex => 98;
-
-        public int ColorsPerEntry => _colorsPerEntry;
-
-        public ReadOnlyDictionary<int, ColorTableEntry> Entries => _entriesReadOnly;
-
-        public ColorTableEntry this[int index] => _entries[index];
-
-        public bool ContainsColor(int colorNumber) => _entries.ContainsKey(colorNumber);
-
-        public bool TryGetEntry(int colorNumber, out ColorTableEntry entry) => _entries.TryGetValue(colorNumber, out entry);
 
         private void Init(Stream stream)
         {
@@ -51,10 +49,17 @@ namespace DALib.Drawing
                     for (var i = 0; i < _colorsPerEntry && !reader.EndOfStream; ++i)
                     {
                         var line = reader.ReadLine();
-                        var values = line.Split(',');
-                        if (values.Length != 3 || !int.TryParse(values[0], out int r) || !int.TryParse(values[1], out int g) || !int.TryParse(values[2], out int b))
-                            return;
-                        colors[i] = Color.FromArgb(r % 256, g % 256, b % 256);
+                        if (line != null)
+                        {
+                            var values = line.Split(',');
+                            if (values.Length != 3 || !int.TryParse(values[0], out int r) || !int.TryParse(values[1], out int g) || !int.TryParse(values[2], out int b))
+                                return;
+                            colors[i] = Color.FromArgb(r % 256, g % 256, b % 256);
+                        }
+                        else
+                        {
+                            colors[i] = Color.FromArgb(0, 0, 0, 0);
+                        }
                     }
                     _entries[colorNumber] = new ColorTableEntry(colors);
                 }

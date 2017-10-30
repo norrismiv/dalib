@@ -22,7 +22,10 @@ namespace DALib.Drawing
             _colorsReadOnly = new ReadOnlyCollection<Color>(_colors);
         }
 
-        public Palette(Stream stream) => Init(stream);
+        public Palette(Stream stream)
+        {
+            Init(stream);
+        }
 
         public Palette(DataFileEntry dataFileEntry) : this(dataFileEntry.Open())
         {
@@ -33,7 +36,6 @@ namespace DALib.Drawing
         }
 
         public ReadOnlyCollection<Color> Colors => _colorsReadOnly;
-
         public Color this[int index] => _colors[index];
 
         public Palette Dye(ColorTableEntry colorTableEntry)
@@ -45,41 +47,6 @@ namespace DALib.Drawing
                 dyedPalette._colors[i + ColorTable.PaletteStartIndex] = colorTableEntry[i];
             }
             return dyedPalette;
-        }
-
-        public Bitmap Render(byte[] imageData, int width, int height)
-        {
-            if (width == 0 || height == 0)
-                return new Bitmap(1, 1);
-
-            var bitmap = new Bitmap(width, height);
-
-            var bitmapData = bitmap.LockBits(new Rectangle(0, 0, width, height), ImageLockMode.WriteOnly, PixelFormat.Format32bppArgb);
-
-            var dataPointer = bitmapData.Scan0;
-
-            var pixelData = new byte[width * height * 4];
-
-            var imageDataIndex = 0;
-            var pixelDataIndex = 0;
-
-            for (var y = 0; y < height; ++y)
-            {
-                for (var x = 0; x < width; ++x)
-                {
-                    var colorIndex = imageData[imageDataIndex++];
-                    var color = colorIndex == 0 ? Color.Transparent : _colors[colorIndex];
-
-                    pixelData[pixelDataIndex++] = color.B;
-                    pixelData[pixelDataIndex++] = color.G;
-                    pixelData[pixelDataIndex++] = color.R;
-                    pixelData[pixelDataIndex++] = color.A;
-                }
-            }
-
-            Marshal.Copy(pixelData, 0, dataPointer, pixelData.Length);
-            bitmap.UnlockBits(bitmapData);
-            return bitmap;
         }
 
         private void Init(Stream stream)

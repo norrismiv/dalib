@@ -12,12 +12,13 @@ namespace DALib.Drawing
         private ReadOnlyCollection<PaletteTableEntry> _entriesReadOnly;
         private Dictionary<int, int> _singleValueEntries;
 
-        public PaletteTable(Stream stream) => Init(stream);
-
+        public PaletteTable(Stream stream)
+        {
+            Init(stream);
+        }
         public PaletteTable(DataFileEntry entry) : this(entry.Open())
         {
         }
-
         public PaletteTable(string fileName) : this(File.OpenRead(fileName))
         {
         }
@@ -49,13 +50,15 @@ namespace DALib.Drawing
                 while (!reader.EndOfStream)
                 {
                     var line = reader.ReadLine();
+                    if (line == null) continue;
                     var vals = line.Split(' ');
                     if (vals.Length < 2 || !int.TryParse(vals[0], out int min) || !int.TryParse(vals[1], out int paletteNumOrMax))
                         continue;
                     if (vals.Length == 2)
-                        _singleValueEntries.Add(min, paletteNumOrMax);
-                    else if (vals.Length == 3 && int.TryParse(vals[2], out int paletteNumber))
-                        _entries.Add(new PaletteTableEntry(min, paletteNumOrMax, paletteNumber));
+                        if (!_singleValueEntries.ContainsKey(min))
+                            _singleValueEntries.Add(min, paletteNumOrMax);
+                        else if (vals.Length == 3 && int.TryParse(vals[2], out int paletteNumber))
+                            _entries.Add(new PaletteTableEntry(min, paletteNumOrMax, paletteNumber));
                 }
             }
         }
@@ -63,17 +66,15 @@ namespace DALib.Drawing
 
     public class PaletteTableEntry
     {
+        public int MinimumTileNumber { get; }
+        public int MaximumTileNumber { get; }
+        public int PaletteNumber { get; }
+
         public PaletteTableEntry(int minimumTileNumber, int maximumTileNumber, int paletteNumber)
         {
             MinimumTileNumber = minimumTileNumber;
             MaximumTileNumber = maximumTileNumber;
             PaletteNumber = paletteNumber;
         }
-
-        public int MinimumTileNumber { get; }
-
-        public int MaximumTileNumber { get; }
-
-        public int PaletteNumber { get; }
     }
 }
