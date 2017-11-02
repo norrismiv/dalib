@@ -7,14 +7,21 @@ using System.Text;
 
 namespace DALib.Drawing
 {
-    public partial class EPFFile
+    public partial class EpfFile
     {
-        private List<EPFFrame> _frames;
-        private ReadOnlyCollection<EPFFrame> _framesReadOnly;
+        private List<EpfFrame> _frames;
 
-        public EPFFile(Stream stream) => Init(stream);
+        public int Width { get; private set; }
+        public int Height { get; private set; }
+        public byte[] UnknownBytes { get; private set; }
+        public ReadOnlyCollection<EpfFrame> Frames { get; private set; }
 
-        public EPFFile(DataFileEntry entry)
+        public EpfFile(Stream stream)
+        {
+            Init(stream);
+        }
+
+        public EpfFile(DataFileEntry entry)
         {
             using (var stream = entry.Open())
             {
@@ -22,19 +29,11 @@ namespace DALib.Drawing
             }
         }
 
-        public int Width { get; private set; }
-
-        public int Height { get; private set; }
-
-        public byte[] UnknownBytes { get; private set; }
-
-        public ReadOnlyCollection<EPFFrame> Frames => _framesReadOnly;
-
-        public EPFFrame this[int index] => _frames[index];
+        public EpfFrame this[int index] => _frames[index];
 
         private void Init(Stream stream)
         {
-            using (var reader = new BinaryReader(stream, Encoding.Default, true))
+            using (var reader = new BinaryReader(stream, Encoding.Default, false))
             {
                 var expectedNumberOfFrames = reader.ReadInt16();
                 Width = reader.ReadInt16();
@@ -42,8 +41,8 @@ namespace DALib.Drawing
                 UnknownBytes = reader.ReadBytes(2);
                 var tocAddress = reader.ReadInt32() + 12;
 
-                _frames = new List<EPFFrame>();
-                _framesReadOnly = new ReadOnlyCollection<EPFFrame>(_frames);
+                _frames = new List<EpfFrame>();
+                Frames = new ReadOnlyCollection<EpfFrame>(_frames);
 
                 for (var i = 0; i < expectedNumberOfFrames; ++i)
                 {
@@ -62,23 +61,18 @@ namespace DALib.Drawing
 
                     stream.Seek(startAddress, SeekOrigin.Begin);
 
-                    byte[] data;
+                    var data = endAddress - startAddress == width * height ? reader.ReadBytes(endAddress - startAddress) : reader.ReadBytes(tocAddress - startAddress);
 
-                    if (endAddress - startAddress == width * height)
-                        data = reader.ReadBytes(endAddress - startAddress);
-                    else
-                        data = reader.ReadBytes(tocAddress - startAddress);
-
-                    _frames.Add(new EPFFrame(top, left, bottom, right, data));
+                    _frames.Add(new EpfFrame(top, left, bottom, right, data));
                 }
             }
         }
     }
 
-    public partial class EPFFile : IEnumerable<EPFFrame>
+    public partial class EpfFile : IEnumerable<EpfFrame>
     {
-        public IEnumerator<EPFFrame> GetEnumerator() => ((IEnumerable<EPFFrame>)_frames).GetEnumerator();
+        public IEnumerator<EpfFrame> GetEnumerator() => ((IEnumerable<EpfFrame>)_frames).GetEnumerator();
 
-        IEnumerator IEnumerable.GetEnumerator() => ((IEnumerable<EPFFrame>)_frames).GetEnumerator();
+        IEnumerator IEnumerable.GetEnumerator() => ((IEnumerable<EpfFrame>)_frames).GetEnumerator();
     }
 }

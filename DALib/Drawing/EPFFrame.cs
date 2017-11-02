@@ -3,11 +3,19 @@ using System.Drawing;
 
 namespace DALib.Drawing
 {
-    public class EPFFrame
+    public class EpfFrame : IRenderable
     {
-        private byte[] _data;
+        private readonly byte[] _data;
 
-        public EPFFrame(int top, int left, int bottom, int right, byte[] data)
+        public int Top { get; }
+        public int Left { get; }
+        public int Bottom { get; }
+        public int Right { get; }
+        public int Width => Right - Left;
+        public int Height => Bottom - Top;
+        public byte[] Data => _data;
+
+        public EpfFrame(int top, int left, int bottom, int right, byte[] data)
         {
             Top = top;
             Left = left;
@@ -16,19 +24,5 @@ namespace DALib.Drawing
             _data = new byte[data.Length];
             Buffer.BlockCopy(data, 0, _data, 0, data.Length);
         }
-
-        public int Top { get; }
-
-        public int Left { get; }
-
-        public int Bottom { get; }
-
-        public int Right { get; }
-
-        public int Width => Right - Left;
-
-        public int Height => Bottom - Top;
-
-        public Bitmap Render(Palette palette) => palette.Render(_data, Width, Height);
     }
 }
