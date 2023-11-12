@@ -1,75 +1,71 @@
 ﻿using System;
-using System.Collections;
-using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.IO;
-using System.Linq;
 using System.Text;
 using DALib.Data;
+using DALib.Definitions;
+using DALib.Memory;
 
-namespace DALib.Drawing
+namespace DALib.Drawing;
+
+public class Tileset : Collection<Tile>
 {
-    public class Tileset : IEnumerable<Tile>
+    public Tileset(Stream stream)
     {
-        public const int TileWidth = 56;
-        public const int TileHeight = 27;
-        public const int TileSize = TileWidth * TileHeight;
+        using var reader = new BinaryReader(stream, Encoding.Default, true);
 
-        private readonly List<Tile> _tiles = new List<Tile>();
+        var tileCount = (int)(reader.BaseStream.Length / CONSTANTS.TILE_SIZE);
 
-        public Tile this[int index]
+        for (var i = 0; i < tileCount; i++)
         {
-            get { return _tiles[index]; }
-            set { _tiles[index] = value; }
-        }
+            var tileData = reader.ReadBytes(CONSTANTS.TILE_SIZE);
 
-        public int TileCount { get; private set; }
-
-        public Tileset(DataFileEntry entry)
-        {
-            using (var stream = entry.Open())
-            {
-                Init(stream);
-            }
-        }
-        public Tileset(Stream stream)
-        {
-            Init(stream);
-        }
-
-        private void Init(Stream stream)
-        {
-            using (var reader = new BinaryReader(stream, Encoding.Default, true))
-            {
-                TileCount = (int)(reader.BaseStream.Length / TileSize);
-                for (var i = 0; i < TileCount; i++)
+            Add(
+                new Tile
                 {
-                    var tileData = reader.ReadBytes(TileSize);
-                    _tiles.Add(new Tile(i, tileData, TileWidth, TileHeight));
-                }
-            }
+                    Id = i,
+                    Data = tileData,
+                    Width = CONSTANTS.TILE_WIDTH,
+                    Height = CONSTANTS.TILE_HEIGHT
+                });
         }
-
-        public IEnumerator<Tile> GetEnumerator() => ((IEnumerable<Tile>) _tiles).GetEnumerator();
-
-        IEnumerator IEnumerable.GetEnumerator() => ((IEnumerable<Tile>) _tiles).GetEnumerator();
     }
 
-    public class Tile : IRenderable
+    public Tileset(Span<byte> buffer)
     {
-        public int Id { get; }
-        public int Width { get; }
-        public int Height { get; }
-        public int Top => 0;
-        public int Left => 0;
-        public byte[] Data { get; }
-        public int PaletteId { get; set; }
-        
-        public Tile(int id, byte[] data, int width, int height)
+        var reader = new SpanReader(Encoding.Default, buffer);
+
+        var tileCount = buffer.Length / CONSTANTS.TILE_SIZE;
+
+        for (var i = 0; i < tileCount; i++)
         {
-            Id = id;
-            Data = data;
-            Width = width;
-            Height = height;
+            var tileData = reader.ReadBytes(CONSTANTS.TILE_SIZE);
+
+            Add(
+                new Tile
+                {
+                    Id = i,
+                    Data = tileData,
+                    Width = CONSTANTS.TILE_WIDTH,
+                    Height = CONSTANTS.TILE_HEIGHT
+                });
         }
+    }
+    
+    public static Tileset FromEntry(DataArchiveEntry entry) => new(entry.ToStreamSegment());
+
+    public static Tileset FromFile(string path)
+    {
+        using var stream = File.Open(
+            path,
+            new FileStreamOptions
+            {
+                Access = FileAccess.Read,
+                Mode = FileMode.Open,
+                Options = FileOptions.SequentialScan,
+                Share = FileShare.ReadWrite
+            });
+
+        return new Tileset(stream);
     }
 }

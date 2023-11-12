@@ -1,17 +1,15 @@
-﻿using System.Drawing;
+﻿using SkiaSharp;
 
-namespace DALib.Drawing
+namespace DALib.Drawing;
+
+public sealed class ColorTableEntry
 {
-    public class ColorTableEntry
+    public byte ColorIndex { get; }
+    public SKColor[] Colors { get; }
+
+    public ColorTableEntry(byte colorIndex, SKColor[] colors)
     {
-        private Color[] _colors;
-
-        public int ColorCount => _colors.Length;
-        public Color this[int index] => _colors[index];
-
-        public ColorTableEntry(Color[] colors)
-        {
-            _colors = colors;
-        }
+        ColorIndex = colorIndex;
+        Colors = colors;
     }
 }

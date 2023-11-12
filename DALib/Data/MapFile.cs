@@ -1,57 +1,88 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
+using System.Text;
+using DALib.Extensions;
+using DALib.Memory;
 
-namespace DALib.Data
+namespace DALib.Data;
+
+public class MapFile
 {
-    public class MapFile
+    public int Height { get; }
+    public MapTile[,] Tiles { get; }
+    public int Width { get; }
+
+    public MapFile(int width, int height)
     {
-        private MapTile[,] _tiles;
+        Tiles = new MapTile[width, height];
+        Width = width;
+        Height = height;
+    }
 
-        public MapFile(Stream stream, int width, int height)
+    public MapFile(Stream stream, int width, int height)
+        : this(width, height)
+    {
+        using var reader = new BinaryReader(stream, Encoding.GetEncoding(949), true);
+
+        for (var y = 0; y < Height; ++y)
         {
-            Width = width;
-            Height = height;
-            Init(stream);
-        }
-
-        public int Width { get; }
-
-        public int Height { get; }
-
-        public MapTile this[int x, int y] => _tiles[x, y];
-
-        private void Init(Stream stream)
-        {
-            _tiles = new MapTile[Width, Height];
-
-            using (var reader = new BinaryReader(stream))
+            for (var x = 0; x < Width; ++x)
             {
-                for (var y = 0; y < Height; ++y)
-                {
-                    for (var x = 0; x < Width; ++x)
-                    {
-                        var groundTile = reader.ReadByte() << 8 | reader.ReadByte();
-                        var leftStaticObjectTile = reader.ReadByte() << 8 | reader.ReadByte();
-                        var rightStaticObjectTile = reader.ReadByte() << 8 | reader.ReadByte();
-                        _tiles[x, y] = new MapTile(groundTile, leftStaticObjectTile, rightStaticObjectTile);
-                    }
-                }
+                var background = reader.ReadInt16(true);
+                var leftForeground = reader.ReadInt16(true);
+                var rightForeground = reader.ReadInt16(true);
+                Tiles[x, y] = new MapTile(background, leftForeground, rightForeground);
             }
         }
     }
 
-    public class MapTile
+    public MapFile(Span<byte> buffer, int width, int height)
+        : this(width, height)
     {
-        public MapTile(int groundTile, int leftStaticObjectTile, int rightStaticObjectTile)
+        var reader = new SpanReader(Encoding.GetEncoding(949), buffer);
+
+        for (var y = 0; y < Height; ++y)
         {
-            GroundTile = groundTile;
-            LeftStaticObjectTile = leftStaticObjectTile;
-            RightStaticObjectTile = rightStaticObjectTile;
+            for (var x = 0; x < Width; ++x)
+            {
+                var background = reader.ReadInt16();
+                var leftForeground = reader.ReadInt16();
+                var rightForeground = reader.ReadInt16();
+                Tiles[x, y] = new MapTile(background, leftForeground, rightForeground);
+            }
         }
+    }
 
-        public int GroundTile { get; }
+    public static MapFile FromFile(string path, int width, int height)
+    {
+        using var stream = File.Open(
+            path,
+            new FileStreamOptions
+            {
+                Access = FileAccess.Read,
+                Mode = FileMode.Open,
+                Options = FileOptions.SequentialScan,
+                Share = FileShare.ReadWrite
+            });
 
-        public int LeftStaticObjectTile { get; }
+        return new MapFile(stream, width, height);
+    }
 
-        public int RightStaticObjectTile { get; }
+    public MapTile this[int x, int y] => Tiles[x, y];
+}
+
+public sealed class MapTile
+{
+    public int Background { get; }
+
+    public int LeftForeground { get; }
+
+    public int RightForeground { get; }
+
+    public MapTile(int background, int leftForeground, int rightForeground)
+    {
+        Background = background;
+        LeftForeground = leftForeground;
+        RightForeground = rightForeground;
     }
 }

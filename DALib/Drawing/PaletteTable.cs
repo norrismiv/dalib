@@ -1,80 +1,133 @@
-﻿using DALib.Data;
+﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Text;
+using DALib.Data;
+using DALib.Memory;
 
-namespace DALib.Drawing
+namespace DALib.Drawing;
+
+public class PaletteTable : Collection<PaletteTableEntry>
 {
-    public class PaletteTable
+    public PaletteTable() { }
+
+    public PaletteTable(Stream stream)
     {
-        private List<PaletteTableEntry> _entries;
-        private ReadOnlyCollection<PaletteTableEntry> _entriesReadOnly;
-        private Dictionary<int, int> _singleValueEntries;
+        using var reader = new StreamReader(
+            stream,
+            Encoding.UTF8,
+            true,
+            1024,
+            true);
 
-        public PaletteTable(Stream stream)
+        while (!reader.EndOfStream)
         {
-            Init(stream);
-        }
-        public PaletteTable(DataFileEntry entry) : this(entry.Open())
-        {
-        }
-        public PaletteTable(string fileName) : this(File.OpenRead(fileName))
-        {
-        }
+            var line = reader.ReadLine();
 
-        public ReadOnlyCollection<PaletteTableEntry> Entries => _entriesReadOnly;
+            if (string.IsNullOrEmpty(line))
+                continue;
 
-        public int GetPaletteNumber(int tileNumber)
-        {
-            if (_singleValueEntries.TryGetValue(tileNumber, out int paletteNumber))
-                return paletteNumber;
+            var vals = line.Split(' ');
 
-            foreach (var entry in _entries)
+            if ((vals.Length < 2) || !int.TryParse(vals[0], out var min) || !int.TryParse(vals[1], out var paletteNumOrMax))
+                continue;
+
+            switch (vals.Length)
             {
-                if (tileNumber >= entry.MinimumTileNumber && tileNumber <= entry.MaximumTileNumber)
-                    return entry.PaletteNumber;
-            }
-
-            return 0;
-        }
-
-        private void Init(Stream stream)
-        {
-            _entries = new List<PaletteTableEntry>();
-            _entriesReadOnly = new ReadOnlyCollection<PaletteTableEntry>(_entries);
-            _singleValueEntries = new Dictionary<int, int>();
-
-            using (var reader = new StreamReader(stream, Encoding.UTF8, true, 1024, true))
-            {
-                while (!reader.EndOfStream)
+                case 2:
                 {
-                    var line = reader.ReadLine();
-                    if (line == null) continue;
-                    var vals = line.Split(' ');
-                    if (vals.Length < 2 || !int.TryParse(vals[0], out int min) || !int.TryParse(vals[1], out int paletteNumOrMax))
-                        continue;
-                    if (vals.Length == 2)
-                        if (!_singleValueEntries.ContainsKey(min))
-                            _singleValueEntries.Add(min, paletteNumOrMax);
-                        else if (vals.Length == 3 && int.TryParse(vals[2], out int paletteNumber))
-                            _entries.Add(new PaletteTableEntry(min, paletteNumOrMax, paletteNumber));
+                    Add(new PaletteTableEntry(min, min, paletteNumOrMax));
+
+                    break;
                 }
+                case 3 when int.TryParse(vals[2], out var paletteNumber):
+                    Add(
+                        paletteNumOrMax < min
+                            ? new PaletteTableEntry(min, min, paletteNumber)
+                            : new PaletteTableEntry(min, paletteNumOrMax, paletteNumber));
+
+                    break;
             }
         }
     }
 
-    public class PaletteTableEntry
+    public PaletteTable(Span<byte> buffer)
     {
-        public int MinimumTileNumber { get; }
-        public int MaximumTileNumber { get; }
-        public int PaletteNumber { get; }
+        var reader = new SpanReader(Encoding.UTF8, buffer);
 
-        public PaletteTableEntry(int minimumTileNumber, int maximumTileNumber, int paletteNumber)
+        while (!reader.EndOfSpan)
         {
-            MinimumTileNumber = minimumTileNumber;
-            MaximumTileNumber = maximumTileNumber;
-            PaletteNumber = paletteNumber;
+            var line = reader.ReadString();
+
+            if (string.IsNullOrEmpty(line))
+                continue;
+
+            var vals = line.Split(' ');
+
+            if ((vals.Length < 2) || !int.TryParse(vals[0], out var min) || !int.TryParse(vals[1], out var paletteNumOrMax))
+                continue;
+
+            switch (vals.Length)
+            {
+                case 2:
+                {
+                    Add(new PaletteTableEntry(min, min, paletteNumOrMax));
+
+                    break;
+                }
+                case 3 when int.TryParse(vals[2], out var paletteNumber):
+                    Add(new PaletteTableEntry(min, paletteNumOrMax, paletteNumber));
+
+                    break;
+            }
         }
+    }
+
+    public static PaletteTable FromArchive(string pattern, DataArchive archive)
+    {
+        var table = new PaletteTable();
+
+        foreach (var entry in archive)
+        {
+            if(!entry.EntryName.EndsWith(".tbl", StringComparison.OrdinalIgnoreCase))
+                continue;
+
+            if (!entry.EntryName.StartsWith(pattern, StringComparison.OrdinalIgnoreCase))
+                continue;
+
+            var tablePart = FromEntry(entry);
+
+            foreach (var pte in tablePart)
+                table.Add(pte);
+        }
+
+        return table;
+    }
+
+    public static PaletteTable FromEntry(DataArchiveEntry entry) => new(entry.ToStreamSegment());
+
+    public static PaletteTable FromFile(string path)
+    {
+        using var stream = File.Open(
+            path,
+            new FileStreamOptions
+            {
+                Access = FileAccess.Read,
+                Mode = FileMode.Open,
+                Options = FileOptions.SequentialScan,
+                Share = FileShare.ReadWrite
+            });
+
+        return new PaletteTable(stream);
+    }
+    
+    public int GetPaletteNumber(int tileNumber)
+    {
+        foreach (var entry in Items)
+            if ((tileNumber >= entry.MinTileNumber) && (tileNumber <= entry.MaxTileNumber))
+                return entry.PaletteNumber;
+
+        return 0;
     }
 }

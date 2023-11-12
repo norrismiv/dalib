@@ -1,66 +1,83 @@
-﻿using DALib.Data;
-using System;
+﻿using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Drawing;
-using System.Drawing.Imaging;
 using System.IO;
-using System.Runtime.InteropServices;
+using System.Linq;
 using System.Text;
+using DALib.Data;
+using DALib.Definitions;
+using DALib.Memory;
+using SkiaSharp;
 
-namespace DALib.Drawing
+namespace DALib.Drawing;
+
+public sealed class Palette : Collection<SKColor>
 {
-    public class Palette
+    public Palette(Stream stream)
     {
-        private const int ColorsPerPalette = 256;
+        using var reader = new BinaryReader(stream, Encoding.Default, true);
 
-        private Color[] _colors;
-        private ReadOnlyCollection<Color> _colorsReadOnly;
+        for (var i = 0; i < CONSTANTS.COLORS_PER_PALETTE; ++i)
+            Add(new SKColor(reader.ReadByte(), reader.ReadByte(), reader.ReadByte()));
+    }
 
-        private Palette()
+    public Palette(IEnumerable<SKColor> colors)
+        : base(colors.ToList()) { }
+
+    public Palette(Span<byte> buffer)
+    {
+        var reader = new SpanReader(Encoding.Default, buffer);
+
+        for (var i = 0; i < CONSTANTS.COLORS_PER_PALETTE; ++i)
+            Add(new SKColor(reader.ReadByte(), reader.ReadByte(), reader.ReadByte()));
+    }
+
+    public Palette Dye(ColorTableEntry colorTableEntry)
+    {
+        var dyedPalette = new Palette(this);
+        
+        for (var i = 0; i < colorTableEntry.Colors.Length; ++i)
+            dyedPalette[CONSTANTS.PALETTE_DYE_INDEX_START + i] = colorTableEntry.Colors[i];
+
+        return dyedPalette;
+    }
+    
+    public static Dictionary<int, Palette> FromArchive(string pattern, DataArchive archive)
+    {
+        var palettes = new Dictionary<int, Palette>();
+
+        foreach (var entry in archive)
         {
-            _colors = new Color[ColorsPerPalette];
-            _colorsReadOnly = new ReadOnlyCollection<Color>(_colors);
+            if (!entry.EntryName.EndsWith(".pal", StringComparison.OrdinalIgnoreCase))
+                continue;
+
+            if (!entry.EntryName.StartsWith(pattern, StringComparison.OrdinalIgnoreCase))
+                continue;
+
+            var paletteName = Path.GetFileNameWithoutExtension(entry.EntryName);
+            var removePattern = paletteName.Replace(pattern, string.Empty);
+            var paletteNum = int.Parse(removePattern);
+
+            palettes.Add(paletteNum, FromEntry(entry));
         }
 
-        public Palette(Stream stream)
-        {
-            Init(stream);
-        }
+        return palettes;
+    }
+    
+    public static Palette FromEntry(DataArchiveEntry entry) => new(entry.ToStreamSegment());
 
-        public Palette(DataFileEntry dataFileEntry) : this(dataFileEntry.Open())
-        {
-        }
-
-        public Palette(string fileName) : this(File.OpenRead(fileName))
-        {
-        }
-
-        public ReadOnlyCollection<Color> Colors => _colorsReadOnly;
-        public Color this[int index] => _colors[index];
-
-        public Palette Dye(ColorTableEntry colorTableEntry)
-        {
-            var dyedPalette = new Palette();
-            Array.Copy(_colors, dyedPalette._colors, ColorsPerPalette);
-            for (var i = 0; i < colorTableEntry.ColorCount; ++i)
+    public static Palette FromFile(string path)
+    {
+        using var stream = File.Open(
+            path,
+            new FileStreamOptions
             {
-                dyedPalette._colors[i + ColorTable.PaletteStartIndex] = colorTableEntry[i];
-            }
-            return dyedPalette;
-        }
+                Access = FileAccess.Read,
+                Mode = FileMode.Open,
+                Options = FileOptions.SequentialScan,
+                Share = FileShare.ReadWrite
+            });
 
-        private void Init(Stream stream)
-        {
-            _colors = new Color[ColorsPerPalette];
-            _colorsReadOnly = new ReadOnlyCollection<Color>(_colors);
-
-            using (var reader = new BinaryReader(stream, Encoding.Default, true))
-            {
-                for (var i = 0; i < ColorsPerPalette; ++i)
-                {
-                    _colors[i] = Color.FromArgb(reader.ReadByte(), reader.ReadByte(), reader.ReadByte());
-                }
-            }
-        }
+        return new Palette(stream);
     }
 }
