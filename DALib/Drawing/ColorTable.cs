@@ -3,6 +3,7 @@ using System.Collections.ObjectModel;
 using System.IO;
 using System.Text;
 using DALib.Data;
+using DALib.Definitions;
 using DALib.Memory;
 using SkiaSharp;
 
@@ -51,7 +52,7 @@ public sealed class ColorTable : KeyedCollection<int, ColorTableEntry>
 
     public ColorTable(Span<byte> buffer)
     {
-        var reader = new SpanReader(Encoding.UTF8, buffer);
+        var reader = new SpanReader(Encoding.UTF8, buffer, Endianness.LittleEndian);
 
         if (!int.TryParse(reader.ReadString(), out var colorsPerEntry))
             return;

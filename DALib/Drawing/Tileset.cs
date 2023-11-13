@@ -4,6 +4,7 @@ using System.IO;
 using System.Text;
 using DALib.Data;
 using DALib.Definitions;
+using DALib.Extensions;
 using DALib.Memory;
 
 namespace DALib.Drawing;
@@ -50,6 +51,14 @@ public class Tileset : Collection<Tile>
                     Height = CONSTANTS.TILE_HEIGHT
                 });
         }
+    }
+
+    public static Tileset FromArchive(string fileName, DataArchive archive)
+    {
+        if(!archive.TryGetValue(fileName.WithExtension(".bmp"), out var entry))
+            throw new FileNotFoundException($"BMP file with the name \"{fileName}\" was not found in the archive");
+
+        return FromEntry(entry);
     }
     
     public static Tileset FromEntry(DataArchiveEntry entry) => new(entry.ToStreamSegment());

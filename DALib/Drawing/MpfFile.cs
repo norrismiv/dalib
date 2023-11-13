@@ -125,6 +125,14 @@ public class MpfFile : Collection<MpfFrame>
         }
     }
 
+    public static MpfFile FromArchive(string fileName, DataArchive archive)
+    {
+        if(!archive.TryGetValue(fileName.WithExtension(".mpf"), out var entry))
+            throw new FileNotFoundException($"MPF file with the name \"{fileName}\" was not found in the archive");
+
+        return FromEntry(entry);
+    }
+    
     public static MpfFile FromEntry(DataArchiveEntry entry) => new(entry.ToStreamSegment());
 
     public static MpfFile FromFile(string path)

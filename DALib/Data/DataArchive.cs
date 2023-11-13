@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Text;
@@ -49,6 +50,20 @@ public sealed class DataArchive : KeyedCollection<string, DataArchiveEntry>, IDi
         }
     }
 
+    public IEnumerable<DataArchiveEntry> GetEntriesThatStartWith(string pattern, string format)
+    {
+        foreach (var entry in this)
+        {
+            if (!entry.EntryName.EndsWith(format, StringComparison.OrdinalIgnoreCase))
+                continue;
+
+            if (!entry.EntryName.StartsWith(pattern, StringComparison.OrdinalIgnoreCase))
+                continue;
+
+            yield return entry;
+        }
+    }
+    
     public static DataArchive FromFile(string path) => new(
         File.Open(
             path,

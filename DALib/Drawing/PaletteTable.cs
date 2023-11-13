@@ -4,11 +4,12 @@ using System.Collections.ObjectModel;
 using System.IO;
 using System.Text;
 using DALib.Data;
+using DALib.Definitions;
 using DALib.Memory;
 
 namespace DALib.Drawing;
 
-public class PaletteTable : Collection<PaletteTableEntry>
+public sealed class PaletteTable : Collection<PaletteTableEntry>
 {
     public PaletteTable() { }
 
@@ -54,7 +55,7 @@ public class PaletteTable : Collection<PaletteTableEntry>
 
     public PaletteTable(Span<byte> buffer)
     {
-        var reader = new SpanReader(Encoding.UTF8, buffer);
+        var reader = new SpanReader(Encoding.UTF8, buffer, Endianness.LittleEndian);
 
         while (!reader.EndOfSpan)
         {
@@ -87,15 +88,9 @@ public class PaletteTable : Collection<PaletteTableEntry>
     public static PaletteTable FromArchive(string pattern, DataArchive archive)
     {
         var table = new PaletteTable();
-
-        foreach (var entry in archive)
+        
+        foreach (var entry in archive.GetEntriesThatStartWith(pattern, ".tbl"))
         {
-            if(!entry.EntryName.EndsWith(".tbl", StringComparison.OrdinalIgnoreCase))
-                continue;
-
-            if (!entry.EntryName.StartsWith(pattern, StringComparison.OrdinalIgnoreCase))
-                continue;
-
             var tablePart = FromEntry(entry);
 
             foreach (var pte in tablePart)

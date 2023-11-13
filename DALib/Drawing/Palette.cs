@@ -26,7 +26,7 @@ public sealed class Palette : Collection<SKColor>
 
     public Palette(Span<byte> buffer)
     {
-        var reader = new SpanReader(Encoding.Default, buffer);
+        var reader = new SpanReader(Encoding.Default, buffer, Endianness.LittleEndian);
 
         for (var i = 0; i < CONSTANTS.COLORS_PER_PALETTE; ++i)
             Add(new SKColor(reader.ReadByte(), reader.ReadByte(), reader.ReadByte()));
@@ -46,21 +46,15 @@ public sealed class Palette : Collection<SKColor>
     {
         var palettes = new Dictionary<int, Palette>();
 
-        foreach (var entry in archive)
+        foreach (var entry in archive.GetEntriesThatStartWith(pattern, ".pal"))
         {
-            if (!entry.EntryName.EndsWith(".pal", StringComparison.OrdinalIgnoreCase))
-                continue;
-
-            if (!entry.EntryName.StartsWith(pattern, StringComparison.OrdinalIgnoreCase))
-                continue;
-
             var paletteName = Path.GetFileNameWithoutExtension(entry.EntryName);
             var removePattern = paletteName.Replace(pattern, string.Empty);
             var paletteNum = int.Parse(removePattern);
 
             palettes.Add(paletteNum, FromEntry(entry));
         }
-
+        
         return palettes;
     }
     

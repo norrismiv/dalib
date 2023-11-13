@@ -4,6 +4,7 @@ using System.IO;
 using System.Text;
 using DALib.Data;
 using DALib.Definitions;
+using DALib.Extensions;
 using DALib.IO;
 using DALib.Memory;
 using DALib.Utility;
@@ -180,6 +181,14 @@ public sealed class SpfFile : Collection<SpfFrame>
         }
     }
 
+    public static SpfFile FromArchive(string fileName, DataArchive archive)
+    {
+        if(!archive.TryGetValue(fileName.WithExtension(".spf"), out var entry))
+            throw new FileNotFoundException($"SPF file with the name \"{fileName}\" was not found in the archive");
+
+        return FromEntry(entry);
+    }
+    
     public static SpfFile FromEntry(DataArchiveEntry entry) => new(entry.ToStreamSegment());
 
     public static SpfFile FromFile(string path)

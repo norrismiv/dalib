@@ -4,6 +4,7 @@ using System.IO;
 using System.Text;
 using DALib.Data;
 using DALib.Definitions;
+using DALib.Extensions;
 using DALib.Memory;
 
 namespace DALib.Drawing;
@@ -104,6 +105,14 @@ public class EpfFile
         }
     }
 
+    public static EpfFile FromArchive(string fileName, DataArchive archive)
+    {
+        if(!archive.TryGetValue(fileName.WithExtension(".epf"), out var entry))
+            throw new FileNotFoundException($"EPF file with the name \"{fileName}\" was not found in the archive");
+
+        return FromEntry(entry);
+    }
+    
     public static EpfFile FromEntry(DataArchiveEntry entry) => new(entry.ToStreamSegment());
 
     public static EpfFile FromFile(string path)
