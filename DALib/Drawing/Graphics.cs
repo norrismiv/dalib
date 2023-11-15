@@ -37,17 +37,17 @@ public class Graphics
         const int FOREGROUND_PADDING = 256;
         //load tiles, palettes, palette tables
         var tiles = Tileset.FromArchive("tilea", seoDat);
-        var bgPaletteLookup = PaletteLookup.FromArchive("stc", iaDat);
+        var bgPaletteLookup = PaletteLookup.FromArchive("mpt", seoDat);
         var fgPaletteLookup = PaletteLookup.FromArchive("stc", iaDat);
         
-        //create lookups so we only render each tile once
+        //create lookups so we only render each tile piece once
         var bgLookup = new Dictionary<int, SKImage>();
         var lfgLookup = new Dictionary<int, SKImage>();
         var rfgLookup = new Dictionary<int, SKImage>();
         
-        //calculate width and height based on orthagonal view
-        var width = CONSTANTS.TILE_WIDTH + (map.Width - 1) * (CONSTANTS.TILE_WIDTH / 2) + FOREGROUND_PADDING;
-        var height = CONSTANTS.TILE_HEIGHT + (map.Height - 1) * (CONSTANTS.TILE_HEIGHT / 2) + FOREGROUND_PADDING;
+        //calculate width and height based on orthogonal view
+        var width = CONSTANTS.TILE_WIDTH + (map.Width - 1) * CONSTANTS.TILE_WIDTH + FOREGROUND_PADDING;
+        var height = CONSTANTS.PADDED_TILE_HEIGHT + (map.Height - 1) * CONSTANTS.PADDED_TILE_HEIGHT + FOREGROUND_PADDING;
         using var bitmap = new SKBitmap(width, height);
         using var canvas = new SKCanvas(bitmap);
 
@@ -67,19 +67,22 @@ public class Graphics
 
                 if (!bgLookup.TryGetValue(bgIndex, out var bgImage))
                 {
-                    bgImage = RenderTile(tiles[bgIndex], bgPaletteLookup.GetPaletteForId(bgIndex));
+                    var palette = bgPaletteLookup.GetPaletteForId(bgIndex + 2);
+                    bgImage = RenderTile(tiles[bgIndex], palette);
 
                     bgLookup[bgIndex] = bgImage;
                 }
 
+                //for each X axis iteration, we want to move the draw position half a tile to the right and down from the initial draw position
                 var drawX = bgInitialDrawX + x * (CONSTANTS.TILE_WIDTH / 2);
-                var drawY = bgInitialDrawY + x * (CONSTANTS.TILE_HEIGHT / 2);
+                var drawY = bgInitialDrawY + x * (CONSTANTS.PADDED_TILE_HEIGHT / 2);
 
                 canvas.DrawImage(bgImage, drawX, drawY);
             }
             
+            //for each Y axis iteration, we want to move the draw position half a tile to the left and down from the initial draw position
             bgInitialDrawX -= CONSTANTS.TILE_WIDTH / 2;
-            bgInitialDrawY += CONSTANTS.TILE_HEIGHT / 2;
+            bgInitialDrawY += CONSTANTS.PADDED_TILE_HEIGHT / 2;
         }
         
         //render left and right foreground tiles and draw them to the canvas
@@ -103,9 +106,9 @@ public class Graphics
                     lfgLookup[lfgIndex] = lfgImage;
                 }
                 
-                //offset the Y value
+                //for each X axis iteration, we want to move the draw position half a tile to the right and down from the initial draw position
                 var lfgDrawX = fgInitialDrawX + x * (CONSTANTS.TILE_WIDTH / 2);
-                var lfgDrawY = fgInitialDrawY + (x + 1) * (CONSTANTS.TILE_HEIGHT / 2) - lfgImage.Height + CONSTANTS.TILE_HEIGHT / 2;
+                var lfgDrawY = fgInitialDrawY + (x + 1) * (CONSTANTS.PADDED_TILE_HEIGHT / 2) - lfgImage.Height + CONSTANTS.PADDED_TILE_HEIGHT / 2;
 
                 if (lfgIndex % 10000 > 1)
                     canvas.DrawImage(lfgImage, lfgDrawX, lfgDrawY);
@@ -119,15 +122,17 @@ public class Graphics
                     rfgLookup[rfgIndex] = rfgImage;
                 }
 
+                //for each X axis iteration, we want to move the draw position half a tile to the right and down from the initial draw position
                 var rfgDrawX = fgInitialDrawX + (x + 1) * (CONSTANTS.TILE_WIDTH / 2);
-                var rfgDrawY = fgInitialDrawY + (x + 1) * (CONSTANTS.TILE_HEIGHT / 2) - rfgImage.Height + CONSTANTS.TILE_HEIGHT / 2;
+                var rfgDrawY = fgInitialDrawY + (x + 1) * (CONSTANTS.PADDED_TILE_HEIGHT / 2) - rfgImage.Height + CONSTANTS.PADDED_TILE_HEIGHT / 2;
 
                 if (rfgIndex % 10000 > 1)
                     canvas.DrawImage(rfgImage, rfgDrawX, rfgDrawY);
             }
             
+            //for each Y axis iteration, we want to move the draw position half a tile to the left and down from the initial draw position
             fgInitialDrawX -= CONSTANTS.TILE_WIDTH / 2;
-            fgInitialDrawY += CONSTANTS.TILE_HEIGHT / 2;
+            fgInitialDrawY += CONSTANTS.PADDED_TILE_HEIGHT / 2;
         }
         
         //canvas.Flush();
@@ -149,7 +154,9 @@ public class Graphics
             {
                 var pixelIndex = y * width + x;
                 var paletteIndex = data[pixelIndex];
-                var color = palette[paletteIndex];
+                //apparently palette index 0 is transparent
+                //TODO: check if this is also the case for SpfFile
+                var color = paletteIndex == 0 ? SKColors.Transparent : palette[paletteIndex];
                 
                 bitmap.SetPixel(x, y, color);
             }

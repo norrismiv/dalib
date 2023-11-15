@@ -6,31 +6,24 @@ using DALib.Memory;
 
 namespace DALib.Data;
 
-public class MapFile
+public sealed class MapFile(int width, int height)
 {
-    public int Height { get; }
-    public MapTile[,] Tiles { get; }
-    public int Width { get; }
-
-    public MapFile(int width, int height)
-    {
-        Tiles = new MapTile[width, height];
-        Width = width;
-        Height = height;
-    }
+    public int Height { get; } = height;
+    public MapTile[,] Tiles { get; } = new MapTile[width, height];
+    public int Width { get; } = width;
 
     public MapFile(Stream stream, int width, int height)
         : this(width, height)
     {
-        using var reader = new BinaryReader(stream, Encoding.GetEncoding(949), true);
+        using var reader = new BinaryReader(stream, Encoding.Default, true);
 
         for (var y = 0; y < Height; ++y)
         {
             for (var x = 0; x < Width; ++x)
             {
-                var background = reader.ReadInt16(true);
-                var leftForeground = reader.ReadInt16(true);
-                var rightForeground = reader.ReadInt16(true);
+                var background = reader.ReadInt16();
+                var leftForeground = reader.ReadInt16();
+                var rightForeground = reader.ReadInt16();
                 Tiles[x, y] = new MapTile(background, leftForeground, rightForeground);
             }
         }
@@ -39,7 +32,7 @@ public class MapFile
     public MapFile(Span<byte> buffer, int width, int height)
         : this(width, height)
     {
-        var reader = new SpanReader(Encoding.GetEncoding(949), buffer);
+        var reader = new SpanReader(Encoding.Default, buffer);
 
         for (var y = 0; y < Height; ++y)
         {

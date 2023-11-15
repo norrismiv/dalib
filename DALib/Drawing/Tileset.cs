@@ -9,13 +9,13 @@ using DALib.Memory;
 
 namespace DALib.Drawing;
 
-public class Tileset : Collection<Tile>
+public sealed class Tileset : Collection<Tile>
 {
     public Tileset(Stream stream)
     {
         using var reader = new BinaryReader(stream, Encoding.Default, true);
 
-        var tileCount = (int)(reader.BaseStream.Length / CONSTANTS.TILE_SIZE);
+        var tileCount = (int)(stream.Length / CONSTANTS.TILE_SIZE);
 
         for (var i = 0; i < tileCount; i++)
         {

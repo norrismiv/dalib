@@ -1,12 +1,15 @@
 ﻿using System;
 using System.IO;
+using System.Text;
 using DALib.Data;
+using DALib.Definitions;
 using DALib.Extensions;
 using DALib.IO;
+using DALib.Memory;
 
 namespace DALib.Drawing;
 
-public class HpfFile
+public sealed class HpfFile
 {
     public byte[] Data { get; }
     public byte[] HeaderBytes { get; }
@@ -18,7 +21,10 @@ public class HpfFile
 
     public HpfFile(Span<byte> buffer)
     {
-        if (buffer[0] == 0x55)
+        var reader = new SpanReader(Encoding.Default, buffer, Endianness.LittleEndian);
+        var signature = reader.ReadUInt32();
+
+        if (signature == 0xFF02AA55)
             Compression.DecompressHpf(ref buffer);
         
         HeaderBytes = buffer[..8].ToArray();

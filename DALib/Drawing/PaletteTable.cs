@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.IO;
 using System.Text;
 using DALib.Data;
@@ -9,8 +8,18 @@ using DALib.Memory;
 
 namespace DALib.Drawing;
 
-public sealed class PaletteTable : Collection<PaletteTableEntry>
+/// <remarks>
+/// As a palette table is populated, newer entries override older ones. This is intended behavior.
+/// In my opinion this makes it meaningless to store and search through all of the entries.
+///
+/// You could search through them in reverse order and return the first one you find, but even still...
+/// It should be faster this way, where each id is mapped to a palette number
+/// </remarks>
+public sealed class PaletteTable
 {
+    private readonly Dictionary<int, int> Overrides = new();
+    private readonly Dictionary<int, int> Entries = new();
+    
     public PaletteTable() { }
 
     public PaletteTable(Stream stream)
@@ -18,9 +27,7 @@ public sealed class PaletteTable : Collection<PaletteTableEntry>
         using var reader = new StreamReader(
             stream,
             Encoding.UTF8,
-            true,
-            1024,
-            true);
+            leaveOpen: true);
 
         while (!reader.EndOfStream)
         {
@@ -38,15 +45,13 @@ public sealed class PaletteTable : Collection<PaletteTableEntry>
             {
                 case 2:
                 {
-                    Add(new PaletteTableEntry(min, min, paletteNumOrMax));
-
+                    Overrides[min] = paletteNumOrMax;
+                    
                     break;
                 }
                 case 3 when int.TryParse(vals[2], out var paletteNumber):
-                    Add(
-                        paletteNumOrMax < min
-                            ? new PaletteTableEntry(min, min, paletteNumber)
-                            : new PaletteTableEntry(min, paletteNumOrMax, paletteNumber));
+                    for(var i = min; i <= paletteNumOrMax; ++i)
+                        Entries[i] = paletteNumber;
 
                     break;
             }
@@ -73,12 +78,13 @@ public sealed class PaletteTable : Collection<PaletteTableEntry>
             {
                 case 2:
                 {
-                    Add(new PaletteTableEntry(min, min, paletteNumOrMax));
+                    Overrides[min] = paletteNumOrMax;
 
                     break;
                 }
                 case 3 when int.TryParse(vals[2], out var paletteNumber):
-                    Add(new PaletteTableEntry(min, paletteNumOrMax, paletteNumber));
+                    for(var i = min; i <= paletteNumOrMax; ++i)
+                        Entries[i] = paletteNumber;
 
                     break;
             }
@@ -89,17 +95,25 @@ public sealed class PaletteTable : Collection<PaletteTableEntry>
     {
         var table = new PaletteTable();
         
-        foreach (var entry in archive.GetEntriesThatStartWith(pattern, ".tbl"))
+        foreach (var entry in archive.GetEntries(pattern, ".tbl"))
         {
             var tablePart = FromEntry(entry);
 
-            foreach (var pte in tablePart)
-                table.Add(pte);
+            table.Merge(tablePart);
         }
 
         return table;
     }
 
+    public void Merge(PaletteTable other)
+    {
+        foreach (var kvp in other.Overrides)
+            Overrides[kvp.Key] = kvp.Value;
+        
+        foreach (var kvp in other.Entries)
+            Entries[kvp.Key] = kvp.Value;
+    }
+    
     public static PaletteTable FromEntry(DataArchiveEntry entry) => new(entry.ToStreamSegment());
 
     public static PaletteTable FromFile(string path)
@@ -119,10 +133,12 @@ public sealed class PaletteTable : Collection<PaletteTableEntry>
     
     public int GetPaletteNumber(int tileNumber)
     {
-        foreach (var entry in Items)
-            if ((tileNumber >= entry.MinTileNumber) && (tileNumber <= entry.MaxTileNumber))
-                return entry.PaletteNumber;
-
+        if (Overrides.TryGetValue(tileNumber, out var paletteNumber))
+            return paletteNumber;
+        
+        if(Entries.TryGetValue(tileNumber, out paletteNumber))
+            return paletteNumber;
+        
         return 0;
     }
 }

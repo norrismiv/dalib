@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.IO;
 
 namespace DALib.IO;
@@ -52,8 +53,8 @@ public class StreamSegment : Stream
     public override int Read(byte[] buffer, int offset, int count)
     {
         if (Position + count > Length)
-            throw new EndOfStreamException();
-
+            count = (int)(Length - Position);
+        
         BaseStream.Seek(OffsetPosition, SeekOrigin.Begin);
         var ret = BaseStream.Read(buffer, offset, count);
 

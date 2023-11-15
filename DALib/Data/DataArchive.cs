@@ -7,19 +7,17 @@ using DALib.Definitions;
 
 namespace DALib.Data;
 
-public sealed class DataArchive : KeyedCollection<string, DataArchiveEntry>, IDisposable
+public sealed class DataArchive() : KeyedCollection<string, DataArchiveEntry>(StringComparer.OrdinalIgnoreCase), IDisposable
 {
     private bool IsDisposed;
     internal Stream? DataStream { get; }
 
-    public DataArchive()
-        : base(StringComparer.OrdinalIgnoreCase) { }
-
     public DataArchive(Stream stream)
+        :this()
     {
         DataStream = stream;
 
-        using var reader = new BinaryReader(stream, Encoding.GetEncoding(949), true);
+        using var reader = new BinaryReader(stream, Encoding.Default, true);
 
         var expectedNumberOfEntries = reader.ReadInt32() - 1;
 
@@ -29,7 +27,7 @@ public sealed class DataArchive : KeyedCollection<string, DataArchiveEntry>, IDi
 
             var nameBytes = new byte[CONSTANTS.DATA_ARCHIVE_ENTRY_NAME_LENGTH];
             _ = reader.Read(nameBytes, 0, CONSTANTS.DATA_ARCHIVE_ENTRY_NAME_LENGTH);
-
+            
             var name = Encoding.ASCII.GetString(nameBytes);
             var nullChar = name.IndexOf('\0');
 
@@ -50,11 +48,11 @@ public sealed class DataArchive : KeyedCollection<string, DataArchiveEntry>, IDi
         }
     }
 
-    public IEnumerable<DataArchiveEntry> GetEntriesThatStartWith(string pattern, string format)
+    public IEnumerable<DataArchiveEntry> GetEntries(string pattern, string extension)
     {
         foreach (var entry in this)
         {
-            if (!entry.EntryName.EndsWith(format, StringComparison.OrdinalIgnoreCase))
+            if (!entry.EntryName.EndsWith(extension, StringComparison.OrdinalIgnoreCase))
                 continue;
 
             if (!entry.EntryName.StartsWith(pattern, StringComparison.OrdinalIgnoreCase))

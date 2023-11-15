@@ -178,7 +178,7 @@ public ref struct SpanWriter
     {
         GrowIfNeeded(sizeof(bool));
 
-        MemoryMarshal.Write(Buffer[Position..], ref value);
+        MemoryMarshal.Write(Buffer[Position..], in value);
 
         Position++;
     }
@@ -190,7 +190,7 @@ public ref struct SpanWriter
     public void WriteByte(byte value)
     {
         GrowIfNeeded(1);
-        MemoryMarshal.Write(Buffer[Position..], ref value);
+        MemoryMarshal.Write(Buffer[Position..], in value);
         Position++;
     }
 
@@ -256,7 +256,7 @@ public ref struct SpanWriter
         if (!IsLittleEndian && BitConverter.IsLittleEndian)
             value = BinaryPrimitives.ReverseEndianness(value);
 
-        MemoryMarshal.Write(Buffer[Position..], ref value);
+        MemoryMarshal.Write(Buffer[Position..], in value);
         Position += sizeof(short);
     }
 
@@ -271,7 +271,7 @@ public ref struct SpanWriter
         if (!IsLittleEndian && BitConverter.IsLittleEndian)
             value = BinaryPrimitives.ReverseEndianness(value);
 
-        MemoryMarshal.Write(Buffer[Position..], ref value);
+        MemoryMarshal.Write(Buffer[Position..], in value);
         Position += sizeof(int);
     }
 
@@ -306,7 +306,7 @@ public ref struct SpanWriter
     {
         GrowIfNeeded(sizeof(sbyte));
 
-        MemoryMarshal.Write(Buffer[Position..], ref value);
+        MemoryMarshal.Write(Buffer[Position..], in value);
 
         Position++;
     }
@@ -364,7 +364,7 @@ public ref struct SpanWriter
         if (!IsLittleEndian && BitConverter.IsLittleEndian)
             value = BinaryPrimitives.ReverseEndianness(value);
 
-        MemoryMarshal.Write(Buffer[Position..], ref value);
+        MemoryMarshal.Write(Buffer[Position..], in value);
         Position += sizeof(ushort);
     }
 
@@ -379,7 +379,7 @@ public ref struct SpanWriter
         if (!IsLittleEndian && BitConverter.IsLittleEndian)
             value = BinaryPrimitives.ReverseEndianness(value);
 
-        MemoryMarshal.Write(Buffer[Position..], ref value);
+        MemoryMarshal.Write(Buffer[Position..], in value);
         Position += sizeof(uint);
     }
 }

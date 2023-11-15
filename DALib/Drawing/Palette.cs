@@ -46,7 +46,7 @@ public sealed class Palette : Collection<SKColor>
     {
         var palettes = new Dictionary<int, Palette>();
 
-        foreach (var entry in archive.GetEntriesThatStartWith(pattern, ".pal"))
+        foreach (var entry in archive.GetEntries(pattern, ".pal"))
         {
             var paletteName = Path.GetFileNameWithoutExtension(entry.EntryName);
             var removePattern = paletteName.Replace(pattern, string.Empty);
