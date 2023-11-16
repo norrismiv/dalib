@@ -1,4 +1,5 @@
-﻿using System.Numerics;
+﻿using System;
+using System.Numerics;
 
 namespace DALib.Utility;
 
@@ -19,4 +20,18 @@ public static class MathEx
                 double.CreateTruncating(max),
                 double.CreateTruncating(newMin),
                 double.CreateTruncating(newMax)));
+    
+    public static double ScaleRange(
+        double num,
+        double min,
+        double max,
+        double newMin,
+        double newMax
+    )
+    {
+        if (min.Equals(max))
+            throw new ArgumentOutOfRangeException(nameof(min), "Min and max cannot be the same value");
+
+        return (newMax - newMin) * (num - min) / (max - min) + newMin;
+    }
 }

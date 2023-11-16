@@ -54,6 +54,9 @@ public class StreamSegment : Stream
     {
         if (Position + count > Length)
             count = (int)(Length - Position);
+
+        if (count == 0)
+            return 0;
         
         BaseStream.Seek(OffsetPosition, SeekOrigin.Begin);
         var ret = BaseStream.Read(buffer, offset, count);

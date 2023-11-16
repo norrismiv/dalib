@@ -1,7 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.IO;
+using System.Runtime.InteropServices;
+using System.Text;
 using DALib.Data;
 using DALib.Definitions;
+using DALib.Memory;
+using DALib.Utility;
 using SkiaSharp;
 
 namespace DALib.Drawing;
@@ -27,18 +33,69 @@ public class Graphics
         HpfFile hpf,
         Palette palette
     ) => SimpleRender(hpf.Width, hpf.Height, hpf.Data, palette);
+
+    public static SKImage RenderImage(EfaFrame efa)
+    {
+        using var bitmap = new SKBitmap(
+            efa.ByteWidth / 2,
+            efa.ByteCount / efa.ByteWidth,
+            SKColorType.Rgba8888,
+            SKAlphaType.Premul);
+        
+        var reader = new SpanReader(Encoding.Default, efa.Data, Endianness.LittleEndian);
+
+        for (var y = 0; y < bitmap.Height; y++)
+        {
+            for (var x = 0; x < bitmap.Width; x++)
+            {
+                //read the RGB565 color
+                var color = reader.ReadUInt16();
+            
+                //scale the color to RGB888
+                //@formatter:off
+                var r = MathEx.ScaleRange<byte, byte>((byte)(color >> 11), 0, CONSTANTS.FIVE_BIT_MASK, 0, byte.MaxValue);
+                var g = MathEx.ScaleRange<byte, byte>((byte)((color >> 5) & CONSTANTS.SIX_BIT_MASK), 0, CONSTANTS.SIX_BIT_MASK, 0, byte.MaxValue);
+                var b = MathEx.ScaleRange<byte, byte>((byte)(color & CONSTANTS.FIVE_BIT_MASK), 0, CONSTANTS.FIVE_BIT_MASK, 0, byte.MaxValue);
+                //@formatter:on
+
+                // get perceived luminance of pixel
+                var luminance = 0.299f * r + 0.587f * g + 0.114f * b;
+                
+                // set alpha based on luminance
+                // TODO: may need adjusting
+                var adjustedColor = new SKColor(
+                    r,
+                    g,
+                    b,
+                    Convert.ToByte(luminance));
+
+                bitmap.SetPixel(x, y, adjustedColor);
+            }
+        }
+        
+        return SKImage.FromBitmap(bitmap);
+    }
     
     public static SKImage RenderMap(
         MapFile map,
         DataArchive seoDat,
         DataArchive iaDat
+    ) => RenderMap(
+        map,
+        Tileset.FromArchive("tilea", seoDat),
+        PaletteLookup.FromArchive("mpt", seoDat),
+        PaletteLookup.FromArchive("stc", iaDat),
+        iaDat);
+
+    public static SKImage RenderMap(
+        MapFile map,
+        Tileset tiles,
+        PaletteLookup bgPaletteLookup,
+        PaletteLookup fgPaletteLookup,
+        DataArchive iaDat
     )
     {
         const int FOREGROUND_PADDING = 256;
-        //load tiles, palettes, palette tables
-        var tiles = Tileset.FromArchive("tilea", seoDat);
-        var bgPaletteLookup = PaletteLookup.FromArchive("mpt", seoDat);
-        var fgPaletteLookup = PaletteLookup.FromArchive("stc", iaDat);
         
         //create lookups so we only render each tile piece once
         var bgLookup = new Dictionary<int, SKImage>();

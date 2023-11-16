@@ -14,16 +14,16 @@ namespace DALib.Drawing;
 
 public sealed class SpfFile : Collection<SpfFrame>
 {
-    public SKColor[] Argb1555Colors { get; init; }
+    public SKColor[] SecondaryColors { get; init; }
     public uint ColorFormat { get; init; }
-    public SKColor[] Rgb565Colors { get; init; }
+    public SKColor[] PrimaryColors { get; init; }
     public uint Unknown1 { get; init; }
     public uint Unknown2 { get; init; }
 
     public SpfFile(Stream stream)
     {
-        Rgb565Colors = new SKColor[256];
-        Argb1555Colors = new SKColor[256];
+        PrimaryColors = new SKColor[256];
+        SecondaryColors = new SKColor[256];
 
         using var reader = new BinaryReader(stream, Encoding.Default, true);
 
@@ -41,7 +41,7 @@ public sealed class SpfFile : Collection<SpfFrame>
             var b = MathEx.ScaleRange<byte, byte>((byte)(color & CONSTANTS.FIVE_BIT_MASK), 0, CONSTANTS.FIVE_BIT_MASK, 0, byte.MaxValue);
             //@formatter:on
 
-            Rgb565Colors[i] = new SKColor(r, g, b);
+            PrimaryColors[i] = new SKColor(r, g, b);
         }
 
         for (var i = 0; i < 256; i++)
@@ -55,7 +55,7 @@ public sealed class SpfFile : Collection<SpfFrame>
             var a = (color & 0b1) == 0b1; //maybe?
             //@formatter:on
 
-            Argb1555Colors[i] = new SKColor(r, g, b);
+            SecondaryColors[i] = new SKColor(r, g, b);
         }
 
         var frameCount = reader.ReadUInt32();
@@ -103,8 +103,8 @@ public sealed class SpfFile : Collection<SpfFrame>
 
     public SpfFile(Span<byte> buffer)
     {
-        Rgb565Colors = new SKColor[256];
-        Argb1555Colors = new SKColor[256];
+        PrimaryColors = new SKColor[256];
+        SecondaryColors = new SKColor[256];
 
         var reader = new SpanReader(Encoding.Default, buffer, Endianness.LittleEndian);
 
@@ -122,7 +122,7 @@ public sealed class SpfFile : Collection<SpfFrame>
             var b = MathEx.ScaleRange<byte, byte>((byte)(color & CONSTANTS.FIVE_BIT_MASK), 0, CONSTANTS.FIVE_BIT_MASK, 0, byte.MaxValue);
             //@formatter:on
 
-            Rgb565Colors[i] = new SKColor(r, g, b);
+            PrimaryColors[i] = new SKColor(r, g, b);
         }
 
         for (var i = 0; i < 256; i++)
@@ -136,7 +136,7 @@ public sealed class SpfFile : Collection<SpfFrame>
             var a = (color & 0b1) == 0b1; //maybe?
             //@formatter:on
 
-            Argb1555Colors[i] = new SKColor(r, g, b);
+            SecondaryColors[i] = new SKColor(r, g, b);
         }
 
         var frameCount = reader.ReadUInt32();
