@@ -35,13 +35,13 @@ public sealed class Palette : Collection<SKColor>
     public Palette Dye(ColorTableEntry colorTableEntry)
     {
         var dyedPalette = new Palette(this);
-        
+
         for (var i = 0; i < colorTableEntry.Colors.Length; ++i)
             dyedPalette[CONSTANTS.PALETTE_DYE_INDEX_START + i] = colorTableEntry.Colors[i];
 
         return dyedPalette;
     }
-    
+
     public static Dictionary<int, Palette> FromArchive(string pattern, DataArchive archive)
     {
         var palettes = new Dictionary<int, Palette>();
@@ -54,10 +54,10 @@ public sealed class Palette : Collection<SKColor>
 
             palettes.Add(paletteNum, FromEntry(entry));
         }
-        
+
         return palettes;
     }
-    
+
     public static Palette FromEntry(DataArchiveEntry entry) => new(entry.ToStreamSegment());
 
     public static Palette FromFile(string path)

@@ -16,22 +16,27 @@ public ref struct SpanWriter
     private readonly bool AutoGrow;
     private readonly bool IsLittleEndian;
     private Span<byte> Buffer;
+
     /// <summary>
     ///     Gets or sets the current position within the Span.
     /// </summary>
     public int Position { get; set; }
+
     /// <summary>
     ///     Gets the Encoding used for writing strings.
     /// </summary>
     public Encoding Encoding { get; }
+
     /// <summary>
     ///     Gets the Endianness used for writing numbers.
     /// </summary>
     public Endianness Endianness { get; }
+
     /// <summary>
     ///     Gets a value indicating whether the current position is at the end of the Span.
     /// </summary>
     public readonly bool EndOfSpan => Position >= Buffer.Length;
+
     /// <summary>
     ///     Gets the number of bytes remaining in the Span from the current position.
     /// </summary>
@@ -65,8 +70,7 @@ public ref struct SpanWriter
         Encoding encoding,
         int initialBufferSize = 50,
         bool autoGrow = true,
-        Endianness endianness = Endianness.BigEndian
-    )
+        Endianness endianness = Endianness.BigEndian)
     {
         Buffer = new Span<byte>(new byte[initialBufferSize]);
         Encoding = encoding;
@@ -79,7 +83,7 @@ public ref struct SpanWriter
     /// <summary>
     ///     Trims the buffer to the current position.
     /// </summary>
-    public void Flush() => Buffer = Buffer[..Position];
+    public void Flush() { Buffer = Buffer[..Position]; }
 
     private void GrowIfNeeded(int bytesToWrite)
     {
@@ -90,6 +94,7 @@ public ref struct SpanWriter
             throw new EndOfStreamException();
 
         var buffer = Buffer;
+
         //create a new buffer of length * 3 OR (length + bytesToWrite) * 1.5 (whichever is bigger)
         var newLength = (int)Math.Max(buffer.Length * 3, (buffer.Length + bytesToWrite) * 1.5);
         var newBuffer = new byte[newLength];
@@ -284,6 +289,7 @@ public ref struct SpanWriter
     {
         WriteUInt16(x);
         WriteUInt16(y);
+
         //TODO: 00 0B 00 0B 00
     }
 

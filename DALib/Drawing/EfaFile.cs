@@ -14,16 +14,15 @@ public sealed class EfaFile : Collection<EfaFrame>
     public int Unknown1 { get; init; }
     public byte[] Unknown2 { get; init; }
 
-
     public EfaFile(Stream stream)
     {
         using var reader = new BinaryReader(stream, Encoding.Default, true);
-        
+
         Unknown1 = reader.ReadInt32();
         var frameCount = reader.ReadInt32();
         Unknown2 = reader.ReadBytes(56);
-        
-        for(var i = 0; i < frameCount; i++)
+
+        for (var i = 0; i < frameCount; i++)
         {
             var unknown1 = reader.ReadInt32();
             var offset = reader.ReadInt32();
@@ -70,18 +69,18 @@ public sealed class EfaFile : Collection<EfaFrame>
                     Data = new byte[byteCount]
                 });
         }
-        
+
         using var dataSegment = new StreamSegment(stream, stream.Position, stream.Length - stream.Position);
-        
-        for(var i = 0; i < frameCount; i++)
+
+        for (var i = 0; i < frameCount; i++)
         {
             var frame = this[i];
-            
+
             DecompressToFrame(dataSegment, frame);
         }
     }
-    
-    private void DecompressToFrame(Stream dataStream, EfaFrame frame)
+
+    private static void DecompressToFrame(Stream dataStream, EfaFrame frame)
     {
         using var compressedSegment = new StreamSegment(dataStream, frame.Offset + 2, frame.Size - 2);
         using var decompressor = new DeflateStream(compressedSegment, CompressionMode.Decompress);
@@ -89,7 +88,7 @@ public sealed class EfaFile : Collection<EfaFrame>
         Span<byte> decompressed = stackalloc byte[frame.RawSize];
 
         decompressor.ReadExactly(decompressed);
-        
+
         decompressed[..frame.ByteCount].CopyTo(frame.Data);
 
         /* Not sure what these numbers are
@@ -107,7 +106,7 @@ public sealed class EfaFile : Collection<EfaFrame>
 
     public static EfaFile FromArchive(string fileName, DataArchive archive)
     {
-        if(!archive.TryGetValue(fileName.WithExtension(".efa"), out var entry))
+        if (!archive.TryGetValue(fileName.WithExtension(".efa"), out var entry))
             throw new FileNotFoundException($"EFA file with the name \"{fileName}\" was not found in the archive");
 
         return FromEntry(entry);

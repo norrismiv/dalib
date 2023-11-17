@@ -13,7 +13,7 @@ public sealed class DataArchive() : KeyedCollection<string, DataArchiveEntry>(St
     internal Stream? DataStream { get; }
 
     public DataArchive(Stream stream)
-        :this()
+        : this()
     {
         DataStream = stream;
 
@@ -27,7 +27,7 @@ public sealed class DataArchive() : KeyedCollection<string, DataArchiveEntry>(St
 
             var nameBytes = new byte[CONSTANTS.DATA_ARCHIVE_ENTRY_NAME_LENGTH];
             _ = reader.Read(nameBytes, 0, CONSTANTS.DATA_ARCHIVE_ENTRY_NAME_LENGTH);
-            
+
             var name = Encoding.ASCII.GetString(nameBytes);
             var nullChar = name.IndexOf('\0');
 
@@ -48,6 +48,18 @@ public sealed class DataArchive() : KeyedCollection<string, DataArchiveEntry>(St
         }
     }
 
+    public static DataArchive FromFile(string path)
+        => new(
+            File.Open(
+                path,
+                new FileStreamOptions
+                {
+                    Access = FileAccess.Read,
+                    Mode = FileMode.Open,
+                    Options = FileOptions.RandomAccess,
+                    Share = FileShare.ReadWrite
+                }));
+
     public IEnumerable<DataArchiveEntry> GetEntries(string pattern, string extension)
     {
         foreach (var entry in this)
@@ -61,17 +73,6 @@ public sealed class DataArchive() : KeyedCollection<string, DataArchiveEntry>(St
             yield return entry;
         }
     }
-    
-    public static DataArchive FromFile(string path) => new(
-        File.Open(
-            path,
-            new FileStreamOptions
-            {
-                Access = FileAccess.Read,
-                Mode = FileMode.Open,
-                Options = FileOptions.RandomAccess,
-                Share = FileShare.ReadWrite
-            }));
 
     #region KeyedCollection implementation
     /// <inheritdoc />

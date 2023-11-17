@@ -45,7 +45,7 @@ public class EpfFile
 
             stream.Seek(startAddress, SeekOrigin.Begin);
 
-            var data = endAddress - startAddress == width * height
+            var data = (endAddress - startAddress) == (width * height)
                 ? reader.ReadBytes(endAddress - startAddress)
                 : reader.ReadBytes(tocAddress - startAddress);
 
@@ -89,7 +89,7 @@ public class EpfFile
 
             reader.Position = startAddress;
 
-            var data = endAddress - startAddress == width * height
+            var data = (endAddress - startAddress) == (width * height)
                 ? reader.ReadBytes(endAddress - startAddress)
                 : reader.ReadBytes(tocAddress - startAddress);
 
@@ -107,12 +107,12 @@ public class EpfFile
 
     public static EpfFile FromArchive(string fileName, DataArchive archive)
     {
-        if(!archive.TryGetValue(fileName.WithExtension(".epf"), out var entry))
+        if (!archive.TryGetValue(fileName.WithExtension(".epf"), out var entry))
             throw new FileNotFoundException($"EPF file with the name \"{fileName}\" was not found in the archive");
 
         return FromEntry(entry);
     }
-    
+
     public static EpfFile FromEntry(DataArchiveEntry entry) => new(entry.ToStreamSegment());
 
     public static EpfFile FromFile(string path)

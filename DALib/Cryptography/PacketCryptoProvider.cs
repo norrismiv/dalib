@@ -89,13 +89,12 @@ public class PacketCryptoProvider
         byte[] data,
         int offset,
         int count,
-        bool useKeystream2
-    )
+        bool useKeystream2)
     {
         if (offset >= data.Length)
             throw new ArgumentOutOfRangeException(nameof(offset));
 
-        if (offset + count > data.Length)
+        if ((offset + count) > data.Length)
             throw new ArgumentOutOfRangeException(nameof(count));
 
         _buffer[0] = data[0];
@@ -147,13 +146,12 @@ public class PacketCryptoProvider
         byte[] data,
         int offset,
         int count,
-        bool useKeystream2
-    )
+        bool useKeystream2)
     {
         if (offset >= data.Length)
             throw new ArgumentOutOfRangeException(nameof(offset));
 
-        if (offset + count > data.Length)
+        if ((offset + count) > data.Length)
             throw new ArgumentOutOfRangeException(nameof(count));
 
         var a = (ushort)((data[count - 1] << 8) | data[count - 3]);
@@ -197,13 +195,12 @@ public class PacketCryptoProvider
         int offset,
         int count,
         byte sequence,
-        bool useKeystream2
-    )
+        bool useKeystream2)
     {
         if (offset >= data.Length)
             throw new ArgumentOutOfRangeException(nameof(offset));
 
-        if (offset + count > data.Length)
+        if ((offset + count) > data.Length)
             throw new ArgumentOutOfRangeException(nameof(count));
 
         var resultLength = 0;
@@ -268,13 +265,12 @@ public class PacketCryptoProvider
         int offset,
         int count,
         byte sequence,
-        bool useKeystream2
-    )
+        bool useKeystream2)
     {
         if (offset >= data.Length)
             throw new ArgumentOutOfRangeException(nameof(offset));
 
-        if (offset + count > data.Length)
+        if ((offset + count) > data.Length)
             throw new ArgumentOutOfRangeException(nameof(count));
 
         var resultLength = 0;
@@ -354,7 +350,7 @@ public class PacketCryptoProvider
 
                     break;
                 case 1:
-                    saltByte = (i % 2 != 0 ? -1 : 1) * ((i + 1) / 2) + 128;
+                    saltByte = ((i % 2) != 0 ? -1 : 1) * ((i + 1) / 2) + 128;
 
                     break;
                 case 2:
@@ -362,7 +358,7 @@ public class PacketCryptoProvider
 
                     break;
                 case 3:
-                    saltByte = (i % 2 != 0 ? -1 : 1) * ((255 - i) / 2) + 128;
+                    saltByte = ((i % 2) != 0 ? -1 : 1) * ((255 - i) / 2) + 128;
 
                     break;
                 case 4:
@@ -422,13 +418,12 @@ public class PacketCryptoProvider
         int offset,
         int count,
         byte[] keystream,
-        byte sequence
-    )
+        byte sequence)
     {
         if (offset >= buffer.Length)
             throw new ArgumentOutOfRangeException(nameof(offset));
 
-        if (offset + count > buffer.Length)
+        if ((offset + count) > buffer.Length)
             throw new ArgumentOutOfRangeException(nameof(count));
 
         for (var i = 0; i < count; ++i)

@@ -55,12 +55,12 @@ public sealed class Tileset : Collection<Tile>
 
     public static Tileset FromArchive(string fileName, DataArchive archive)
     {
-        if(!archive.TryGetValue(fileName.WithExtension(".bmp"), out var entry))
+        if (!archive.TryGetValue(fileName.WithExtension(".bmp"), out var entry))
             throw new FileNotFoundException($"BMP file with the name \"{fileName}\" was not found in the archive");
 
         return FromEntry(entry);
     }
-    
+
     public static Tileset FromEntry(DataArchiveEntry entry) => new(entry.ToStreamSegment());
 
     public static Tileset FromFile(string path)

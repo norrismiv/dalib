@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Drawing;
 using System.IO;
@@ -109,7 +108,9 @@ public class MpfFile : Collection<MpfFrame>
                 data = reader.ReadBytes(frameWidth * frameHeight);
                 stream.Seek(position, SeekOrigin.Begin);
             } else
+            {
                 data = Array.Empty<byte>();
+            }
 
             Add(
                 new MpfFrame
@@ -127,12 +128,12 @@ public class MpfFile : Collection<MpfFrame>
 
     public static MpfFile FromArchive(string fileName, DataArchive archive)
     {
-        if(!archive.TryGetValue(fileName.WithExtension(".mpf"), out var entry))
+        if (!archive.TryGetValue(fileName.WithExtension(".mpf"), out var entry))
             throw new FileNotFoundException($"MPF file with the name \"{fileName}\" was not found in the archive");
 
         return FromEntry(entry);
     }
-    
+
     public static MpfFile FromEntry(DataArchiveEntry entry) => new(entry.ToStreamSegment());
 
     public static MpfFile FromFile(string path)

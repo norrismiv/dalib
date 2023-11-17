@@ -43,7 +43,9 @@ public sealed class ColorTable : KeyedCollection<int, ColorTableEntry>
 
                     colors[i] = new SKColor((byte)(r % 256), (byte)(g % 256), (byte)(b % 256));
                 } else
+                {
                     colors[i] = new SKColor();
+                }
             }
 
             Add(new ColorTableEntry(colorIndex, colors));
@@ -77,7 +79,9 @@ public sealed class ColorTable : KeyedCollection<int, ColorTableEntry>
 
                     colors[i] = new SKColor((byte)(r % 256), (byte)(g % 256), (byte)(b % 256));
                 } else
+                {
                     colors[i] = new SKColor();
+                }
             }
 
             Add(new ColorTableEntry(colorIndex, colors));

@@ -14,9 +14,9 @@ namespace DALib.Drawing;
 
 public sealed class SpfFile : Collection<SpfFrame>
 {
-    public SKColor[] SecondaryColors { get; init; }
     public uint ColorFormat { get; init; }
     public SKColor[] PrimaryColors { get; init; }
+    public SKColor[] SecondaryColors { get; init; }
     public uint Unknown1 { get; init; }
     public uint Unknown2 { get; init; }
 
@@ -32,31 +32,10 @@ public sealed class SpfFile : Collection<SpfFrame>
         ColorFormat = reader.ReadUInt32();
 
         for (var i = 0; i < 256; i++)
-        {
-            var color = reader.ReadUInt16();
-            
-            //@formatter:off
-            var r = MathEx.ScaleRange<byte, byte>((byte)(color >> 11), 0, CONSTANTS.FIVE_BIT_MASK, 0, byte.MaxValue);
-            var g = MathEx.ScaleRange<byte, byte>((byte)((color >> 5) & CONSTANTS.SIX_BIT_MASK), 0, CONSTANTS.SIX_BIT_MASK, 0, byte.MaxValue);
-            var b = MathEx.ScaleRange<byte, byte>((byte)(color & CONSTANTS.FIVE_BIT_MASK), 0, CONSTANTS.FIVE_BIT_MASK, 0, byte.MaxValue);
-            //@formatter:on
-
-            PrimaryColors[i] = new SKColor(r, g, b);
-        }
+            PrimaryColors[i] = reader.ReadRgb565Color(true);
 
         for (var i = 0; i < 256; i++)
-        {
-            var color = reader.ReadUInt16();
-            
-            //@formatter:off
-            var r = MathEx.ScaleRange<byte, byte>((byte)(color >> 11), 0, CONSTANTS.FIVE_BIT_MASK, 0, byte.MaxValue);
-            var g = MathEx.ScaleRange<byte, byte>((byte)((color >> 5) & CONSTANTS.FIVE_BIT_MASK), 0, CONSTANTS.FIVE_BIT_MASK, 0, byte.MaxValue);
-            var b = MathEx.ScaleRange<byte, byte>((byte)(color & CONSTANTS.FIVE_BIT_MASK), 0, CONSTANTS.FIVE_BIT_MASK, 0, byte.MaxValue);
-            var a = (color & 0b1) == 0b1; //maybe?
-            //@formatter:on
-
-            SecondaryColors[i] = new SKColor(r, g, b);
-        }
+            SecondaryColors[i] = reader.ReadArgb1555Color(true);
 
         var frameCount = reader.ReadUInt32();
 
@@ -183,12 +162,12 @@ public sealed class SpfFile : Collection<SpfFrame>
 
     public static SpfFile FromArchive(string fileName, DataArchive archive)
     {
-        if(!archive.TryGetValue(fileName.WithExtension(".spf"), out var entry))
+        if (!archive.TryGetValue(fileName.WithExtension(".spf"), out var entry))
             throw new FileNotFoundException($"SPF file with the name \"{fileName}\" was not found in the archive");
 
         return FromEntry(entry);
     }
-    
+
     public static SpfFile FromEntry(DataArchiveEntry entry) => new(entry.ToStreamSegment());
 
     public static SpfFile FromFile(string path)

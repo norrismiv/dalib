@@ -18,8 +18,7 @@ public sealed class DataArchiveEntry
         DataArchive archive,
         string entryName,
         int address,
-        int fileSize
-    )
+        int fileSize)
     {
         Archive = archive;
         EntryName = entryName;

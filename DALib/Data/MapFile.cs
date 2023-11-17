@@ -1,7 +1,6 @@
 ﻿using System;
 using System.IO;
 using System.Text;
-using DALib.Extensions;
 using DALib.Memory;
 
 namespace DALib.Data;
@@ -18,7 +17,6 @@ public sealed class MapFile(int width, int height)
         using var reader = new BinaryReader(stream, Encoding.Default, true);
 
         for (var y = 0; y < Height; ++y)
-        {
             for (var x = 0; x < Width; ++x)
             {
                 var background = reader.ReadInt16();
@@ -26,7 +24,6 @@ public sealed class MapFile(int width, int height)
                 var rightForeground = reader.ReadInt16();
                 Tiles[x, y] = new MapTile(background, leftForeground, rightForeground);
             }
-        }
     }
 
     public MapFile(Span<byte> buffer, int width, int height)
@@ -35,7 +32,6 @@ public sealed class MapFile(int width, int height)
         var reader = new SpanReader(Encoding.Default, buffer);
 
         for (var y = 0; y < Height; ++y)
-        {
             for (var x = 0; x < Width; ++x)
             {
                 var background = reader.ReadInt16();
@@ -43,7 +39,6 @@ public sealed class MapFile(int width, int height)
                 var rightForeground = reader.ReadInt16();
                 Tiles[x, y] = new MapTile(background, leftForeground, rightForeground);
             }
-        }
     }
 
     public static MapFile FromFile(string path, int width, int height)

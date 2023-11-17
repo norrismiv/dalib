@@ -9,12 +9,10 @@ public static class StringExtensions
     {
         var existingExt = Path.GetExtension(str);
         var newExt = extension;
-        
-        if(!newExt.StartsWith(".", StringComparison.OrdinalIgnoreCase))
+
+        if (!newExt.StartsWith(".", StringComparison.OrdinalIgnoreCase))
             newExt = $".{newExt}";
 
-        return string.IsNullOrEmpty(existingExt)
-            ? $"{str}{newExt}"
-            : str.Replace(existingExt, $"{newExt}");
+        return string.IsNullOrEmpty(existingExt) ? $"{str}{newExt}" : str.Replace(existingExt, $"{newExt}");
     }
 }

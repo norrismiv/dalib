@@ -9,25 +9,21 @@ using DALib.Memory;
 namespace DALib.Drawing;
 
 /// <remarks>
-/// As a palette table is populated, newer entries override older ones. This is intended behavior.
-/// In my opinion this makes it meaningless to store and search through all of the entries.
-///
-/// You could search through them in reverse order and return the first one you find, but even still...
-/// It should be faster this way, where each id is mapped to a palette number
+///     As a palette table is populated, newer entries override older ones. This is intended behavior.
+///     In my opinion this makes it meaningless to store and search through all of the entries.
+///     You could search through them in reverse order and return the first one you find, but even still...
+///     It should be faster this way, where each id is mapped to a palette number
 /// </remarks>
 public sealed class PaletteTable
 {
-    private readonly Dictionary<int, int> Overrides = new();
     private readonly Dictionary<int, int> Entries = new();
-    
+    private readonly Dictionary<int, int> Overrides = new();
+
     public PaletteTable() { }
 
     public PaletteTable(Stream stream)
     {
-        using var reader = new StreamReader(
-            stream,
-            Encoding.UTF8,
-            leaveOpen: true);
+        using var reader = new StreamReader(stream, Encoding.UTF8, leaveOpen: true);
 
         while (!reader.EndOfStream)
         {
@@ -46,11 +42,11 @@ public sealed class PaletteTable
                 case 2:
                 {
                     Overrides[min] = paletteNumOrMax;
-                    
+
                     break;
                 }
                 case 3 when int.TryParse(vals[2], out var paletteNumber):
-                    for(var i = min; i <= paletteNumOrMax; ++i)
+                    for (var i = min; i <= paletteNumOrMax; ++i)
                         Entries[i] = paletteNumber;
 
                     break;
@@ -83,7 +79,7 @@ public sealed class PaletteTable
                     break;
                 }
                 case 3 when int.TryParse(vals[2], out var paletteNumber):
-                    for(var i = min; i <= paletteNumOrMax; ++i)
+                    for (var i = min; i <= paletteNumOrMax; ++i)
                         Entries[i] = paletteNumber;
 
                     break;
@@ -94,7 +90,7 @@ public sealed class PaletteTable
     public static PaletteTable FromArchive(string pattern, DataArchive archive)
     {
         var table = new PaletteTable();
-        
+
         foreach (var entry in archive.GetEntries(pattern, ".tbl"))
         {
             var tablePart = FromEntry(entry);
@@ -105,15 +101,6 @@ public sealed class PaletteTable
         return table;
     }
 
-    public void Merge(PaletteTable other)
-    {
-        foreach (var kvp in other.Overrides)
-            Overrides[kvp.Key] = kvp.Value;
-        
-        foreach (var kvp in other.Entries)
-            Entries[kvp.Key] = kvp.Value;
-    }
-    
     public static PaletteTable FromEntry(DataArchiveEntry entry) => new(entry.ToStreamSegment());
 
     public static PaletteTable FromFile(string path)
@@ -130,15 +117,24 @@ public sealed class PaletteTable
 
         return new PaletteTable(stream);
     }
-    
+
     public int GetPaletteNumber(int tileNumber)
     {
         if (Overrides.TryGetValue(tileNumber, out var paletteNumber))
             return paletteNumber;
-        
-        if(Entries.TryGetValue(tileNumber, out paletteNumber))
+
+        if (Entries.TryGetValue(tileNumber, out paletteNumber))
             return paletteNumber;
-        
+
         return 0;
+    }
+
+    public void Merge(PaletteTable other)
+    {
+        foreach (var kvp in other.Overrides)
+            Overrides[kvp.Key] = kvp.Value;
+
+        foreach (var kvp in other.Entries)
+            Entries[kvp.Key] = kvp.Value;
     }
 }
