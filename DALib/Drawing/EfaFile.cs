@@ -87,7 +87,7 @@ public sealed class EfaFile : Collection<EfaFrame>
 
         Span<byte> decompressed = stackalloc byte[frame.RawSize];
 
-        decompressor.ReadExactly(decompressed);
+        decompressor.ReadAtLeast(decompressed, frame.RawSize);
 
         decompressed[..frame.ByteCount].CopyTo(frame.Data);
 

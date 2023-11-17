@@ -7,7 +7,7 @@ namespace DALib.Extensions;
 
 public static class SpanReaderExtensions
 {
-    public static SKColor ReadArgb1555Color(this SpanReader reader, bool scaleToArgb8888)
+    public static SKColor ReadArgb1555Color(ref this SpanReader reader, bool scaleToArgb8888)
     {
         var color = reader.ReadUInt16();
 
@@ -47,7 +47,7 @@ public static class SpanReaderExtensions
             a ? byte.MaxValue : byte.MinValue);
     }
 
-    public static SKColor ReadRgb565Color(this SpanReader reader, bool scaleToRgb888)
+    public static SKColor ReadRgb565Color(ref this SpanReader reader, bool scaleToRgb888)
     {
         var color = reader.ReadUInt16();
 

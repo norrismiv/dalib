@@ -15,15 +15,15 @@ namespace DALib.Drawing;
 public sealed class SpfFile : Collection<SpfFrame>
 {
     public uint ColorFormat { get; init; }
-    public SKColor[] PrimaryColors { get; init; }
-    public SKColor[] SecondaryColors { get; init; }
+    public Palette PrimaryColors { get; init; }
+    public Palette SecondaryColors { get; init; }
     public uint Unknown1 { get; init; }
     public uint Unknown2 { get; init; }
 
     public SpfFile(Stream stream)
     {
-        PrimaryColors = new SKColor[256];
-        SecondaryColors = new SKColor[256];
+        PrimaryColors = new Palette();
+        SecondaryColors = new Palette();
 
         using var reader = new BinaryReader(stream, Encoding.Default, true);
 
@@ -82,8 +82,8 @@ public sealed class SpfFile : Collection<SpfFrame>
 
     public SpfFile(Span<byte> buffer)
     {
-        PrimaryColors = new SKColor[256];
-        SecondaryColors = new SKColor[256];
+        PrimaryColors = new Palette();
+        SecondaryColors = new Palette();
 
         var reader = new SpanReader(Encoding.Default, buffer, Endianness.LittleEndian);
 
@@ -115,7 +115,11 @@ public sealed class SpfFile : Collection<SpfFrame>
             var a = (color & 0b1) == 0b1; //maybe?
             //@formatter:on
 
-            SecondaryColors[i] = new SKColor(r, g, b);
+            SecondaryColors[i] = new SKColor(
+                r,
+                g,
+                b,
+                a ? byte.MaxValue : byte.MinValue);
         }
 
         var frameCount = reader.ReadUInt32();

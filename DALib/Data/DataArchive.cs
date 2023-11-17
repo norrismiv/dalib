@@ -74,6 +74,17 @@ public sealed class DataArchive() : KeyedCollection<string, DataArchiveEntry>(St
         }
     }
 
+    public IEnumerable<DataArchiveEntry> GetEntries(string extension)
+    {
+        foreach (var entry in this)
+        {
+            if (!entry.EntryName.EndsWith(extension, StringComparison.OrdinalIgnoreCase))
+                continue;
+
+            yield return entry;
+        }
+    }
+
     #region KeyedCollection implementation
     /// <inheritdoc />
     protected override string GetKeyForItem(DataArchiveEntry item) => item.EntryName;

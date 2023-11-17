@@ -21,6 +21,9 @@ public sealed class Palette : Collection<SKColor>
             Add(new SKColor(reader.ReadByte(), reader.ReadByte(), reader.ReadByte()));
     }
 
+    public Palette()
+        : this(Enumerable.Repeat(SKColor.Empty, CONSTANTS.COLORS_PER_PALETTE)) { }
+
     public Palette(IEnumerable<SKColor> colors)
         : base(colors.ToList()) { }
 

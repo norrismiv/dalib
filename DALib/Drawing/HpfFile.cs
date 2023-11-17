@@ -14,7 +14,7 @@ public sealed class HpfFile
     public byte[] Data { get; }
     public byte[] HeaderBytes { get; }
     public int Height => Data.Length / Width;
-    public int Width => 28;
+    public int Width => CONSTANTS.HPF_TILE_HEIGHT;
 
     public HpfFile(Stream stream)
         : this(stream.ToSpan()) { }

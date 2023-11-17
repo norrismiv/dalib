@@ -13,12 +13,7 @@ public sealed class ColorTable : KeyedCollection<int, ColorTableEntry>
 {
     public ColorTable(Stream stream)
     {
-        using var reader = new StreamReader(
-            stream,
-            Encoding.UTF8,
-            true,
-            1024,
-            true);
+        using var reader = new StreamReader(stream, leaveOpen: true);
 
         if (!int.TryParse(reader.ReadLine(), out var colorsPerEntry))
             return;

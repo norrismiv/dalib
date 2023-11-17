@@ -24,10 +24,7 @@ public sealed class Tileset : Collection<Tile>
             Add(
                 new Tile
                 {
-                    Id = i,
-                    Data = tileData,
-                    Width = CONSTANTS.TILE_WIDTH,
-                    Height = CONSTANTS.TILE_HEIGHT
+                    Data = tileData
                 });
         }
     }
@@ -45,10 +42,7 @@ public sealed class Tileset : Collection<Tile>
             Add(
                 new Tile
                 {
-                    Id = i,
-                    Data = tileData,
-                    Width = CONSTANTS.TILE_WIDTH,
-                    Height = CONSTANTS.TILE_HEIGHT
+                    Data = tileData
                 });
         }
     }
