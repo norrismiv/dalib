@@ -101,7 +101,12 @@ public sealed class PaletteTable
         return table;
     }
 
-    public static PaletteTable FromEntry(DataArchiveEntry entry) => new(entry.ToStreamSegment());
+    public static PaletteTable FromEntry(DataArchiveEntry entry)
+    {
+        using var segment = entry.ToStreamSegment();
+
+        return new PaletteTable(segment);
+    }
 
     public static PaletteTable FromFile(string path)
     {

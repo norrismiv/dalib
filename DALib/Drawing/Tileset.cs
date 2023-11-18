@@ -55,7 +55,12 @@ public sealed class Tileset : Collection<Tile>
         return FromEntry(entry);
     }
 
-    public static Tileset FromEntry(DataArchiveEntry entry) => new(entry.ToStreamSegment());
+    public static Tileset FromEntry(DataArchiveEntry entry)
+    {
+        using var segment = entry.ToStreamSegment();
+
+        return new Tileset(segment);
+    }
 
     public static Tileset FromFile(string path)
     {

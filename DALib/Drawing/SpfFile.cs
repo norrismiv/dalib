@@ -172,7 +172,12 @@ public sealed class SpfFile : Collection<SpfFrame>
         return FromEntry(entry);
     }
 
-    public static SpfFile FromEntry(DataArchiveEntry entry) => new(entry.ToStreamSegment());
+    public static SpfFile FromEntry(DataArchiveEntry entry)
+    {
+        using var segment = entry.ToStreamSegment();
+
+        return new SpfFile(segment);
+    }
 
     public static SpfFile FromFile(string path)
     {

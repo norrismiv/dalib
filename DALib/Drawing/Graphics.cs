@@ -1,5 +1,4 @@
-﻿using System;
-using System.Text;
+﻿using System.Text;
 using DALib.Data;
 using DALib.Definitions;
 using DALib.Extensions;
@@ -68,25 +67,39 @@ public class Graphics
     public static SKImage RenderImage(EfaFrame efa)
     {
         using var bitmap = new SKBitmap(
-            efa.ByteWidth / 2,
-            efa.ByteCount / efa.ByteWidth,
+            efa.ImageWidth,
+            efa.ImageHeight,
             SKColorType.Rgba8888,
             SKAlphaType.Premul);
 
+        if (efa.ByteCount == 0)
+        {
+            bitmap.Erase(SKColors.Transparent);
+
+            return SKImage.FromBitmap(bitmap);
+        }
+
         var reader = new SpanReader(Encoding.Default, efa.Data, Endianness.LittleEndian);
 
-        for (var y = 0; y < bitmap.Height; y++)
-            for (var x = 0; x < bitmap.Width; x++)
+        var dataWidth = efa.ByteWidth / 2;
+        var dataHeight = efa.ByteCount / efa.ByteWidth;
+
+        for (var y = 0; y < dataHeight; y++)
+            for (var x = 0; x < dataWidth; x++)
             {
                 //read the RGB565 color
                 var color = reader.ReadRgb565Color(true);
 
-                // get perceived luminance of pixel
-                var luminance = 0.299f * color.Red + 0.587f * color.Green + 0.114f * color.Blue;
+                //ignore extra shit on the right and bottom outside the render dimensions
+                if (x >= efa.FrameWidth)
+                    continue;
+
+                if (y >= efa.FrameHeight)
+                    continue;
 
                 // set alpha based on luminance
                 // TODO: may need adjusting
-                var adjustedColor = color.WithAlpha(Convert.ToByte(luminance));
+                var adjustedColor = color.WithLuminanceAlpha();
 
                 bitmap.SetPixel(x, y, adjustedColor);
             }

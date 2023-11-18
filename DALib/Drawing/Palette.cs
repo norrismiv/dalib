@@ -61,7 +61,12 @@ public sealed class Palette : Collection<SKColor>
         return palettes;
     }
 
-    public static Palette FromEntry(DataArchiveEntry entry) => new(entry.ToStreamSegment());
+    public static Palette FromEntry(DataArchiveEntry entry)
+    {
+        using var segment = entry.ToStreamSegment();
+
+        return new Palette(segment);
+    }
 
     public static Palette FromFile(string path)
     {

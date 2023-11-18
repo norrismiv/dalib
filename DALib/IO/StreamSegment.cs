@@ -70,6 +70,9 @@ public class StreamSegment : Stream
     /// <inheritdoc />
     public override long Seek(long offset, SeekOrigin origin)
     {
+        if ((offset > Length) || (offset < 0))
+            throw new ArgumentOutOfRangeException(nameof(offset), offset, null);
+
         return origin switch
         {
             SeekOrigin.Begin   => Position = offset,

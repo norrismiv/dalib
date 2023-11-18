@@ -5,16 +5,16 @@ public class EfaFrame
     public int ByteCount { get; init; }
     public int ByteWidth { get; init; }
     public required byte[] Data { get; init; }
+    public short FrameHeight { get; init; }
+    public short FrameWidth { get; init; }
+    public short ImageHeight { get; init; }
+    public short ImageWidth { get; init; }
     public int Offset { get; init; }
     public int OriginFlags { get; init; }
     public int OriginX { get; init; }
     public int OriginY { get; init; }
     public int Pad1Flags { get; init; }
-    public short Pad1X { get; init; }
-    public short Pad1Y { get; init; }
     public int Pad2Flags { get; init; }
-    public short Pad2X { get; init; }
-    public short Pad2Y { get; init; }
     public int RawSize { get; init; }
     public int Size { get; init; }
     public int Unknown1 { get; init; }

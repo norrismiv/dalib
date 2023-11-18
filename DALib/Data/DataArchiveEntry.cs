@@ -4,27 +4,17 @@ using DALib.Extensions;
 
 namespace DALib.Data;
 
-public sealed class DataArchiveEntry
+public sealed class DataArchiveEntry(
+    DataArchive archive,
+    string entryName,
+    int address,
+    int fileSize)
 {
-    private readonly DataArchive Archive;
+    public int Address { get; } = address;
 
-    public int Address { get; }
+    public string EntryName { get; } = entryName;
 
-    public string EntryName { get; }
-
-    public int FileSize { get; }
-
-    public DataArchiveEntry(
-        DataArchive archive,
-        string entryName,
-        int address,
-        int fileSize)
-    {
-        Archive = archive;
-        EntryName = entryName;
-        Address = address;
-        FileSize = fileSize;
-    }
+    public int FileSize { get; } = fileSize;
 
     public DataArchiveEntry(DataArchive archive, string entryName, int fileSize)
         : this(
@@ -35,19 +25,19 @@ public sealed class DataArchiveEntry
 
     public Span<byte> ToSpan()
     {
-        Archive.ThrowIfDisposed();
+        archive.ThrowIfDisposed();
 
-        Archive.DataStream!.Seek(Address, SeekOrigin.Begin);
+        archive.DataStream!.Seek(Address, SeekOrigin.Begin);
         var span = new Span<byte>(new byte[FileSize]);
-        _ = Archive.DataStream.Read(span);
+        _ = archive.DataStream.Read(span);
 
         return span;
     }
 
     public Stream ToStreamSegment()
     {
-        Archive.ThrowIfDisposed();
+        archive.ThrowIfDisposed();
 
-        return Archive.DataStream!.Slice(Address, FileSize);
+        return archive.DataStream!.Slice(Address, FileSize);
     }
 }

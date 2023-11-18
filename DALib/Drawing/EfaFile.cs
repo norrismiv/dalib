@@ -24,25 +24,25 @@ public sealed class EfaFile : Collection<EfaFrame>
 
         for (var i = 0; i < frameCount; i++)
         {
-            var unknown1 = reader.ReadInt32();
+            var unknown1 = reader.ReadInt32(); //3 on reverse
             var offset = reader.ReadInt32();
             var size = reader.ReadInt32();
             var rawSize = reader.ReadInt32();
-            var unknown2 = reader.ReadInt32();
-            var unknown3 = reader.ReadInt32();
+            var unknown2 = reader.ReadInt32(); //1 on reverse
+            var unknown3 = reader.ReadInt32(); //0 on reverse
             var width = reader.ReadInt32();
-            var unknown4 = reader.ReadInt32();
+            var unknown4 = reader.ReadInt32(); //4 on reverse
             var byteCount = reader.ReadInt32();
-            var unknown5 = reader.ReadInt32();
+            var unknown5 = reader.ReadInt32(); //0 on reverse
             var originX = reader.ReadInt16();
             var originY = reader.ReadInt16();
-            var originFlags = reader.ReadInt32();
-            var pad1X = reader.ReadInt16();
-            var pad1Y = reader.ReadInt16();
+            var originFlags = reader.ReadInt32(); //0 on reverse
+            var imageWidth = reader.ReadInt16();
+            var imageHeight = reader.ReadInt16();
             var pad1Flags = reader.ReadInt32();
-            var pad2X = reader.ReadInt16();
-            var pad2Y = reader.ReadInt16();
-            var pad2Flags = reader.ReadInt32();
+            var frameWidth = reader.ReadInt16();
+            var frameHeight = reader.ReadInt16();
+            var pad2Flags = reader.ReadInt32(); //0 on reverse
 
             Add(
                 new EfaFrame
@@ -60,11 +60,11 @@ public sealed class EfaFile : Collection<EfaFrame>
                     OriginX = originX,
                     OriginY = originY,
                     OriginFlags = originFlags,
-                    Pad1X = pad1X,
-                    Pad1Y = pad1Y,
+                    ImageWidth = imageWidth,
+                    ImageHeight = imageHeight,
                     Pad1Flags = pad1Flags,
-                    Pad2X = pad2X,
-                    Pad2Y = pad2Y,
+                    FrameWidth = frameWidth,
+                    FrameHeight = frameHeight,
                     Pad2Flags = pad2Flags,
                     Data = new byte[byteCount]
                 });
@@ -91,17 +91,17 @@ public sealed class EfaFile : Collection<EfaFrame>
 
         decompressed[..frame.ByteCount].CopyTo(frame.Data);
 
-        /* Not sure what these numbers are
+        /*
+        //Not sure what these numbers are
         var reader = new SpanReader(Encoding.Default, decompressed[frame.ByteCount..], Endianness.LittleEndian);
 
         //not even sure if these should be ushort
         //could they be colors? transparency map?
         //the length of the tail data seems relevant to the size of the image
-        var nums = new List<ushort>();
+        var nums = new List<byte>();
 
         while (!reader.EndOfSpan)
-            nums.Add(reader.ReadUInt16());
-        */
+            nums.Add(reader.ReadByte());*/
     }
 
     public static EfaFile FromArchive(string fileName, DataArchive archive)
@@ -112,7 +112,12 @@ public sealed class EfaFile : Collection<EfaFrame>
         return FromEntry(entry);
     }
 
-    public static EfaFile FromEntry(DataArchiveEntry entry) => new(entry.ToStreamSegment());
+    public static EfaFile FromEntry(DataArchiveEntry entry)
+    {
+        using var segment = entry.ToStreamSegment();
+
+        return new EfaFile(segment);
+    }
 
     public static EfaFile FromFile(string path)
     {

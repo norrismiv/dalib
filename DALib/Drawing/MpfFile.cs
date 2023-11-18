@@ -134,7 +134,12 @@ public class MpfFile : Collection<MpfFrame>
         return FromEntry(entry);
     }
 
-    public static MpfFile FromEntry(DataArchiveEntry entry) => new(entry.ToStreamSegment());
+    public static MpfFile FromEntry(DataArchiveEntry entry)
+    {
+        using var segment = entry.ToStreamSegment();
+
+        return new MpfFile(segment);
+    }
 
     public static MpfFile FromFile(string path)
     {

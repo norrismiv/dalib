@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.IO;
 using System.Text;
 using DALib.Data;
@@ -9,13 +9,12 @@ using DALib.Memory;
 
 namespace DALib.Drawing;
 
-public class EpfFile
+public class EpfFile : Collection<EpfFrame>
 {
     public int Height { get; set; }
     public byte[] UnknownBytes { get; set; }
 
     public int Width { get; set; }
-    public List<EpfFrame> Frames { get; }
 
     public EpfFile(Stream stream)
     {
@@ -25,7 +24,6 @@ public class EpfFile
         Width = reader.ReadInt16();
         Height = reader.ReadInt16();
         UnknownBytes = reader.ReadBytes(2);
-        Frames = new List<EpfFrame>();
         var tocAddress = reader.ReadInt32() + 12;
 
         for (var i = 0; i < frameCount; ++i)
@@ -49,7 +47,10 @@ public class EpfFile
                 ? reader.ReadBytes(endAddress - startAddress)
                 : reader.ReadBytes(tocAddress - startAddress);
 
-            Frames.Add(
+            if ((width == 0) || (height == 0))
+                continue;
+
+            Add(
                 new EpfFrame
                 {
                     Top = top,
@@ -69,7 +70,6 @@ public class EpfFile
         Width = reader.ReadInt16();
         Height = reader.ReadInt16();
         UnknownBytes = reader.ReadBytes(2);
-        Frames = new List<EpfFrame>();
         var tocAddress = reader.ReadInt32() + 12;
 
         for (var i = 0; i < frameCount; ++i)
@@ -93,7 +93,7 @@ public class EpfFile
                 ? reader.ReadBytes(endAddress - startAddress)
                 : reader.ReadBytes(tocAddress - startAddress);
 
-            Frames.Add(
+            Add(
                 new EpfFrame
                 {
                     Top = top,
@@ -113,7 +113,12 @@ public class EpfFile
         return FromEntry(entry);
     }
 
-    public static EpfFile FromEntry(DataArchiveEntry entry) => new(entry.ToStreamSegment());
+    public static EpfFile FromEntry(DataArchiveEntry entry)
+    {
+        using var segment = entry.ToStreamSegment();
+
+        return new EpfFile(segment);
+    }
 
     public static EpfFile FromFile(string path)
     {

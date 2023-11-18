@@ -83,7 +83,12 @@ public sealed class ColorTable : KeyedCollection<int, ColorTableEntry>
         }
     }
 
-    public static ColorTable FromEntry(DataArchiveEntry entry) => new(entry.ToStreamSegment());
+    public static ColorTable FromEntry(DataArchiveEntry entry)
+    {
+        using var segment = entry.ToStreamSegment();
+
+        return new ColorTable(segment);
+    }
 
     public static ColorTable FromFile(string path)
     {

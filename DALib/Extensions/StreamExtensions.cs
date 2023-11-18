@@ -21,8 +21,8 @@ public static class StreamExtensions
 
     public static Span<byte> ToSpan(this Stream stream)
     {
-        var buffer = new Span<byte>(new byte[stream.Length]);
-        _ = stream.Read(buffer);
+        var buffer = new Span<byte>(new byte[stream.Length - stream.Position]);
+        stream.ReadExactly(buffer);
 
         return buffer;
     }

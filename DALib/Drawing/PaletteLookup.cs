@@ -1,5 +1,7 @@
 ﻿using System.Collections.Generic;
 using DALib.Data;
+using DALib.Definitions;
+using DALib.Extensions;
 
 namespace DALib.Drawing;
 
@@ -18,6 +20,29 @@ public sealed class PaletteLookup
     public Palette GetPaletteForId(int id)
     {
         var paletteNumber = Table.GetPaletteNumber(id);
+        var useLuminanceBlending = false;
+
+        if (paletteNumber >= 1000)
+        {
+            paletteNumber -= 1000;
+            useLuminanceBlending = true;
+        }
+
+        var palette = Palettes[paletteNumber];
+
+        if (useLuminanceBlending)
+        {
+            var blendedPalette = new Palette();
+
+            for (var i = 0; i < CONSTANTS.COLORS_PER_PALETTE; i++)
+            {
+                var color = palette[i];
+
+                blendedPalette[i] = color.WithLuminanceAlpha();
+            }
+
+            return blendedPalette;
+        }
 
         return Palettes[paletteNumber];
     }
