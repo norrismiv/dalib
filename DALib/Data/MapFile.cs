@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Text;
+using DALib.Extensions;
 using DALib.Memory;
 
 namespace DALib.Data;
@@ -44,7 +45,7 @@ public sealed class MapFile(int width, int height)
     public static MapFile FromFile(string path, int width, int height)
     {
         using var stream = File.Open(
-            path,
+            path.WithExtension(".map"),
             new FileStreamOptions
             {
                 Access = FileAccess.Read,

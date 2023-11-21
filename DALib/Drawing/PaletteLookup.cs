@@ -17,6 +17,13 @@ public sealed class PaletteLookup
             Palettes = Palette.FromArchive(pattern, archive)
         };
 
+    public static PaletteLookup FromArchive(string tablePattern, string palettePattern, DataArchive archive)
+        => new()
+        {
+            Table = PaletteTable.FromArchive(tablePattern, archive),
+            Palettes = Palette.FromArchive(palettePattern, archive)
+        };
+
     public Palette GetPaletteForId(int id)
     {
         var paletteNumber = Table.GetPaletteNumber(id);

@@ -44,7 +44,7 @@ public sealed class HpfFile
     public static HpfFile FromFile(string path)
     {
         using var stream = File.Open(
-            path,
+            path.WithExtension(".hpf"),
             new FileStreamOptions
             {
                 Access = FileAccess.Read,

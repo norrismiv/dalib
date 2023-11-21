@@ -4,6 +4,7 @@ using System.IO;
 using System.Text;
 using DALib.Data;
 using DALib.Definitions;
+using DALib.Extensions;
 using DALib.Memory;
 using SkiaSharp;
 
@@ -93,7 +94,7 @@ public sealed class ColorTable : KeyedCollection<int, ColorTableEntry>
     public static ColorTable FromFile(string path)
     {
         using var stream = File.Open(
-            path,
+            path.WithExtension(".tbl"),
             new FileStreamOptions
             {
                 Access = FileAccess.Read,

@@ -59,7 +59,9 @@ public class StreamSegment : Stream
         if ((Position + count) > Length)
             count = (int)(Length - Position);
 
-        BaseStream.Seek(OffsetPosition, SeekOrigin.Begin);
+        if (BaseStream.Position != OffsetPosition)
+            BaseStream.Seek(OffsetPosition, SeekOrigin.Begin);
+
         var ret = BaseStream.Read(buffer, offset, count);
 
         SetPositionFromBaseStream();
@@ -90,7 +92,9 @@ public class StreamSegment : Stream
     /// <inheritdoc />
     public override void Write(byte[] buffer, int offset, int count)
     {
-        BaseStream.Seek(OffsetPosition, SeekOrigin.Begin);
+        if (BaseStream.Position != OffsetPosition)
+            BaseStream.Seek(OffsetPosition, SeekOrigin.Begin);
+
         BaseStream.Write(buffer, offset, count);
 
         SetPositionFromBaseStream();

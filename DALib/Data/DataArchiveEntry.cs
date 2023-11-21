@@ -40,4 +40,29 @@ public sealed class DataArchiveEntry(
 
         return archive.DataStream!.Slice(Address, FileSize);
     }
+
+    public bool TryGetNumericIdentifier(out int identifier)
+    {
+        identifier = -1;
+
+        var fileName = Path.GetFileNameWithoutExtension(EntryName);
+        var indexOfFirstNumber = -1;
+
+        for (var i = 0; i < fileName.Length; ++i)
+        {
+            if (char.IsDigit(fileName[i]))
+            {
+                indexOfFirstNumber = i;
+
+                break;
+            }
+        }
+
+        if (indexOfFirstNumber == -1)
+            return false;
+
+        var numericIdentifierStr = fileName[indexOfFirstNumber..];
+
+        return int.TryParse(numericIdentifierStr, out identifier);
+    }
 }

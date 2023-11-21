@@ -144,7 +144,7 @@ public class MpfFile : Collection<MpfFrame>
     public static MpfFile FromFile(string path)
     {
         using var stream = File.Open(
-            path,
+            path.WithExtension(".mpf"),
             new FileStreamOptions
             {
                 Access = FileAccess.Read,

@@ -21,3 +21,12 @@ public enum Endianness
     /// </summary>
     BigEndian
 }
+
+public enum DALibEncodedImageFormat
+{
+    Efa,
+    Epf,
+    Hpf,
+    Mpf,
+    Spf
+}

@@ -182,7 +182,7 @@ public sealed class SpfFile : Collection<SpfFrame>
     public static SpfFile FromFile(string path)
     {
         using var stream = File.Open(
-            path,
+            path.WithExtension(".spf"),
             new FileStreamOptions
             {
                 Access = FileAccess.Read,

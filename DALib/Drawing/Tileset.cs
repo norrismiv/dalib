@@ -65,7 +65,7 @@ public sealed class Tileset : Collection<Tile>
     public static Tileset FromFile(string path)
     {
         using var stream = File.Open(
-            path,
+            path.WithExtension(".bmp"),
             new FileStreamOptions
             {
                 Access = FileAccess.Read,

@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text;
 using DALib.Data;
 using DALib.Definitions;
+using DALib.Extensions;
 using DALib.Memory;
 using SkiaSharp;
 
@@ -51,11 +52,10 @@ public sealed class Palette : Collection<SKColor>
 
         foreach (var entry in archive.GetEntries(pattern, ".pal"))
         {
-            var paletteName = Path.GetFileNameWithoutExtension(entry.EntryName);
-            var removePattern = paletteName.Replace(pattern, string.Empty);
-            var paletteNum = int.Parse(removePattern);
+            if (!entry.TryGetNumericIdentifier(out var identifier))
+                continue;
 
-            palettes.Add(paletteNum, FromEntry(entry));
+            palettes.Add(identifier, FromEntry(entry));
         }
 
         return palettes;
@@ -71,7 +71,7 @@ public sealed class Palette : Collection<SKColor>
     public static Palette FromFile(string path)
     {
         using var stream = File.Open(
-            path,
+            path.WithExtension(".pal"),
             new FileStreamOptions
             {
                 Access = FileAccess.Read,

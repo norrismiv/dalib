@@ -4,6 +4,7 @@ using System.Collections.ObjectModel;
 using System.IO;
 using System.Text;
 using DALib.Definitions;
+using DALib.Extensions;
 
 namespace DALib.Data;
 
@@ -12,7 +13,7 @@ public sealed class DataArchive() : KeyedCollection<string, DataArchiveEntry>(St
     private bool IsDisposed;
     internal Stream? DataStream { get; }
 
-    public DataArchive(Stream stream)
+    private DataArchive(Stream stream)
         : this()
     {
         DataStream = stream;
@@ -48,17 +49,20 @@ public sealed class DataArchive() : KeyedCollection<string, DataArchiveEntry>(St
         }
     }
 
+    #region LoadFrom
     public static DataArchive FromFile(string path)
         => new(
             File.Open(
-                path,
+                path.WithExtension(".dat"),
                 new FileStreamOptions
                 {
                     Access = FileAccess.Read,
                     Mode = FileMode.Open,
                     Options = FileOptions.RandomAccess,
-                    Share = FileShare.ReadWrite
+                    Share = FileShare.ReadWrite,
+                    BufferSize = 8192
                 }));
+    #endregion
 
     public IEnumerable<DataArchiveEntry> GetEntries(string pattern, string extension)
     {

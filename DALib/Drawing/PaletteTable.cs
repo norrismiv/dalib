@@ -4,6 +4,7 @@ using System.IO;
 using System.Text;
 using DALib.Data;
 using DALib.Definitions;
+using DALib.Extensions;
 using DALib.Memory;
 
 namespace DALib.Drawing;
@@ -111,7 +112,7 @@ public sealed class PaletteTable
     public static PaletteTable FromFile(string path)
     {
         using var stream = File.Open(
-            path,
+            path.WithExtension(".tbl"),
             new FileStreamOptions
             {
                 Access = FileAccess.Read,
