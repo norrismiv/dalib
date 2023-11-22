@@ -6,9 +6,10 @@ using SkiaSharp;
 
 namespace DALib.Drawing;
 
-public sealed class ColorTable : KeyedCollection<int, ColorTableEntry>
+public sealed class ColorTable() : KeyedCollection<int, ColorTableEntry>
 {
-    public ColorTable(Stream stream)
+    private ColorTable(Stream stream)
+        : this()
     {
         using var reader = new StreamReader(stream, leaveOpen: true);
 
@@ -49,6 +50,15 @@ public sealed class ColorTable : KeyedCollection<int, ColorTableEntry>
         }
     }
 
+    #region KeyedCollection implementation
+    /// <inheritdoc />
+    protected override int GetKeyForItem(ColorTableEntry item) => item.ColorIndex;
+    #endregion
+
+    #region SaveTo
+    #endregion
+
+    #region LoadFrom
     public static ColorTable FromEntry(DataArchiveEntry entry)
     {
         using var segment = entry.ToStreamSegment();
@@ -70,9 +80,5 @@ public sealed class ColorTable : KeyedCollection<int, ColorTableEntry>
 
         return new ColorTable(stream);
     }
-
-    #region KeyedCollection implementation
-    /// <inheritdoc />
-    protected override int GetKeyForItem(ColorTableEntry item) => item.ColorIndex;
     #endregion
 }

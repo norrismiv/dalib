@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using DALib.Extensions;
 using KGySoft.Drawing.Imaging;
@@ -36,6 +35,31 @@ public static class ImageProcessor
         return SKImage.FromBitmap(bitmap);
     }
 
+    public static Palettized<SKImage> Quantize(SKColorType colorType, SKImage image)
+    {
+        using var bitmap = SKBitmap.FromImage(image);
+        IQuantizer quantizer = OptimizedPaletteQuantizer.Wu(alphaThreshold: 0);
+        using var session = quantizer.Initialize(bitmap.GetReadableBitmapData());
+
+        using var quantizedBitmap = new SKBitmap(image.Info.WithColorType(colorType));
+
+        bitmap.ExtractSubset(
+            quantizedBitmap,
+            new SKRectI(
+                0,
+                0,
+                image.Width,
+                image.Height));
+
+        var quantizedImage = SKImage.FromBitmap(quantizedBitmap);
+
+        return new Palettized<SKImage>
+        {
+            Entity = quantizedImage,
+            Palette = session.Palette!.ToDALibPalette()
+        };
+    }
+
     public static Palettized<SKImageCollection> QuantizeMultiple(SKColorType colorType, params SKImage[] images)
     {
         const int PADDING = 1;
@@ -68,9 +92,6 @@ public static class ImageProcessor
             x += quantizedBitmap.Width + PADDING;
 
             var image = SKImage.FromBitmap(quantizedBitmap);
-            using var outStream = File.Create($@"output\test{i}.png");
-            image.Encode(SKEncodedImageFormat.Png, 100).SaveTo(outStream);
-
             quantizedImages.Add(image);
         }
 

@@ -1,11 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text;
 using DALib.Data;
-using DALib.Definitions;
 using DALib.Extensions;
-using DALib.Memory;
 
 namespace DALib.Drawing;
 
@@ -55,39 +54,80 @@ public sealed class PaletteTable
         }
     }
 
-    public PaletteTable(Span<byte> buffer)
+    public int GetPaletteNumber(int tileNumber)
     {
-        var reader = new SpanReader(Encoding.UTF8, buffer, Endianness.LittleEndian);
+        if (Overrides.TryGetValue(tileNumber, out var paletteNumber))
+            return paletteNumber;
 
-        while (!reader.EndOfSpan)
-        {
-            var line = reader.ReadString();
+        if (Entries.TryGetValue(tileNumber, out paletteNumber))
+            return paletteNumber;
 
-            if (string.IsNullOrEmpty(line))
-                continue;
-
-            var vals = line.Split(' ');
-
-            if ((vals.Length < 2) || !int.TryParse(vals[0], out var min) || !int.TryParse(vals[1], out var paletteNumOrMax))
-                continue;
-
-            switch (vals.Length)
-            {
-                case 2:
-                {
-                    Overrides[min] = paletteNumOrMax;
-
-                    break;
-                }
-                case 3 when int.TryParse(vals[2], out var paletteNumber):
-                    for (var i = min; i <= paletteNumOrMax; ++i)
-                        Entries[i] = paletteNumber;
-
-                    break;
-            }
-        }
+        return 0;
     }
 
+    public void Merge(PaletteTable other)
+    {
+        foreach (var kvp in other.Overrides)
+            Overrides[kvp.Key] = kvp.Value;
+
+        foreach (var kvp in other.Entries)
+            Entries[kvp.Key] = kvp.Value;
+    }
+
+    #region SaveTo
+    public void Save(string path)
+    {
+        using var stream = File.Open(
+            path.WithExtension(".tbl"),
+            new FileStreamOptions
+            {
+                Access = FileAccess.Write,
+                Mode = FileMode.Create,
+                Options = FileOptions.SequentialScan,
+                Share = FileShare.ReadWrite
+            });
+
+        Save(stream);
+    }
+
+    public void Save(Stream stream)
+    {
+        //construct a dictionary of all entries, with overrides applied
+        var entries = Entries.ToDictionary();
+
+        foreach (var kvp in Overrides)
+            entries[kvp.Key] = kvp.Value;
+
+        var orderedKeys = entries.Keys.Order().ToArray();
+        var ranges = new List<Range>();
+
+        //extract ranges of consecutive keys
+        for (var i = 0; i < orderedKeys.Length; ++i)
+        {
+            var start = orderedKeys[i];
+
+            while ((i < (orderedKeys.Length - 1)) && ((orderedKeys[i] + 1) == orderedKeys[i + 1]))
+                i++;
+
+            var end = orderedKeys[i];
+            ranges.Add(new Range(start, end));
+        }
+
+        using var writer = new StreamWriter(stream, leaveOpen: true);
+
+        foreach (var range in ranges)
+        {
+            var paletteId = entries[range.Start.Value];
+
+            writer.WriteLine(
+                range.Start.Value == range.End.Value
+                    ? $"{range.Start.Value} {paletteId}"
+                    : $"{range.Start.Value} {range.End.Value} {paletteId}");
+        }
+    }
+    #endregion
+
+    #region LoadFrom
     public static PaletteTable FromArchive(string pattern, DataArchive archive)
     {
         var table = new PaletteTable();
@@ -123,24 +163,5 @@ public sealed class PaletteTable
 
         return new PaletteTable(stream);
     }
-
-    public int GetPaletteNumber(int tileNumber)
-    {
-        if (Overrides.TryGetValue(tileNumber, out var paletteNumber))
-            return paletteNumber;
-
-        if (Entries.TryGetValue(tileNumber, out paletteNumber))
-            return paletteNumber;
-
-        return 0;
-    }
-
-    public void Merge(PaletteTable other)
-    {
-        foreach (var kvp in other.Overrides)
-            Overrides[kvp.Key] = kvp.Value;
-
-        foreach (var kvp in other.Entries)
-            Entries[kvp.Key] = kvp.Value;
-    }
+    #endregion
 }
