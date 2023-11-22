@@ -1,8 +1,6 @@
-﻿using System;
-using System.IO;
+﻿using System.IO;
 using System.Text;
 using DALib.Extensions;
-using DALib.Memory;
 
 namespace DALib.Data;
 
@@ -23,22 +21,13 @@ public sealed class MapFile(int width, int height)
                 var background = reader.ReadInt16();
                 var leftForeground = reader.ReadInt16();
                 var rightForeground = reader.ReadInt16();
-                Tiles[x, y] = new MapTile(background, leftForeground, rightForeground);
-            }
-    }
 
-    public MapFile(Span<byte> buffer, int width, int height)
-        : this(width, height)
-    {
-        var reader = new SpanReader(Encoding.Default, buffer);
-
-        for (var y = 0; y < Height; ++y)
-            for (var x = 0; x < Width; ++x)
-            {
-                var background = reader.ReadInt16();
-                var leftForeground = reader.ReadInt16();
-                var rightForeground = reader.ReadInt16();
-                Tiles[x, y] = new MapTile(background, leftForeground, rightForeground);
+                Tiles[x, y] = new MapTile
+                {
+                    Background = background,
+                    LeftForeground = leftForeground,
+                    RightForeground = rightForeground
+                };
             }
     }
 
@@ -62,16 +51,9 @@ public sealed class MapFile(int width, int height)
 
 public sealed class MapTile
 {
-    public int Background { get; }
+    public int Background { get; init; }
 
-    public int LeftForeground { get; }
+    public int LeftForeground { get; init; }
 
-    public int RightForeground { get; }
-
-    public MapTile(int background, int leftForeground, int rightForeground)
-    {
-        Background = background;
-        LeftForeground = leftForeground;
-        RightForeground = rightForeground;
-    }
+    public int RightForeground { get; init; }
 }

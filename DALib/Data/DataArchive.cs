@@ -102,10 +102,6 @@ public sealed class DataArchive() : KeyedCollection<string, DataArchiveEntry>(St
         IsDisposed = true;
     }
 
-    internal void ThrowIfDisposed()
-    {
-        if (IsDisposed)
-            throw new ObjectDisposedException(nameof(DataArchive));
-    }
+    internal void ThrowIfDisposed() => ObjectDisposedException.ThrowIf(IsDisposed, this);
     #endregion
 }

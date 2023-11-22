@@ -11,11 +11,25 @@ namespace DALib.Drawing;
 public class Graphics
 {
     public static SKImage RenderImage(EpfFrame frame, Palette palette)
-        => SimpleRender(
-            frame.Width,
-            frame.Height,
+    {
+        var fullWidth = frame.Right;
+        var fullHeight = frame.Bottom;
+        var drawnWidth = frame.Right - frame.Left;
+        var drawnHeight = frame.Bottom - frame.Top;
+
+        using var image = new SKBitmap(fullWidth, fullHeight);
+        using var canvas = new SKCanvas(image);
+
+        using var drawnPart = SimpleRender(
+            drawnWidth,
+            drawnHeight,
             frame.Data,
             palette);
+
+        canvas.DrawImage(drawnPart, frame.Left, frame.Top);
+
+        return SKImage.FromBitmap(image);
+    }
 
     public static SKImage RenderImage(MpfFrame frame, Palette palette)
         => SimpleRender(
@@ -26,7 +40,7 @@ public class Graphics
 
     public static SKImage RenderImage(HpfFile hpf, Palette palette)
         => SimpleRender(
-            hpf.Width,
+            CONSTANTS.HPF_TILE_WIDTH,
             hpf.Height,
             hpf.Data,
             palette);
@@ -131,7 +145,7 @@ public class Graphics
 
         //calculate width and height based on orthogonal view
         var width = CONSTANTS.TILE_WIDTH + (map.Width - 1) * CONSTANTS.TILE_WIDTH + FOREGROUND_PADDING;
-        var height = CONSTANTS.HPF_TILE_HEIGHT + (map.Height - 1) * CONSTANTS.HPF_TILE_HEIGHT + FOREGROUND_PADDING;
+        var height = CONSTANTS.HPF_TILE_WIDTH + (map.Height - 1) * CONSTANTS.HPF_TILE_WIDTH + FOREGROUND_PADDING;
         using var bitmap = new SKBitmap(width, height);
         using var canvas = new SKCanvas(bitmap);
 
@@ -160,14 +174,14 @@ public class Graphics
 
                 //for each X axis iteration, we want to move the draw position half a tile to the right and down from the initial draw position
                 var drawX = bgInitialDrawX + x * (CONSTANTS.TILE_WIDTH / 2);
-                var drawY = bgInitialDrawY + x * (CONSTANTS.HPF_TILE_HEIGHT / 2);
+                var drawY = bgInitialDrawY + x * (CONSTANTS.HPF_TILE_WIDTH / 2);
 
                 canvas.DrawImage(bgImage, drawX, drawY);
             }
 
             //for each Y axis iteration, we want to move the draw position half a tile to the left and down from the initial draw position
             bgInitialDrawX -= CONSTANTS.TILE_WIDTH / 2;
-            bgInitialDrawY += CONSTANTS.HPF_TILE_HEIGHT / 2;
+            bgInitialDrawY += CONSTANTS.HPF_TILE_WIDTH / 2;
         }
 
         //render left and right foreground tiles and draw them to the canvas
@@ -196,7 +210,7 @@ public class Graphics
                 //for each X axis iteration, we want to move the draw position half a tile to the right and down from the initial draw position
                 var lfgDrawX = fgInitialDrawX + x * (CONSTANTS.TILE_WIDTH / 2);
 
-                var lfgDrawY = fgInitialDrawY + (x + 1) * (CONSTANTS.HPF_TILE_HEIGHT / 2) - lfgImage.Height + CONSTANTS.HPF_TILE_HEIGHT / 2;
+                var lfgDrawY = fgInitialDrawY + (x + 1) * (CONSTANTS.HPF_TILE_WIDTH / 2) - lfgImage.Height + CONSTANTS.HPF_TILE_WIDTH / 2;
 
                 if ((lfgIndex % 10000) > 1)
                     canvas.DrawImage(lfgImage, lfgDrawX, lfgDrawY);
@@ -215,7 +229,7 @@ public class Graphics
                 //for each X axis iteration, we want to move the draw position half a tile to the right and down from the initial draw position
                 var rfgDrawX = fgInitialDrawX + (x + 1) * (CONSTANTS.TILE_WIDTH / 2);
 
-                var rfgDrawY = fgInitialDrawY + (x + 1) * (CONSTANTS.HPF_TILE_HEIGHT / 2) - rfgImage.Height + CONSTANTS.HPF_TILE_HEIGHT / 2;
+                var rfgDrawY = fgInitialDrawY + (x + 1) * (CONSTANTS.HPF_TILE_WIDTH / 2) - rfgImage.Height + CONSTANTS.HPF_TILE_WIDTH / 2;
 
                 if ((rfgIndex % 10000) > 1)
                     canvas.DrawImage(rfgImage, rfgDrawX, rfgDrawY);
@@ -223,7 +237,7 @@ public class Graphics
 
             //for each Y axis iteration, we want to move the draw position half a tile to the left and down from the initial draw position
             fgInitialDrawX -= CONSTANTS.TILE_WIDTH / 2;
-            fgInitialDrawY += CONSTANTS.HPF_TILE_HEIGHT / 2;
+            fgInitialDrawY += CONSTANTS.HPF_TILE_WIDTH / 2;
         }
 
         return SKImage.FromBitmap(bitmap);
@@ -231,8 +245,8 @@ public class Graphics
 
     public static SKImage RenderTile(Tile tile, Palette palette)
         => SimpleRender(
-            tile.Width,
-            tile.Height,
+            CONSTANTS.TILE_WIDTH,
+            CONSTANTS.TILE_HEIGHT,
             tile.Data,
             palette);
 

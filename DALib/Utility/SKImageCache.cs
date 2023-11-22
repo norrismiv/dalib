@@ -9,7 +9,7 @@ public class SKImageCache<TKey>(IEqualityComparer<TKey>? comparer = null) : IDis
     private readonly Dictionary<TKey, SKImage> Cache = new(comparer);
 
     /// <inheritdoc />
-    public void Dispose()
+    public virtual void Dispose()
     {
         foreach (var image in Cache.Values)
             image.Dispose();
@@ -17,7 +17,7 @@ public class SKImageCache<TKey>(IEqualityComparer<TKey>? comparer = null) : IDis
         GC.SuppressFinalize(this);
     }
 
-    public SKImage GetOrCreate(TKey key, Func<TKey, SKImage> create)
+    public virtual SKImage GetOrCreate(TKey key, Func<TKey, SKImage> create)
     {
         if (Cache.TryGetValue(key, out var image))
             return image;

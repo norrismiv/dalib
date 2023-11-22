@@ -32,25 +32,25 @@ public sealed class EfaFile : Collection<EfaFrame>
 
         for (var i = 0; i < frameCount; i++)
         {
-            var unknown1 = reader.ReadInt32(); //3 on reverse
+            var unknown1 = reader.ReadInt32();
             var offset = reader.ReadInt32();
             var size = reader.ReadInt32();
             var rawSize = reader.ReadInt32();
-            var unknown2 = reader.ReadInt32(); //1 on reverse
-            var unknown3 = reader.ReadInt32(); //0 on reverse
+            var unknown2 = reader.ReadInt32();
+            var unknown3 = reader.ReadInt32();
             var byteWidth = reader.ReadInt32();
-            var unknown4 = reader.ReadInt32(); //4 on reverse
+            var unknown4 = reader.ReadInt32();
             var byteCount = reader.ReadInt32();
-            var unknown5 = reader.ReadInt32(); //0 on reverse
+            var unknown5 = reader.ReadInt32();
             var originX = reader.ReadInt16();
             var originY = reader.ReadInt16();
-            var originFlags = reader.ReadInt32(); //0 on reverse
+            var originFlags = reader.ReadInt32();
             var imageWidth = reader.ReadInt16();
             var imageHeight = reader.ReadInt16();
             var pad1Flags = reader.ReadInt32();
             var frameWidth = reader.ReadInt16();
             var frameHeight = reader.ReadInt16();
-            var pad2Flags = reader.ReadInt32(); //0 on reverse
+            var pad2Flags = reader.ReadInt32();
 
             Add(
                 new EfaFrame
@@ -119,15 +119,15 @@ public sealed class EfaFile : Collection<EfaFrame>
         return new EfaFile(stream);
     }
 
-    public static EfaFile FromImages(params SKImage[] orderedImages)
+    public static EfaFile FromImages(params SKImage[] orderedFrames)
     {
         var efaFile = new EfaFile();
-        var imageWidth = orderedImages.Select(img => img.Width).Max();
-        var imageHeight = orderedImages.Select(img => img.Height).Max();
+        var imageWidth = orderedFrames.Select(img => img.Width).Max();
+        var imageHeight = orderedFrames.Select(img => img.Height).Max();
 
-        for (var i = 0; i < orderedImages.Length; i++)
+        for (var i = 0; i < orderedFrames.Length; i++)
         {
-            var image = orderedImages[i];
+            var image = orderedFrames[i];
 
             //convert the image to Rgb565 if necessary
             if (image.ColorType != SKColorType.Rgb565)
@@ -226,7 +226,7 @@ public sealed class EfaFile : Collection<EfaFrame>
         writer.Write(Unknown2);
 
         var offset = 0;
-        var compressedData = new byte[Count][];
+        var compressedFrames = new byte[Count][];
 
         for (var i = 0; i < Count; i++)
         {
@@ -242,7 +242,7 @@ public sealed class EfaFile : Collection<EfaFrame>
 
             var compressedBytes = compressed.ToArray();
             var compressedSize = compressedBytes.Length;
-            compressedData[i] = compressedBytes;
+            compressedFrames[i] = compressedBytes;
 
             //offset starts at 0 and grows with each frame's compressed data size (including the zlib header)
             frame.Offset = offset;
@@ -273,7 +273,7 @@ public sealed class EfaFile : Collection<EfaFrame>
 
         for (var i = 0; i < Count; i++)
         {
-            var compressedBytes = compressedData[i];
+            var compressedBytes = compressedFrames[i];
 
             writer.Write(compressedBytes);
         }

@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
@@ -7,7 +6,6 @@ using System.Text;
 using DALib.Data;
 using DALib.Definitions;
 using DALib.Extensions;
-using DALib.Memory;
 using SkiaSharp;
 
 namespace DALib.Drawing;
@@ -28,14 +26,6 @@ public sealed class Palette : Collection<SKColor>
     public Palette(IEnumerable<SKColor> colors)
         : base(colors.ToList()) { }
 
-    public Palette(Span<byte> buffer)
-    {
-        var reader = new SpanReader(Encoding.Default, buffer, Endianness.LittleEndian);
-
-        for (var i = 0; i < CONSTANTS.COLORS_PER_PALETTE; ++i)
-            Add(new SKColor(reader.ReadByte(), reader.ReadByte(), reader.ReadByte()));
-    }
-
     public Palette Dye(ColorTableEntry colorTableEntry)
     {
         var dyedPalette = new Palette(this);
@@ -46,6 +36,46 @@ public sealed class Palette : Collection<SKColor>
         return dyedPalette;
     }
 
+    #region SaveTo
+    public void Save(string path)
+    {
+        using var stream = File.Open(
+            path.WithExtension(".pal"),
+            new FileStreamOptions
+            {
+                Access = FileAccess.Write,
+                Mode = FileMode.Create,
+                Options = FileOptions.SequentialScan,
+                Share = FileShare.ReadWrite
+            });
+
+        Save(stream);
+    }
+
+    public void Save(Stream stream)
+    {
+        using var writer = new BinaryWriter(stream, Encoding.Default, true);
+
+        for (var i = 0; i < Count; ++i)
+        {
+            var color = this[i];
+
+            writer.Write(color.Red);
+            writer.Write(color.Green);
+            writer.Write(color.Blue);
+        }
+
+        //pad the palette with black to 256 colors
+        for (var i = Count; i < CONSTANTS.COLORS_PER_PALETTE; ++i)
+        {
+            writer.Write((byte)0);
+            writer.Write((byte)0);
+            writer.Write((byte)0);
+        }
+    }
+    #endregion
+
+    #region LoadFrom
     public static Dictionary<int, Palette> FromArchive(string pattern, DataArchive archive)
     {
         var palettes = new Dictionary<int, Palette>();
@@ -82,4 +112,5 @@ public sealed class Palette : Collection<SKColor>
 
         return new Palette(stream);
     }
+    #endregion
 }

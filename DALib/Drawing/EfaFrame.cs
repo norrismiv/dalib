@@ -1,6 +1,6 @@
 ﻿namespace DALib.Drawing;
 
-public class EfaFrame
+public sealed class EfaFrame
 {
     public int ByteCount { get; init; }
     public int ByteWidth { get; init; }

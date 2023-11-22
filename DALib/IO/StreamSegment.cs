@@ -5,8 +5,8 @@ namespace DALib.IO;
 
 public class StreamSegment : Stream
 {
-    private readonly long BaseOffset;
-    private readonly bool LeaveOpen;
+    protected long BaseOffset { get; set; }
+    protected bool LeaveOpen { get; set; }
 
     /// <inheritdoc />
     public override long Position { get; set; }
@@ -25,7 +25,7 @@ public class StreamSegment : Stream
     /// <inheritdoc />
     public override bool CanWrite => BaseStream.CanWrite;
 
-    private long OffsetPosition => BaseOffset + Position;
+    protected virtual long OffsetPosition => BaseOffset + Position;
 
     public StreamSegment(
         Stream baseStream,
@@ -87,7 +87,7 @@ public class StreamSegment : Stream
     /// <inheritdoc />
     public override void SetLength(long value) { throw new NotImplementedException(); }
 
-    private void SetPositionFromBaseStream() { Position = BaseStream.Position - BaseOffset; }
+    protected virtual void SetPositionFromBaseStream() { Position = BaseStream.Position - BaseOffset; }
 
     /// <inheritdoc />
     public override void Write(byte[] buffer, int offset, int count)
