@@ -7,22 +7,8 @@ namespace DALib.Drawing;
 
 public sealed class PaletteLookup
 {
-    public required Dictionary<int, Palette> Palettes { get; set; }
-    public required PaletteTable Table { get; set; }
-
-    public static PaletteLookup FromArchive(string pattern, DataArchive archive)
-        => new()
-        {
-            Table = PaletteTable.FromArchive(pattern, archive),
-            Palettes = Palette.FromArchive(pattern, archive)
-        };
-
-    public static PaletteLookup FromArchive(string tablePattern, string palettePattern, DataArchive archive)
-        => new()
-        {
-            Table = PaletteTable.FromArchive(tablePattern, archive),
-            Palettes = Palette.FromArchive(palettePattern, archive)
-        };
+    public required Dictionary<int, Palette> Palettes { get; init; }
+    public required PaletteTable Table { get; init; }
 
     public Palette GetPaletteForId(int id)
     {
@@ -53,4 +39,20 @@ public sealed class PaletteLookup
 
         return Palettes[paletteNumber];
     }
+
+    #region LoadFrom
+    public static PaletteLookup FromArchive(string pattern, DataArchive archive)
+        => new()
+        {
+            Table = PaletteTable.FromArchive(pattern, archive),
+            Palettes = Palette.FromArchive(pattern, archive)
+        };
+
+    public static PaletteLookup FromArchive(string tablePattern, string palettePattern, DataArchive archive)
+        => new()
+        {
+            Table = PaletteTable.FromArchive(tablePattern, archive),
+            Palettes = Palette.FromArchive(palettePattern, archive)
+        };
+    #endregion
 }

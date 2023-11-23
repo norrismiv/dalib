@@ -11,10 +11,9 @@ namespace DALib.Drawing;
 
 public sealed class EpfFile : Collection<EpfFrame>
 {
-    public short Height { get; set; }
-    public byte[] UnknownBytes { get; set; }
-
-    public short Width { get; set; }
+    public short Height { get; }
+    public byte[] UnknownBytes { get; }
+    public short Width { get; }
 
     private EpfFile(short width, short height)
     {
@@ -185,7 +184,7 @@ public sealed class EpfFile : Collection<EpfFrame>
                     Left = 0,
                     Right = (short)image.Width,
                     Bottom = (short)image.Height,
-                    Data = image.GetPalettizedPixelData(quantized.Palette)
+                    Data = image.GetPalettizedPixelData(palette)
                 });
         }
 

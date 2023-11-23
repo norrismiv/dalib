@@ -13,8 +13,8 @@ namespace DALib.Drawing;
 
 public sealed class EfaFile : Collection<EfaFrame>
 {
-    public int Unknown1 { get; init; }
-    public byte[] Unknown2 { get; init; }
+    public int Unknown1 { get; }
+    public byte[] Unknown2 { get; }
 
     private EfaFile()
     {

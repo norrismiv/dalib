@@ -19,9 +19,9 @@ public sealed class PaletteTable
     private readonly Dictionary<int, int> Entries = new();
     private readonly Dictionary<int, int> Overrides = new();
 
-    public PaletteTable() { }
+    private PaletteTable() { }
 
-    public PaletteTable(Stream stream)
+    private PaletteTable(Stream stream)
     {
         using var reader = new StreamReader(stream, Encoding.UTF8, leaveOpen: true);
 

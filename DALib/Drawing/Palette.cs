@@ -12,7 +12,7 @@ namespace DALib.Drawing;
 
 public sealed class Palette : Collection<SKColor>
 {
-    public Palette(Stream stream)
+    private Palette(Stream stream)
     {
         using var reader = new BinaryReader(stream, Encoding.Default, true);
 
@@ -20,10 +20,10 @@ public sealed class Palette : Collection<SKColor>
             Add(new SKColor(reader.ReadByte(), reader.ReadByte(), reader.ReadByte()));
     }
 
-    public Palette()
+    internal Palette()
         : this(Enumerable.Repeat(SKColor.Empty, CONSTANTS.COLORS_PER_PALETTE)) { }
 
-    public Palette(IEnumerable<SKColor> colors)
+    internal Palette(IEnumerable<SKColor> colors)
         : base(colors.ToList()) { }
 
     public Palette Dye(ColorTableEntry colorTableEntry)

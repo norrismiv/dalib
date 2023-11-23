@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.ObjectModel;
-using System.Drawing;
 using System.IO;
 using System.Text;
 using DALib.Data;
@@ -25,11 +24,9 @@ public class MpfFile : Collection<MpfFrame>
     public byte[] UnknownBytes { get; init; }
     public int WalkFrameCount { get; init; }
     public int WalkFrameIndex { get; init; }
+    public int Width { get; init; }
 
-    public int Width { get; }
-    public Size Size => new(Width, Height);
-
-    public MpfFile(Stream stream)
+    private MpfFile(Stream stream)
     {
         using var reader = new BinaryReader(stream, Encoding.UTF8, true);
 
@@ -126,6 +123,7 @@ public class MpfFile : Collection<MpfFrame>
         }
     }
 
+    #region LoadFrom
     public static MpfFile FromArchive(string fileName, DataArchive archive)
     {
         if (!archive.TryGetValue(fileName.WithExtension(".mpf"), out var entry))
@@ -155,4 +153,5 @@ public class MpfFile : Collection<MpfFrame>
 
         return new MpfFile(stream);
     }
+    #endregion
 }

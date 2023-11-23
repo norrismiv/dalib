@@ -12,17 +12,22 @@ using SkiaSharp;
 
 namespace DALib.Drawing;
 
-public sealed class HpfFile()
+public sealed class HpfFile
 {
-    public byte[] Data { get; init; }
-    public byte[] HeaderBytes { get; init; }
+    public byte[] Data { get; }
+    public byte[] HeaderBytes { get; }
     public int Height => Data.Length / CONSTANTS.HPF_TILE_WIDTH;
 
-    public HpfFile(Stream stream)
+    private HpfFile(byte[] headerBytes, byte[] data)
+    {
+        HeaderBytes = headerBytes;
+        Data = data;
+    }
+
+    private HpfFile(Stream stream)
         : this(stream.ToSpan()) { }
 
-    public HpfFile(Span<byte> buffer)
-        : this()
+    private HpfFile(Span<byte> buffer)
     {
         var reader = new SpanReader(Encoding.Default, buffer, Endianness.LittleEndian);
         var signature = reader.ReadUInt32();
@@ -33,7 +38,6 @@ public sealed class HpfFile()
             Debugger.Break();
 
         HeaderBytes = buffer[..8].ToArray();
-
         Data = buffer[8..].ToArray();
     }
 
@@ -71,11 +75,7 @@ public sealed class HpfFile()
 
         return new Palettized<HpfFile>
         {
-            Entity = new HpfFile
-            {
-                HeaderBytes = new byte[8],
-                Data = newImage.GetPalettizedPixelData(palette)
-            },
+            Entity = new HpfFile(new byte[8], newImage.GetPalettizedPixelData(palette)),
             Palette = palette
         };
     }
