@@ -11,7 +11,7 @@ namespace DALib.Data;
 public sealed class DataArchive() : KeyedCollection<string, DataArchiveEntry>(StringComparer.OrdinalIgnoreCase), IDisposable
 {
     private bool IsDisposed;
-    internal Stream? DataStream { get; }
+    internal Stream? DataStream { get; set; }
 
     private DataArchive(Stream stream)
         : this()
@@ -49,21 +49,6 @@ public sealed class DataArchive() : KeyedCollection<string, DataArchiveEntry>(St
         }
     }
 
-    #region LoadFrom
-    public static DataArchive FromFile(string path)
-        => new(
-            File.Open(
-                path.WithExtension(".dat"),
-                new FileStreamOptions
-                {
-                    Access = FileAccess.Read,
-                    Mode = FileMode.Open,
-                    Options = FileOptions.RandomAccess,
-                    Share = FileShare.ReadWrite,
-                    BufferSize = 8192
-                }));
-    #endregion
-
     public IEnumerable<DataArchiveEntry> GetEntries(string pattern, string extension)
     {
         foreach (var entry in this)
@@ -92,6 +77,148 @@ public sealed class DataArchive() : KeyedCollection<string, DataArchiveEntry>(St
     #region KeyedCollection implementation
     /// <inheritdoc />
     protected override string GetKeyForItem(DataArchiveEntry item) => item.EntryName;
+    #endregion
+
+    #region SaveTo
+    public void Save(string path)
+    {
+        using var stream = File.Open(
+            path.WithExtension(".dat"),
+            new FileStreamOptions
+            {
+                Access = FileAccess.Write,
+                Mode = FileMode.Create,
+                Options = FileOptions.RandomAccess,
+                Share = FileShare.ReadWrite,
+                BufferSize = 8192
+            });
+
+        Save(stream);
+    }
+
+    public void Save(Stream stream)
+    {
+        const int HEADER_LENGTH = 4;
+        const int ENTRY_HEADER_LENGTH = 4 + CONSTANTS.DATA_ARCHIVE_ENTRY_NAME_LENGTH;
+        using var writer = new BinaryWriter(stream, Encoding.Default, true);
+
+        writer.Write(Count + 1);
+
+        //add the file header length
+        //plus the entry header length * number of entries
+        //plus 4 bytes for the final entry's end address (which could also be considered the total number of bytes)
+        var address = HEADER_LENGTH + Count * ENTRY_HEADER_LENGTH + 4;
+
+        foreach (var entry in this)
+        {
+            var nameStr = entry.EntryName;
+
+            // ReSharper disable once ConvertIfStatementToSwitchStatement
+            if (nameStr.Length > CONSTANTS.DATA_ARCHIVE_ENTRY_NAME_LENGTH)
+                throw new InvalidOperationException("Entry name is too long, must be 13 characters or less");
+
+            if (nameStr.Length < CONSTANTS.DATA_ARCHIVE_ENTRY_NAME_LENGTH)
+                nameStr = nameStr.PadRight(CONSTANTS.DATA_ARCHIVE_ENTRY_NAME_LENGTH, '\0');
+
+            var nameStrBytes = Encoding.ASCII.GetBytes(nameStr);
+
+            writer.Write(address);
+            writer.Write(nameStrBytes);
+
+            address += entry.FileSize;
+        }
+
+        writer.Write(address);
+
+        foreach (var entry in this)
+        {
+            using var segment = entry.ToStreamSegment();
+            segment.CopyTo(stream);
+        }
+    }
+    #endregion
+
+    #region LoadFrom
+    public static DataArchive FromDirectory(string dir)
+    {
+        //create a new in-memory archive
+        var archive = new DataArchive();
+        archive.DataStream = new MemoryStream();
+
+        var address = 0;
+
+        //enumerate the directory, copying each file into the memory archive
+        //maintain accurate address offsets for each file so that the archive is useable
+        foreach (var file in Directory.EnumerateFiles(dir))
+        {
+            using var stream = File.Open(
+                file,
+                new FileStreamOptions
+                {
+                    Access = FileAccess.Read,
+                    Mode = FileMode.Open,
+                    Options = FileOptions.RandomAccess,
+                    Share = FileShare.ReadWrite,
+                    BufferSize = 8192
+                });
+
+            stream.CopyTo(archive.DataStream);
+
+            var entryName = Path.GetFileName(file);
+            var length = (int)stream.Length;
+
+            var entry = new DataArchiveEntry(
+                archive,
+                entryName,
+                address,
+                length);
+
+            address += length;
+
+            archive.Add(entry);
+        }
+
+        return archive;
+    }
+
+    public static DataArchive FromFile(string path, bool cacheArchive = false)
+    {
+        //if we don't want to cache the archive
+        //return an archive that reads using pointers from an open file handle
+        if (!cacheArchive)
+            return new DataArchive(
+                File.Open(
+                    path.WithExtension(".dat"),
+                    new FileStreamOptions
+                    {
+                        Access = FileAccess.Read,
+                        Mode = FileMode.Open,
+                        Options = FileOptions.RandomAccess,
+                        Share = FileShare.ReadWrite,
+                        BufferSize = 8192
+                    }));
+
+        //if we do want to cache the archive
+        //copy the whole file into a memorystream and use that
+        //pointers will still be used, but the data will be cached in memory
+        using var stream = File.Open(
+            path.WithExtension(".dat"),
+            new FileStreamOptions
+            {
+                Access = FileAccess.Read,
+                Mode = FileMode.Open,
+                Options = FileOptions.RandomAccess,
+                Share = FileShare.ReadWrite,
+                BufferSize = 81920
+            });
+
+        var memory = new MemoryStream((int)stream.Length);
+        stream.CopyTo(memory);
+
+        memory.Seek(0, SeekOrigin.Begin);
+
+        return new DataArchive(memory);
+    }
     #endregion
 
     #region IDisposable implementation
