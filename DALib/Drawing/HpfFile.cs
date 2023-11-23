@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Diagnostics;
 using System.IO;
 using System.Text;
 using DALib.Data;
@@ -34,8 +33,6 @@ public sealed class HpfFile
 
         if (signature == 0xFF02AA55)
             Compression.DecompressHpf(ref buffer);
-        else
-            Debugger.Break();
 
         HeaderBytes = buffer[..8].ToArray();
         Data = buffer[8..].ToArray();
