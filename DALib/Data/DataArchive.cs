@@ -2,13 +2,15 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
+using System.Linq;
 using System.Text;
+using DALib.Abstractions;
 using DALib.Definitions;
 using DALib.Extensions;
 
 namespace DALib.Data;
 
-public sealed class DataArchive() : KeyedCollection<string, DataArchiveEntry>(StringComparer.OrdinalIgnoreCase), IDisposable
+public sealed class DataArchive() : KeyedCollection<string, DataArchiveEntry>(StringComparer.OrdinalIgnoreCase), ISavable, IDisposable
 {
     private bool IsDisposed;
     internal Stream? DataStream { get; set; }
@@ -79,6 +81,33 @@ public sealed class DataArchive() : KeyedCollection<string, DataArchiveEntry>(St
     protected override string GetKeyForItem(DataArchiveEntry item) => item.EntryName;
     #endregion
 
+    public void Patch(string entryName, ISavable item)
+    {
+        ThrowIfDisposed();
+
+        //if an entry exists with the same name, remove it
+        Remove(entryName);
+
+        using var buffer = new MemoryStream();
+        item.Save(buffer);
+
+        //create a new entry (this entry will be appended to the end of the archive)
+        var entry = new DataArchiveEntry(
+            this,
+            entryName,
+            (int)DataStream!.Length,
+            (int)buffer.Length);
+
+        //seek to the end of the archive and append the new entry
+        DataStream!.Seek(0, SeekOrigin.End);
+        buffer.Seek(0, SeekOrigin.Begin);
+
+        buffer.CopyTo(DataStream);
+
+        //add entry to archive
+        Add(entry);
+    }
+
     #region SaveTo
     public void Save(string path)
     {
@@ -88,9 +117,9 @@ public sealed class DataArchive() : KeyedCollection<string, DataArchiveEntry>(St
             {
                 Access = FileAccess.Write,
                 Mode = FileMode.Create,
-                Options = FileOptions.RandomAccess,
+                Options = FileOptions.SequentialScan,
                 Share = FileShare.ReadWrite,
-                BufferSize = 8192
+                BufferSize = 81920
             });
 
         Save(stream);
@@ -109,8 +138,11 @@ public sealed class DataArchive() : KeyedCollection<string, DataArchiveEntry>(St
         //plus 4 bytes for the final entry's end address (which could also be considered the total number of bytes)
         var address = HEADER_LENGTH + Count * ENTRY_HEADER_LENGTH + 4;
 
-        foreach (var entry in this)
+        var orderedEntries = this.OrderBy(entry => entry.EntryName).ToList();
+
+        foreach (var entry in orderedEntries)
         {
+            //reconstruct the name field with the required terminator
             var nameStr = entry.EntryName;
 
             // ReSharper disable once ConvertIfStatementToSwitchStatement
@@ -120,6 +152,7 @@ public sealed class DataArchive() : KeyedCollection<string, DataArchiveEntry>(St
             if (nameStr.Length < CONSTANTS.DATA_ARCHIVE_ENTRY_NAME_LENGTH)
                 nameStr = nameStr.PadRight(CONSTANTS.DATA_ARCHIVE_ENTRY_NAME_LENGTH, '\0');
 
+            //get bytes for the name field (binaryWriter.Write(string) doesn't work for this)
             var nameStrBytes = Encoding.ASCII.GetBytes(nameStr);
 
             writer.Write(address);
@@ -130,7 +163,7 @@ public sealed class DataArchive() : KeyedCollection<string, DataArchiveEntry>(St
 
         writer.Write(address);
 
-        foreach (var entry in this)
+        foreach (var entry in orderedEntries)
         {
             using var segment = entry.ToStreamSegment();
             segment.CopyTo(stream);
@@ -157,7 +190,7 @@ public sealed class DataArchive() : KeyedCollection<string, DataArchiveEntry>(St
                 {
                     Access = FileAccess.Read,
                     Mode = FileMode.Open,
-                    Options = FileOptions.RandomAccess,
+                    Options = FileOptions.SequentialScan,
                     Share = FileShare.ReadWrite,
                     BufferSize = 8192
                 });
@@ -207,7 +240,7 @@ public sealed class DataArchive() : KeyedCollection<string, DataArchiveEntry>(St
             {
                 Access = FileAccess.Read,
                 Mode = FileMode.Open,
-                Options = FileOptions.RandomAccess,
+                Options = FileOptions.SequentialScan,
                 Share = FileShare.ReadWrite,
                 BufferSize = 81920
             });

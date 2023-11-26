@@ -1,3 +1,5 @@
+using SkiaSharp;
+
 namespace DALib.Definitions;
 
 public static class CONSTANTS
@@ -8,7 +10,10 @@ public static class CONSTANTS
     public const int TILE_WIDTH = 56;
     public const int TILE_HEIGHT = 27;
     public const int HPF_TILE_WIDTH = 28;
+    public const int HALF_TILE_WIDTH = 28;
+    public const int HALF_TILE_HEIGHT = 14;
     public const int TILE_SIZE = TILE_WIDTH * TILE_HEIGHT;
     public const byte FIVE_BIT_MASK = 0b11111;
     public const byte SIX_BIT_MASK = 0b111111;
+    public static readonly SKColor Transparent = SKColors.Black.WithAlpha(0);
 }

@@ -1,10 +1,11 @@
 ﻿using System.IO;
 using System.Text;
+using DALib.Abstractions;
 using DALib.Extensions;
 
 namespace DALib.Data;
 
-public sealed class MapFile(int width, int height)
+public sealed class MapFile(int width, int height) : ISavable
 {
     public int Height { get; } = height;
     public MapTile[,] Tiles { get; } = new MapTile[width, height];
@@ -31,6 +32,7 @@ public sealed class MapFile(int width, int height)
             }
     }
 
+    #region LoadFrom
     public static MapFile FromFile(string path, int width, int height)
     {
         using var stream = File.Open(
@@ -45,8 +47,41 @@ public sealed class MapFile(int width, int height)
 
         return new MapFile(stream, width, height);
     }
+    #endregion
 
     public MapTile this[int x, int y] => Tiles[x, y];
+
+    #region SaveTo
+    public void Save(string path)
+    {
+        using var stream = File.Open(
+            path.WithExtension(".map"),
+            new FileStreamOptions
+            {
+                Access = FileAccess.Write,
+                Mode = FileMode.Create,
+                Options = FileOptions.SequentialScan,
+                Share = FileShare.ReadWrite
+            });
+
+        Save(stream);
+    }
+
+    public void Save(Stream stream)
+    {
+        using var writer = new BinaryWriter(stream, Encoding.Default, true);
+
+        for (var y = 0; y < Height; ++y)
+            for (var x = 0; x < Width; ++x)
+            {
+                var tile = Tiles[x, y];
+
+                writer.Write(tile.Background);
+                writer.Write(tile.LeftForeground);
+                writer.Write(tile.RightForeground);
+            }
+    }
+    #endregion
 }
 
 public sealed class MapTile

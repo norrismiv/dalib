@@ -1,25 +1,33 @@
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Text;
+using DALib.Abstractions;
 using DALib.Data;
+using DALib.Definitions;
 using DALib.Extensions;
 using DALib.IO;
+using DALib.Memory;
 using SkiaSharp;
 
 namespace DALib.Drawing;
 
-public sealed class EfaFile : Collection<EfaFrame>
+public sealed class EfaFile : Collection<EfaFrame>, ISavable
 {
+    public EfaBlendingType BlendingType { get; set; }
+    public int FrameIntervalMs { get; set; }
+    public byte[] Unknown2 { get; set; }
     public int Unknown1 { get; }
-    public byte[] Unknown2 { get; }
 
     private EfaFile()
     {
         Unknown1 = 0;
-        Unknown2 = new byte[56];
+        BlendingType = EfaBlendingType.Luminance;
+        FrameIntervalMs = 10000;
+        Unknown2 = new byte[51];
     }
 
     private EfaFile(Stream stream)
@@ -28,7 +36,10 @@ public sealed class EfaFile : Collection<EfaFrame>
 
         Unknown1 = reader.ReadInt32();
         var frameCount = reader.ReadInt32();
-        Unknown2 = reader.ReadBytes(56);
+        FrameIntervalMs = reader.ReadInt32();
+        var blendingType = reader.ReadByte();
+        BlendingType = (EfaBlendingType)blendingType;
+        Unknown2 = reader.ReadBytes(51);
 
         for (var i = 0; i < frameCount; i++)
         {
@@ -119,6 +130,8 @@ public sealed class EfaFile : Collection<EfaFrame>
         return new EfaFile(stream);
     }
 
+    public static EfaFile FromImages(IEnumerable<SKImage> orderedFrames) => FromImages(orderedFrames.ToArray());
+
     public static EfaFile FromImages(params SKImage[] orderedFrames)
     {
         var efaFile = new EfaFile();
@@ -128,22 +141,24 @@ public sealed class EfaFile : Collection<EfaFrame>
         for (var i = 0; i < orderedFrames.Length; i++)
         {
             var image = orderedFrames[i];
+            using var bitmap = SKBitmap.FromImage(image);
+            byte[] rawBytes;
 
-            //convert the image to Rgb565 if necessary
-            if (image.ColorType != SKColorType.Rgb565)
+            if (image.ColorType == SKColorType.Rgb565)
+                rawBytes = bitmap.Bytes;
+            else
             {
-                var oldImage = image;
+                var writer = new SpanWriter(Encoding.Default, endianness: Endianness.LittleEndian);
 
-                using var oldBitmap = SKBitmap.FromImage(image);
-                using var newBitmap = new SKBitmap(image.Info.WithColorType(SKColorType.Rgb565));
-                oldBitmap.CopyTo(newBitmap, SKColorType.Rgb565);
+                for (var y = 0; y < image.Height; y++)
+                    for (var x = 0; x < image.Width; x++)
+                    {
+                        var color = bitmap.GetPixel(x, y);
+                        writer.WriteRgb565Color(color);
+                    }
 
-                image = SKImage.FromBitmap(newBitmap);
-
-                oldImage.Dispose();
+                rawBytes = writer.ToSpan().ToArray();
             }
-
-            var rawBytes = image.EncodedData.ToArray();
 
             efaFile.Add(
                 new EfaFrame
@@ -223,6 +238,8 @@ public sealed class EfaFile : Collection<EfaFrame>
         //write file header
         writer.Write(Unknown1);
         writer.Write(Count);
+        writer.Write(FrameIntervalMs);
+        writer.Write((byte)BlendingType);
         writer.Write(Unknown2);
 
         var offset = 0;

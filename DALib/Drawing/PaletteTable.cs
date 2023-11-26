@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using DALib.Abstractions;
 using DALib.Data;
 using DALib.Extensions;
 
@@ -14,7 +15,7 @@ namespace DALib.Drawing;
 ///     You could search through them in reverse order and return the first one you find, but even still...
 ///     It should be faster this way, where each id is mapped to a palette number
 /// </remarks>
-public sealed class PaletteTable
+public sealed class PaletteTable : ISavable
 {
     private readonly Dictionary<int, int> Entries = new();
     private readonly Dictionary<int, int> Overrides = new();

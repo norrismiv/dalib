@@ -3,6 +3,7 @@ using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
 using System.Text;
+using DALib.Abstractions;
 using DALib.Data;
 using DALib.Definitions;
 using DALib.Extensions;
@@ -10,7 +11,7 @@ using SkiaSharp;
 
 namespace DALib.Drawing;
 
-public sealed class Palette : Collection<SKColor>
+public sealed class Palette : Collection<SKColor>, ISavable
 {
     private Palette(Stream stream)
     {

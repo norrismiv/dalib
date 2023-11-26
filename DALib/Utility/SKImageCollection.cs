@@ -1,12 +1,12 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Linq;
 using SkiaSharp;
 
 namespace DALib.Utility;
 
-// ReSharper disable once ParameterTypeCanBeEnumerable.Local Collection<T> wont allow this
-public class SKImageCollection(IList<SKImage> images) : Collection<SKImage>(images), IDisposable
+public class SKImageCollection(IEnumerable<SKImage> images) : Collection<SKImage>(images.ToList()), IDisposable
 {
     /// <inheritdoc />
     public virtual void Dispose()

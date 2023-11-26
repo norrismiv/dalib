@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Text;
+using DALib.Abstractions;
 using DALib.Data;
 using DALib.Definitions;
 using DALib.Extensions;
@@ -11,7 +12,7 @@ using SkiaSharp;
 
 namespace DALib.Drawing;
 
-public sealed class HpfFile
+public sealed class HpfFile : ISavable
 {
     public byte[] Data { get; }
     public byte[] HeaderBytes { get; }

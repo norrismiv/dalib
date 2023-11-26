@@ -11,8 +11,8 @@ public sealed class EfaFrame
     public short ImageWidth { get; init; }
     public int Offset { get; set; }
     public int OriginFlags { get; init; }
-    public short OriginX { get; init; }
-    public short OriginY { get; init; }
+    public short OriginX { get; set; }
+    public short OriginY { get; set; }
     public int Pad1Flags { get; init; }
     public int Pad2Flags { get; init; }
     public int RawSize { get; init; }

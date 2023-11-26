@@ -1,7 +1,9 @@
-﻿using System.Collections.ObjectModel;
+﻿using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
 using System.Text;
+using DALib.Abstractions;
 using DALib.Data;
 using DALib.Definitions;
 using DALib.Extensions;
@@ -10,7 +12,7 @@ using SkiaSharp;
 
 namespace DALib.Drawing;
 
-public sealed class Tileset : Collection<Tile>
+public sealed class Tileset : Collection<Tile>, ISavable
 {
     private Tileset() { }
 
@@ -67,6 +69,8 @@ public sealed class Tileset : Collection<Tile>
     #endregion
 
     #region LoadFrom
+    public static Palettized<Tileset> FromImages(IEnumerable<SKImage> orderedFrames) => FromImages(orderedFrames.ToArray());
+
     public static Palettized<Tileset> FromImages(params SKImage[] images)
     {
         if (images.Any(img => (img.Height * img.Width) != CONSTANTS.TILE_SIZE))

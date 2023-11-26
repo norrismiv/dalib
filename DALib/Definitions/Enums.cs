@@ -22,11 +22,21 @@ public enum Endianness
     BigEndian
 }
 
-public enum DALibEncodedImageFormat
+public enum EfaBlendingType : byte
 {
-    Efa,
-    Epf,
-    Hpf,
-    Mpf,
-    Spf
+    /// <summary>
+    ///     Transparency is added by the client based on the luminance of the pixel
+    /// </summary>
+    Luminance = 1,
+
+    /// <summary>
+    ///     Transparency is added by the client based on the luminance of the pixel. Slightly less transparent than "Luminance"
+    /// </summary>
+    LessLuminance = 2,
+
+    /// <summary>
+    ///     Transparency is added by the client through some mechanism. Appears to be flood fill, but it only seems to work on
+    ///     like 3 effects. Other effects that try to use this option will not render at all.
+    /// </summary>
+    NotSure = 3
 }

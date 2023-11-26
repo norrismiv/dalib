@@ -1,6 +1,9 @@
-﻿using System.Collections.ObjectModel;
+﻿using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.IO;
+using System.Linq;
 using System.Text;
+using DALib.Abstractions;
 using DALib.Data;
 using DALib.Definitions;
 using DALib.Extensions;
@@ -10,7 +13,7 @@ using SkiaSharp;
 
 namespace DALib.Drawing;
 
-public sealed class SpfFile : Collection<SpfFrame>
+public sealed class SpfFile : Collection<SpfFrame>, ISavable
 {
     public uint ColorFormat { get; }
     public Palette PrimaryColors { get; }
@@ -148,6 +151,8 @@ public sealed class SpfFile : Collection<SpfFrame>
     #endregion
 
     #region LoadFrom
+    public static SpfFile FromImages(IEnumerable<SKImage> orderedFrames) => FromImages(orderedFrames.ToArray());
+
     public static SpfFile FromImages(params SKImage[] orderedFrames)
     {
         using var quantized = ImageProcessor.QuantizeMultiple(SKColorType.Rgba8888, orderedFrames);

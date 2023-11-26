@@ -1,7 +1,9 @@
-﻿using System.Collections.ObjectModel;
+﻿using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
 using System.Text;
+using DALib.Abstractions;
 using DALib.Data;
 using DALib.Extensions;
 using DALib.Utility;
@@ -9,7 +11,7 @@ using SkiaSharp;
 
 namespace DALib.Drawing;
 
-public sealed class EpfFile : Collection<EpfFrame>
+public sealed class EpfFile : Collection<EpfFrame>, ISavable
 {
     public short Height { get; }
     public byte[] UnknownBytes { get; }
@@ -164,6 +166,8 @@ public sealed class EpfFile : Collection<EpfFrame>
 
         return new EpfFile(stream);
     }
+
+    public static Palettized<EpfFile> FromImages(IEnumerable<SKImage> orderedFrames) => FromImages(orderedFrames.ToArray());
 
     public static Palettized<EpfFile> FromImages(params SKImage[] orderedFrames)
     {
