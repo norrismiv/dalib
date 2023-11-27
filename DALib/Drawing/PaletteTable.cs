@@ -55,12 +55,14 @@ public sealed class PaletteTable : ISavable
         }
     }
 
-    public int GetPaletteNumber(int tileNumber)
+    public void Add(int id, int paletteNumber) => Overrides[id] = paletteNumber;
+
+    public int GetPaletteNumber(int id)
     {
-        if (Overrides.TryGetValue(tileNumber, out var paletteNumber))
+        if (Overrides.TryGetValue(id, out var paletteNumber))
             return paletteNumber;
 
-        if (Entries.TryGetValue(tileNumber, out paletteNumber))
+        if (Entries.TryGetValue(id, out paletteNumber))
             return paletteNumber;
 
         return 0;
@@ -99,31 +101,36 @@ public sealed class PaletteTable : ISavable
         foreach (var kvp in Overrides)
             entries[kvp.Key] = kvp.Value;
 
-        var orderedKeys = entries.Keys.Order().ToArray();
-        var ranges = new List<Range>();
+        var orderedEntries = entries.OrderBy(kvp => kvp.Key);
 
-        //extract ranges of consecutive keys
-        for (var i = 0; i < orderedKeys.Length; ++i)
+        foreach (var set in orderedEntries.GroupBy(kvp => kvp.Value))
         {
-            var start = orderedKeys[i];
+            var orderedKeys = set.Select(kvp => kvp.Key).Order().ToArray();
+            var ranges = new List<Range>();
 
-            while ((i < (orderedKeys.Length - 1)) && ((orderedKeys[i] + 1) == orderedKeys[i + 1]))
-                i++;
+            //extract ranges of consecutive keys for the same palette
+            for (var i = 0; i < orderedKeys.Length; ++i)
+            {
+                var start = orderedKeys[i];
 
-            var end = orderedKeys[i];
-            ranges.Add(new Range(start, end));
-        }
+                while ((i < (orderedKeys.Length - 1)) && ((orderedKeys[i] + 1) == orderedKeys[i + 1]))
+                    i++;
 
-        using var writer = new StreamWriter(stream, leaveOpen: true);
+                var end = orderedKeys[i];
+                ranges.Add(new Range(start, end));
+            }
 
-        foreach (var range in ranges)
-        {
-            var paletteId = entries[range.Start.Value];
+            using var writer = new StreamWriter(stream, leaveOpen: true);
 
-            writer.WriteLine(
-                range.Start.Value == range.End.Value
-                    ? $"{range.Start.Value} {paletteId}"
-                    : $"{range.Start.Value} {range.End.Value} {paletteId}");
+            foreach (var range in ranges)
+            {
+                var paletteId = set.Key;
+
+                writer.WriteLine(
+                    range.Start.Value == range.End.Value
+                        ? $"{range.Start.Value} {paletteId}"
+                        : $"{range.Start.Value} {range.End.Value} {paletteId}");
+            }
         }
     }
     #endregion

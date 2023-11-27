@@ -9,7 +9,7 @@ public static class SKImageExtensions
 {
     public static byte[] GetPalettizedPixelData(this SKImage image, Palette palette)
     {
-        var colorMap = palette.Select((c, i) => (c, i)).ToDictionary(set => set.c, c => (byte)c.i);
+        var colorMap = palette.Select((c, i) => (c, i)).DistinctBy(set => set.c).ToDictionary(set => set.c, c => (byte)c.i);
         var pixelData = new byte[image.Width * image.Height];
 
         for (var y = 0; y < image.Height; ++y)

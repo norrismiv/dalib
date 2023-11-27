@@ -22,10 +22,16 @@ public sealed class Palette : Collection<SKColor>, ISavable
     }
 
     internal Palette()
-        : this(Enumerable.Repeat(SKColor.Empty, CONSTANTS.COLORS_PER_PALETTE)) { }
+        : base(Enumerable.Repeat(SKColor.Empty, CONSTANTS.COLORS_PER_PALETTE).ToList()) { }
 
     internal Palette(IEnumerable<SKColor> colors)
-        : base(colors.ToList()) { }
+        : this()
+    {
+        var index = 0;
+
+        foreach (var color in colors)
+            this[index++] = color;
+    }
 
     public Palette Dye(ColorTableEntry colorTableEntry)
     {

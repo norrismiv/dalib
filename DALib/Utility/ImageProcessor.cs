@@ -43,13 +43,14 @@ public static class ImageProcessor
 
         using var quantizedBitmap = new SKBitmap(image.Info.WithColorType(colorType));
 
-        bitmap.ExtractSubset(
-            quantizedBitmap,
-            new SKRectI(
-                0,
-                0,
-                image.Width,
-                image.Height));
+        for (var y = 0; y < image.Height; y++)
+        {
+            for (var x = 0; x < image.Width; x++)
+            {
+                var color = bitmap.GetPixel(x, y);
+                quantizedBitmap.SetPixel(x, y, session.GetQuantizedColor(color.ToColor32()).ToSKColor());
+            }
+        }
 
         var quantizedImage = SKImage.FromBitmap(quantizedBitmap);
 
@@ -66,11 +67,8 @@ public static class ImageProcessor
 
         //create a mosaic of all of the individual images
         using var mosaic = CreateMosaic(colorType, PADDING, images);
-        using var bitmap = SKBitmap.FromImage(mosaic);
-
-        //quantize the mosaic
-        IQuantizer quantizer = OptimizedPaletteQuantizer.Wu(alphaThreshold: 0);
-        using var session = quantizer.Initialize(bitmap.GetReadableBitmapData());
+        using var quantizedMosaic = Quantize(colorType, mosaic);
+        using var bitmap = SKBitmap.FromImage(quantizedMosaic.Entity);
 
         var quantizedImages = new List<SKImage>();
         var x = 0;
@@ -98,7 +96,7 @@ public static class ImageProcessor
         return new Palettized<SKImageCollection>
         {
             Entity = new SKImageCollection(quantizedImages),
-            Palette = session.Palette!.ToDALibPalette()
+            Palette = quantizedMosaic.Palette
         };
     }
 }

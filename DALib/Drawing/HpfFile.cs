@@ -18,7 +18,7 @@ public sealed class HpfFile : ISavable
     public byte[] HeaderBytes { get; }
     public int Height => Data.Length / CONSTANTS.HPF_TILE_WIDTH;
 
-    private HpfFile(byte[] headerBytes, byte[] data)
+    public HpfFile(byte[] headerBytes, byte[] data)
     {
         HeaderBytes = headerBytes;
         Data = data;
@@ -69,7 +69,7 @@ public sealed class HpfFile : ISavable
     {
         using var quantized = ImageProcessor.Quantize(SKColorType.Rgba8888, image);
 
-        (var newImage, var palette) = ImageProcessor.Quantize(SKColorType.Rgba8888, image);
+        (var newImage, var palette) = quantized;
 
         return new Palettized<HpfFile>
         {

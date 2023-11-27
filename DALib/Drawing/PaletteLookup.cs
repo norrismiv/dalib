@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using DALib.Data;
 using DALib.Definitions;
 using DALib.Extensions;
@@ -9,6 +10,8 @@ public sealed class PaletteLookup
 {
     public required Dictionary<int, Palette> Palettes { get; init; }
     public required PaletteTable Table { get; init; }
+
+    public int GetNextPaletteId() => Palettes.Keys.Max() + 1;
 
     public Palette GetPaletteForId(int id)
     {

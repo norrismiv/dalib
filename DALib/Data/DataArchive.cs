@@ -85,6 +85,9 @@ public sealed class DataArchive() : KeyedCollection<string, DataArchiveEntry>(St
     {
         ThrowIfDisposed();
 
+        if (DataStream is not MemoryStream)
+            throw new InvalidOperationException("DataArchive must be in memory to patch (use cacheArchive=true)");
+
         //if an entry exists with the same name, remove it
         Remove(entryName);
 
