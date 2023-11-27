@@ -76,7 +76,7 @@ public sealed class Tileset : Collection<Tile>, ISavable
         if (images.Any(img => (img.Height * img.Width) != CONSTANTS.TILE_SIZE))
             throw new InvalidDataException("All images must be 56x27");
 
-        using var quantized = ImageProcessor.QuantizeMultiple(SKColorType.Rgba8888, images);
+        using var quantized = ImageProcessor.QuantizeMultiple(QuantizerOptions.Default, images);
         (var quantizedImages, var palette) = quantized;
 
         var tileset = new Tileset();

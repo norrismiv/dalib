@@ -22,7 +22,9 @@ public sealed class Palette : Collection<SKColor>, ISavable
     }
 
     internal Palette()
-        : base(Enumerable.Repeat(SKColor.Empty, CONSTANTS.COLORS_PER_PALETTE).ToList()) { }
+        : base(
+            Enumerable.Repeat(SKColor.Empty, CONSTANTS.COLORS_PER_PALETTE)
+                      .ToList()) { }
 
     internal Palette(IEnumerable<SKColor> colors)
         : this()
@@ -33,12 +35,12 @@ public sealed class Palette : Collection<SKColor>, ISavable
             this[index++] = color;
     }
 
-    public Palette Dye(ColorTableEntry colorTableEntry)
+    public Palette Dye(ColorTableEntry colorTableEntry, int dyeIndexStart = CONSTANTS.PALETTE_DYE_INDEX_START)
     {
         var dyedPalette = new Palette(this);
 
         for (var i = 0; i < colorTableEntry.Colors.Length; ++i)
-            dyedPalette[CONSTANTS.PALETTE_DYE_INDEX_START + i] = colorTableEntry.Colors[i];
+            dyedPalette[dyeIndexStart + i] = colorTableEntry.Colors[i];
 
         return dyedPalette;
     }

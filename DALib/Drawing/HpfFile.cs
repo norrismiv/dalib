@@ -35,8 +35,11 @@ public sealed class HpfFile : ISavable
         if (signature == 0xFF02AA55)
             Compression.DecompressHpf(ref buffer);
 
-        HeaderBytes = buffer[..8].ToArray();
-        Data = buffer[8..].ToArray();
+        HeaderBytes = buffer[..8]
+            .ToArray();
+
+        Data = buffer[8..]
+            .ToArray();
     }
 
     #region SaveTo
@@ -67,7 +70,7 @@ public sealed class HpfFile : ISavable
     #region LoadFrom
     public static Palettized<HpfFile> FromImage(SKImage image)
     {
-        using var quantized = ImageProcessor.Quantize(SKColorType.Rgba8888, image);
+        using var quantized = ImageProcessor.Quantize(QuantizerOptions.Default, image);
 
         (var newImage, var palette) = quantized;
 

@@ -155,7 +155,7 @@ public sealed class SpfFile : Collection<SpfFrame>, ISavable
 
     public static SpfFile FromImages(params SKImage[] orderedFrames)
     {
-        using var quantized = ImageProcessor.QuantizeMultiple(SKColorType.Rgba8888, orderedFrames);
+        using var quantized = ImageProcessor.QuantizeMultiple(QuantizerOptions.Default, orderedFrames);
         (var images, var palette) = quantized;
 
         var spfFile = new SpfFile(palette, palette);

@@ -55,9 +55,6 @@ public sealed class ColorTable() : KeyedCollection<int, ColorTableEntry>
     protected override int GetKeyForItem(ColorTableEntry item) => item.ColorIndex;
     #endregion
 
-    #region SaveTo
-    #endregion
-
     #region LoadFrom
     public static ColorTable FromEntry(DataArchiveEntry entry)
     {

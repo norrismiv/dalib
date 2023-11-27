@@ -35,20 +35,45 @@ public static class ImageProcessor
         return SKImage.FromBitmap(bitmap);
     }
 
-    public static Palettized<SKImage> Quantize(SKColorType colorType, SKImage image)
+    public static Palettized<SKImage> Quantize(QuantizerOptions options, SKImage image)
     {
         using var bitmap = SKBitmap.FromImage(image);
-        IQuantizer quantizer = OptimizedPaletteQuantizer.Wu(alphaThreshold: 0);
-        using var session = quantizer.Initialize(bitmap.GetReadableBitmapData());
+        IQuantizer quantizer = OptimizedPaletteQuantizer.Wu(options.MaxColors, alphaThreshold: 0);
+        var source = bitmap.GetReadableBitmapData();
 
-        using var quantizedBitmap = new SKBitmap(image.Info.WithColorType(colorType));
+        using var qSession = quantizer.Initialize(source);
+        using var quantizedBitmap = new SKBitmap(image.Info.WithColorType(options.ColorType));
 
-        for (var y = 0; y < image.Height; y++)
+        //if a ditherer was specified, use it
+        if (options.Ditherer is not null)
         {
-            for (var x = 0; x < image.Width; x++)
+            using var dSession = options.Ditherer!.Initialize(source, qSession);
+
+            for (var y = 0; y < image.Height; y++)
             {
-                var color = bitmap.GetPixel(x, y);
-                quantizedBitmap.SetPixel(x, y, session.GetQuantizedColor(color.ToColor32()).ToSKColor());
+                for (var x = 0; x < image.Width; x++)
+                {
+                    var color = bitmap.GetPixel(x, y);
+
+                    var ditheredColor = dSession.GetDitheredColor(color.ToColor32(), x, y)
+                                                .ToSKColor();
+                    quantizedBitmap.SetPixel(x, y, ditheredColor);
+                }
+            }
+        } else //otherwise, just quantize the image
+        {
+            for (var y = 0; y < image.Height; y++)
+            {
+                for (var x = 0; x < image.Width; x++)
+                {
+                    var color = bitmap.GetPixel(x, y);
+
+                    quantizedBitmap.SetPixel(
+                        x,
+                        y,
+                        qSession.GetQuantizedColor(color.ToColor32())
+                                .ToSKColor());
+                }
             }
         }
 
@@ -57,17 +82,17 @@ public static class ImageProcessor
         return new Palettized<SKImage>
         {
             Entity = quantizedImage,
-            Palette = session.Palette!.ToDALibPalette()
+            Palette = qSession.Palette!.ToDALibPalette()
         };
     }
 
-    public static Palettized<SKImageCollection> QuantizeMultiple(SKColorType colorType, params SKImage[] images)
+    public static Palettized<SKImageCollection> QuantizeMultiple(QuantizerOptions options, params SKImage[] images)
     {
         const int PADDING = 1;
 
         //create a mosaic of all of the individual images
-        using var mosaic = CreateMosaic(colorType, PADDING, images);
-        using var quantizedMosaic = Quantize(colorType, mosaic);
+        using var mosaic = CreateMosaic(options.ColorType, PADDING, images);
+        using var quantizedMosaic = Quantize(options, mosaic);
         using var bitmap = SKBitmap.FromImage(quantizedMosaic.Entity);
 
         var quantizedImages = new List<SKImage>();
@@ -76,7 +101,7 @@ public static class ImageProcessor
         for (var i = 0; i < images.Length; i++)
         {
             var originalImage = images[i];
-            using var quantizedBitmap = new SKBitmap(originalImage.Info.WithColorType(colorType));
+            using var quantizedBitmap = new SKBitmap(originalImage.Info.WithColorType(options.ColorType));
 
             //extract the quantized parts out of the mosaic
             bitmap.ExtractSubset(

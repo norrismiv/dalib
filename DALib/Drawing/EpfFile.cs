@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using DALib.Abstractions;
 using DALib.Data;
+using DALib.Definitions;
 using DALib.Extensions;
 using DALib.Utility;
 using SkiaSharp;
@@ -167,14 +168,25 @@ public sealed class EpfFile : Collection<EpfFrame>, ISavable
         return new EpfFile(stream);
     }
 
-    public static Palettized<EpfFile> FromImages(IEnumerable<SKImage> orderedFrames) => FromImages(orderedFrames.ToArray());
+    public static Palettized<EpfFile> FromImages(IEnumerable<SKImage> orderedFrames, int maxColors = CONSTANTS.COLORS_PER_PALETTE)
+        => FromImages(maxColors, orderedFrames.ToArray());
 
-    public static Palettized<EpfFile> FromImages(params SKImage[] orderedFrames)
+    public static Palettized<EpfFile> FromImages(int maxColors, params SKImage[] orderedFrames)
     {
-        using var quantized = ImageProcessor.QuantizeMultiple(SKColorType.Rgba8888, orderedFrames);
+        var options = new QuantizerOptions
+        {
+            MaxColors = maxColors
+        };
+
+        using var quantized = ImageProcessor.QuantizeMultiple(options, orderedFrames);
+
         (var images, var palette) = quantized;
-        var imageWidth = (short)orderedFrames.Select(img => img.Width).Max();
-        var imageHeight = (short)orderedFrames.Select(img => img.Height).Max();
+
+        var imageWidth = (short)orderedFrames.Select(img => img.Width)
+                                             .Max();
+
+        var imageHeight = (short)orderedFrames.Select(img => img.Height)
+                                              .Max();
         var epfFile = new EpfFile(imageWidth, imageHeight);
 
         for (var i = 0; i < images.Count; i++)

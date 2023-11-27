@@ -114,6 +114,8 @@ public sealed class DataArchive() : KeyedCollection<string, DataArchiveEntry>(St
     #region SaveTo
     public void Save(string path)
     {
+        ThrowIfDisposed();
+
         using var stream = File.Open(
             path.WithExtension(".dat"),
             new FileStreamOptions
@@ -130,6 +132,8 @@ public sealed class DataArchive() : KeyedCollection<string, DataArchiveEntry>(St
 
     public void Save(Stream stream)
     {
+        ThrowIfDisposed();
+
         const int HEADER_LENGTH = 4;
         const int ENTRY_HEADER_LENGTH = 4 + CONSTANTS.DATA_ARCHIVE_ENTRY_NAME_LENGTH;
         using var writer = new BinaryWriter(stream, Encoding.Default, true);
@@ -141,7 +145,8 @@ public sealed class DataArchive() : KeyedCollection<string, DataArchiveEntry>(St
         //plus 4 bytes for the final entry's end address (which could also be considered the total number of bytes)
         var address = HEADER_LENGTH + Count * ENTRY_HEADER_LENGTH + 4;
 
-        var orderedEntries = this.OrderBy(entry => entry.EntryName).ToList();
+        var orderedEntries = this.OrderBy(entry => entry.EntryName)
+                                 .ToList();
 
         foreach (var entry in orderedEntries)
         {
@@ -169,6 +174,21 @@ public sealed class DataArchive() : KeyedCollection<string, DataArchiveEntry>(St
         foreach (var entry in orderedEntries)
         {
             using var segment = entry.ToStreamSegment();
+            segment.CopyTo(stream);
+        }
+    }
+
+    public void ExtractTo(string dir)
+    {
+        ThrowIfDisposed();
+
+        foreach (var entry in this)
+        {
+            var path = Path.Combine(dir, entry.EntryName);
+
+            using var stream = File.Create(path);
+            using var segment = entry.ToStreamSegment();
+
             segment.CopyTo(stream);
         }
     }
