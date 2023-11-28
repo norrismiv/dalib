@@ -1,16 +1,37 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
-        <TargetFramework>net8.0</TargetFramework>
-        <OutputType>Library</OutputType>
-        <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+        <TargetFrameworks>net8.0</TargetFrameworks>
+       <PackageId>DALib</PackageId>
+        <PackageVersion>0.1.0</PackageVersion>
+        <PackageReadmeFile>README.md</PackageReadmeFile>
+        <PackageLicenseExpression>MIT</PackageLicenseExpression>
+        <PackageIcon>hybrasyl-512x512.png</PackageIcon>
+        <ProjectUrl>https://www.hybrasyl</ProjectUrl>
+        <Version>0.1.0</Version>
+        <IncludeSymbols>true</IncludeSymbols>
+        <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+        <Authors>See CONTRIBUTORS.md</Authors>
+        <Copyright>See CONTRIBUTORS.md</Copyright>
+        <RepositoryUrl>https://github.com/eriscorp/dalib</RepositoryUrl>
+        <Tags>hybrasyl; dalib; epf; spf; hpf; doomvas;</Tags>
+        <Icon>hybrasyl-512x512.png</Icon>
+        <Title>Dark Ages Library</Title>
+        <Description>A library for processing DOOMVAS v1 client data (such as Dark Ages MPF/EPF/SPF/DAT formats)</Description>
+        <IsPackable>true</IsPackable>
         <Nullable>enable</Nullable>
+        <GenerateAssemblyInfo>false</GenerateAssemblyInfo>   
     </PropertyGroup>
+    <ItemGroup>
+        <None Include="$(MSBuildThisFileDirectory)README.md" Pack="true" PackagePath="" />
+    </ItemGroup>
+    <ItemGroup>
+        <None Include="hybrasyl-512x512.png" Pack="true" PackagePath="" />
+    </ItemGroup>
     <ItemGroup>
         <PackageReference Include="KGySoft.Drawing.SkiaSharp" Version="7.2.0"/>
         <PackageReference Include="SkiaSharp" Version="2.88.6"/>
         <PackageReference Include="zlib.net" Version="1.0.4"/>
     </ItemGroup>
-
     <ItemGroup>
         <SupportedPlatform Include="Linux"/>
         <SupportedPlatform Include="macOS"/>
