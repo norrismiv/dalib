@@ -9,7 +9,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
 [assembly: AssemblyProduct("Dark Ages Class Library")]
-[assembly: AssemblyCopyright("Copyright © Kyle Speck& contributors 2017-2023")]
+[assembly: AssemblyCopyright("Copyright © Kyle Speck & contributors 2017-2023")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
