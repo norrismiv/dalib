@@ -1,66 +1,125 @@
-﻿using DALib.Data;
-using System;
+﻿using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Drawing;
-using System.Drawing.Imaging;
 using System.IO;
-using System.Runtime.InteropServices;
+using System.Linq;
 using System.Text;
+using DALib.Abstractions;
+using DALib.Data;
+using DALib.Definitions;
+using DALib.Extensions;
+using SkiaSharp;
 
-namespace DALib.Drawing
+namespace DALib.Drawing;
+
+public sealed class Palette : Collection<SKColor>, ISavable
 {
-    public class Palette
+    private Palette(Stream stream)
     {
-        private const int ColorsPerPalette = 256;
+        using var reader = new BinaryReader(stream, Encoding.Default, true);
 
-        private Color[] _colors;
-        private ReadOnlyCollection<Color> _colorsReadOnly;
+        for (var i = 0; i < CONSTANTS.COLORS_PER_PALETTE; ++i)
+            Add(new SKColor(reader.ReadByte(), reader.ReadByte(), reader.ReadByte()));
+    }
 
-        private Palette()
-        {
-            _colors = new Color[ColorsPerPalette];
-            _colorsReadOnly = new ReadOnlyCollection<Color>(_colors);
-        }
+    internal Palette()
+        : base(
+            Enumerable.Repeat(SKColor.Empty, CONSTANTS.COLORS_PER_PALETTE)
+                      .ToList()) { }
 
-        public Palette(Stream stream)
-        {
-            Init(stream);
-        }
+    internal Palette(IEnumerable<SKColor> colors)
+        : this()
+    {
+        var index = 0;
 
-        public Palette(DataFileEntry dataFileEntry) : this(dataFileEntry.Open())
-        {
-        }
+        foreach (var color in colors)
+            this[index++] = color;
+    }
 
-        public Palette(string fileName) : this(File.OpenRead(fileName))
-        {
-        }
+    public Palette Dye(ColorTableEntry colorTableEntry, int dyeIndexStart = CONSTANTS.PALETTE_DYE_INDEX_START)
+    {
+        var dyedPalette = new Palette(this);
 
-        public ReadOnlyCollection<Color> Colors => _colorsReadOnly;
-        public Color this[int index] => _colors[index];
+        for (var i = 0; i < colorTableEntry.Colors.Length; ++i)
+            dyedPalette[dyeIndexStart + i] = colorTableEntry.Colors[i];
 
-        public Palette Dye(ColorTableEntry colorTableEntry)
-        {
-            var dyedPalette = new Palette();
-            Array.Copy(_colors, dyedPalette._colors, ColorsPerPalette);
-            for (var i = 0; i < colorTableEntry.ColorCount; ++i)
+        return dyedPalette;
+    }
+
+    #region SaveTo
+    public void Save(string path)
+    {
+        using var stream = File.Open(
+            path.WithExtension(".pal"),
+            new FileStreamOptions
             {
-                dyedPalette._colors[i + ColorTable.PaletteStartIndex] = colorTableEntry[i];
-            }
-            return dyedPalette;
+                Access = FileAccess.Write,
+                Mode = FileMode.Create,
+                Options = FileOptions.SequentialScan,
+                Share = FileShare.ReadWrite
+            });
+
+        Save(stream);
+    }
+
+    public void Save(Stream stream)
+    {
+        using var writer = new BinaryWriter(stream, Encoding.Default, true);
+
+        for (var i = 0; i < Count; ++i)
+        {
+            var color = this[i];
+
+            writer.Write(color.Red);
+            writer.Write(color.Green);
+            writer.Write(color.Blue);
         }
 
-        private void Init(Stream stream)
+        //pad the palette with black to 256 colors
+        for (var i = Count; i < CONSTANTS.COLORS_PER_PALETTE; ++i)
         {
-            _colors = new Color[ColorsPerPalette];
-            _colorsReadOnly = new ReadOnlyCollection<Color>(_colors);
-
-            using (var reader = new BinaryReader(stream, Encoding.Default, true))
-            {
-                for (var i = 0; i < ColorsPerPalette; ++i)
-                {
-                    _colors[i] = Color.FromArgb(reader.ReadByte(), reader.ReadByte(), reader.ReadByte());
-                }
-            }
+            writer.Write((byte)0);
+            writer.Write((byte)0);
+            writer.Write((byte)0);
         }
     }
+    #endregion
+
+    #region LoadFrom
+    public static Dictionary<int, Palette> FromArchive(string pattern, DataArchive archive)
+    {
+        var palettes = new Dictionary<int, Palette>();
+
+        foreach (var entry in archive.GetEntries(pattern, ".pal"))
+        {
+            if (!entry.TryGetNumericIdentifier(out var identifier))
+                continue;
+
+            palettes.Add(identifier, FromEntry(entry));
+        }
+
+        return palettes;
+    }
+
+    public static Palette FromEntry(DataArchiveEntry entry)
+    {
+        using var segment = entry.ToStreamSegment();
+
+        return new Palette(segment);
+    }
+
+    public static Palette FromFile(string path)
+    {
+        using var stream = File.Open(
+            path.WithExtension(".pal"),
+            new FileStreamOptions
+            {
+                Access = FileAccess.Read,
+                Mode = FileMode.Open,
+                Options = FileOptions.SequentialScan,
+                Share = FileShare.ReadWrite
+            });
+
+        return new Palette(stream);
+    }
+    #endregion
 }
