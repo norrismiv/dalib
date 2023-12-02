@@ -19,14 +19,14 @@ public sealed class EfaFile : Collection<EfaFrame>, ISavable
 {
     public EfaBlendingType BlendingType { get; set; }
     public int FrameIntervalMs { get; set; }
+    public int Unknown1 { get; set; }
     public byte[] Unknown2 { get; set; }
-    public int Unknown1 { get; }
 
-    private EfaFile()
+    public EfaFile()
     {
         Unknown1 = 0;
         BlendingType = EfaBlendingType.Luminance;
-        FrameIntervalMs = 10000;
+        FrameIntervalMs = 50;
         Unknown2 = new byte[51];
     }
 
@@ -135,8 +135,12 @@ public sealed class EfaFile : Collection<EfaFrame>, ISavable
     public static EfaFile FromImages(params SKImage[] orderedFrames)
     {
         var efaFile = new EfaFile();
-        var imageWidth = orderedFrames.Select(img => img.Width).Max();
-        var imageHeight = orderedFrames.Select(img => img.Height).Max();
+
+        var imageWidth = orderedFrames.Select(img => img.Width)
+                                      .Max();
+
+        var imageHeight = orderedFrames.Select(img => img.Height)
+                                       .Max();
 
         for (var i = 0; i < orderedFrames.Length; i++)
         {
@@ -157,7 +161,8 @@ public sealed class EfaFile : Collection<EfaFrame>, ISavable
                         writer.WriteRgb565Color(color);
                     }
 
-                rawBytes = writer.ToSpan().ToArray();
+                rawBytes = writer.ToSpan()
+                                 .ToArray();
             }
 
             efaFile.Add(
@@ -198,7 +203,8 @@ public sealed class EfaFile : Collection<EfaFrame>, ISavable
 
         decompressor.ReadAtLeast(decompressed, frame.RawSize);
 
-        decompressed[..frame.ByteCount].CopyTo(frame.Data);
+        decompressed[..frame.ByteCount]
+            .CopyTo(frame.Data);
 
         /*
         //Not sure what these numbers are

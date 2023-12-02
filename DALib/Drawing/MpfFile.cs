@@ -61,19 +61,15 @@ public class MpfFile : Collection<MpfFrame>, ISavable
                 var headerBytes = reader.ReadBytes(4);
 
                 //convert those bytes to a number
-                var num = BitConverter.ToInt32(UnknownHeaderBytes);
+                var num = BitConverter.ToInt32(headerBytes);
 
                 //if they equal "4", read 8 more bytes into the header
                 if (num == 4)
                 {
                     var moreBytes = reader.ReadBytes(8);
 
-                    Buffer.BlockCopy(
-                        moreBytes,
-                        0,
-                        headerBytes,
-                        4,
-                        8);
+                    headerBytes = headerBytes.Concat(moreBytes)
+                                             .ToArray();
                 }
 
                 UnknownHeaderBytes = headerBytes;
@@ -116,6 +112,7 @@ public class MpfFile : Collection<MpfFrame>, ISavable
                 break;
             default:
                 stream.Seek(-2, SeekOrigin.Current);
+
                 AttackFrameIndex = reader.ReadByte();
                 AttackFrameCount = reader.ReadByte();
                 StopFrameIndex = reader.ReadByte();

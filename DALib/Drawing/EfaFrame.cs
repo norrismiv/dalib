@@ -2,24 +2,24 @@
 
 public sealed class EfaFrame
 {
-    public int ByteCount { get; init; }
-    public int ByteWidth { get; init; }
-    public required byte[] Data { get; init; }
-    public short FrameHeight { get; init; }
-    public short FrameWidth { get; init; }
-    public short ImageHeight { get; init; }
-    public short ImageWidth { get; init; }
+    public int ByteCount { get; set; }
+    public int ByteWidth { get; set; }
+    public required byte[] Data { get; set; }
+    public short FrameHeight { get; set; }
+    public short FrameWidth { get; set; }
+    public short ImageHeight { get; set; }
+    public short ImageWidth { get; set; }
     public int Offset { get; set; }
-    public int OriginFlags { get; init; }
+    public int OriginFlags { get; set; }
     public short OriginX { get; set; }
     public short OriginY { get; set; }
-    public int Pad1Flags { get; init; }
-    public int Pad2Flags { get; init; }
-    public int RawSize { get; init; }
+    public int Pad1Flags { get; set; }
+    public int Pad2Flags { get; set; }
+    public int RawSize { get; set; }
     public int Size { get; set; }
-    public int Unknown1 { get; init; }
-    public int Unknown2 { get; init; }
-    public int Unknown3 { get; init; }
-    public int Unknown4 { get; init; }
-    public int Unknown5 { get; init; }
+    public int Unknown1 { get; set; }
+    public int Unknown2 { get; set; }
+    public int Unknown3 { get; set; }
+    public int Unknown4 { get; set; }
+    public int Unknown5 { get; set; }
 }

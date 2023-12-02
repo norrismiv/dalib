@@ -15,7 +15,7 @@ public sealed class DataArchive() : KeyedCollection<string, DataArchiveEntry>(St
     private bool IsDisposed;
     internal Stream? DataStream { get; set; }
 
-    private DataArchive(Stream stream)
+    private DataArchive(Stream stream, bool newFormat = false)
         : this()
     {
         DataStream = stream;
@@ -28,8 +28,10 @@ public sealed class DataArchive() : KeyedCollection<string, DataArchiveEntry>(St
         {
             var startAddress = reader.ReadInt32();
 
-            var nameBytes = new byte[CONSTANTS.DATA_ARCHIVE_ENTRY_NAME_LENGTH];
-            _ = reader.Read(nameBytes, 0, CONSTANTS.DATA_ARCHIVE_ENTRY_NAME_LENGTH);
+            var nameLength = newFormat ? 12 : CONSTANTS.DATA_ARCHIVE_ENTRY_NAME_LENGTH;
+
+            var nameBytes = new byte[nameLength];
+            _ = reader.Read(nameBytes, 0, nameLength);
 
             var name = Encoding.ASCII.GetString(nameBytes);
             var nullChar = name.IndexOf('\0');
@@ -37,17 +39,19 @@ public sealed class DataArchive() : KeyedCollection<string, DataArchiveEntry>(St
             if (nullChar > -1)
                 name = name[..nullChar];
 
+            if (newFormat)
+                _ = reader.ReadBytes(20); //idk
+
             var endAddress = reader.ReadInt32();
 
             stream.Seek(-4, SeekOrigin.Current);
 
-            var entry = new DataArchiveEntry(
-                this,
-                name,
-                startAddress,
-                endAddress - startAddress);
-
-            Add(entry);
+            Add(
+                new DataArchiveEntry(
+                    this,
+                    name,
+                    startAddress,
+                    endAddress - startAddress));
         }
     }
 
@@ -237,7 +241,7 @@ public sealed class DataArchive() : KeyedCollection<string, DataArchiveEntry>(St
         return archive;
     }
 
-    public static DataArchive FromFile(string path, bool cacheArchive = false)
+    public static DataArchive FromFile(string path, bool cacheArchive = false, bool newformat = false)
     {
         //if we don't want to cache the archive
         //return an archive that reads using pointers from an open file handle
@@ -252,7 +256,8 @@ public sealed class DataArchive() : KeyedCollection<string, DataArchiveEntry>(St
                         Options = FileOptions.RandomAccess,
                         Share = FileShare.ReadWrite,
                         BufferSize = 8192
-                    }));
+                    }),
+                newformat);
 
         //if we do want to cache the archive
         //copy the whole file into a memorystream and use that
@@ -273,7 +278,7 @@ public sealed class DataArchive() : KeyedCollection<string, DataArchiveEntry>(St
 
         memory.Seek(0, SeekOrigin.Begin);
 
-        return new DataArchive(memory);
+        return new DataArchive(memory, newformat);
     }
     #endregion
 

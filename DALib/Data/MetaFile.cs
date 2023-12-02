@@ -11,10 +11,12 @@ namespace DALib.Data;
 
 public sealed class MetaFile : Collection<MetaFileEntry>, ISavable
 {
-    public MetaFile(Stream stream, bool leaveOpen = false)
+    public MetaFile() { }
+
+    private MetaFile(Stream stream)
     {
         var encoding = CodePagesEncodingProvider.Instance.GetEncoding(949)!;
-        using var reader = new BinaryReader(stream, encoding, leaveOpen);
+        using var reader = new BinaryReader(stream, encoding, true);
 
         var entryCount = reader.ReadUInt16(true);
 
