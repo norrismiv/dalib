@@ -8,6 +8,7 @@ on:
 
 jobs:
   build:
+    if: github.repository == 'eriscorp/dalib'
     runs-on: ubuntu-latest
     environment: deploy
     strategy:

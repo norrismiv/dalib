@@ -40,3 +40,15 @@ public enum EfaBlendingType : byte
     /// </summary>
     NotSure = 3
 }
+
+public enum MpfHeaderType
+{
+    Unknown = -1,
+    None = 0
+}
+
+public enum MpfFormatType
+{
+    MultipleAttacks = -1,
+    SingleAttack = 0
+}

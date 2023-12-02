@@ -30,7 +30,6 @@
     <ItemGroup>
         <PackageReference Include="KGySoft.Drawing.SkiaSharp" Version="7.2.0"/>
         <PackageReference Include="SkiaSharp" Version="2.88.6"/>
-        <PackageReference Include="zlib.net" Version="1.0.4"/>
     </ItemGroup>
     <ItemGroup>
         <SupportedPlatform Include="Linux"/>
