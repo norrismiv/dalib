@@ -136,11 +136,8 @@ public sealed class EfaFile : Collection<EfaFrame>, ISavable
     {
         var efaFile = new EfaFile();
 
-        var imageWidth = orderedFrames.Select(img => img.Width)
-                                      .Max();
-
-        var imageHeight = orderedFrames.Select(img => img.Height)
-                                       .Max();
+        var imageWidth = orderedFrames.Max(img => img.Width);
+        var imageHeight = orderedFrames.Max(img => img.Height);
 
         for (var i = 0; i < orderedFrames.Length; i++)
         {
