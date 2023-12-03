@@ -3,26 +3,28 @@
 public sealed class MpfFrame
 {
     public short Bottom { get; set; }
-    public required byte[] Data { get; set; }
-    public short Left { get; set; }
 
     /// <summary>
-    ///     This controls the X coordinate of the image in which the image will be flipped on when facing left or right
+    ///     The X coordinate of the image that lines up with the center of the draw area. The image will be reflected on this X
+    ///     coordinate when facing left or right
     /// </summary>
     /// <remarks>
     ///     This value is generally exactly(or very close to) ImageWidth / 2
     /// </remarks>
-    public short ReflectionX { get; set; }
+    public short CenterX { get; set; }
 
     /// <summary>
-    ///     This controls the Y coordinate of the image in which it might be reflected, but in practicality it represents the
-    ///     bottom of the image.
+    ///     The Y coordinate of the image that lines up with the center of the draw area. Generally, the bottom of the image
+    ///     sits on the center of the draw area
     /// </summary>
     /// <remarks>
     ///     This value is generally close to ImageHeight. Depending on how much space was left at the bottom of the frame vs
     ///     the total height of the image, you may need to subtract a small number of pixels (1-15)
     /// </remarks>
-    public short ReflectionY { get; set; }
+    public short CenterY { get; set; }
+
+    public required byte[] Data { get; set; }
+    public short Left { get; set; }
 
     public short Right { get; set; }
     public int StartAddress { get; set; }

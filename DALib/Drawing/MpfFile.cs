@@ -132,8 +132,8 @@ public sealed class MpfFile : Collection<MpfFrame>, ISavable
             var top = reader.ReadInt16();
             var right = reader.ReadInt16();
             var bottom = reader.ReadInt16();
-            var reflectionX = reader.ReadInt16();
-            var reflectionY = reader.ReadInt16();
+            var centerX = reader.ReadInt16();
+            var centerY = reader.ReadInt16();
             var startAddress = reader.ReadInt32();
 
             if ((left == -1) && (top == -1))
@@ -154,8 +154,8 @@ public sealed class MpfFile : Collection<MpfFrame>, ISavable
                     Left = left,
                     Bottom = bottom,
                     Right = right,
-                    ReflectionX = reflectionX,
-                    ReflectionY = reflectionY,
+                    CenterX = centerX,
+                    CenterY = centerY,
                     StartAddress = startAddress,
                     Data = new byte[frameWidth * frameHeight]
                 });
@@ -235,8 +235,8 @@ public sealed class MpfFile : Collection<MpfFrame>, ISavable
             writer.Write(frame.Top);
             writer.Write(frame.Right);
             writer.Write(frame.Bottom);
-            writer.Write(frame.ReflectionX);
-            writer.Write(frame.ReflectionY);
+            writer.Write(frame.CenterX);
+            writer.Write(frame.CenterY);
 
             frame.StartAddress = startAddress;
             startAddress += frame.Data.Length;
