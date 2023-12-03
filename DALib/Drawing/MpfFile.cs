@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Buffers.Binary;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
@@ -14,7 +13,7 @@ using SkiaSharp;
 
 namespace DALib.Drawing;
 
-public class MpfFile : Collection<MpfFrame>, ISavable
+public sealed class MpfFile : Collection<MpfFrame>, ISavable
 {
     public byte Attack2FrameCount { get; set; }
     public byte Attack2StartIndex { get; set; }
@@ -133,8 +132,8 @@ public class MpfFile : Collection<MpfFrame>, ISavable
             var top = reader.ReadInt16();
             var right = reader.ReadInt16();
             var bottom = reader.ReadInt16();
-            var xOffset = reader.ReadInt16(true);
-            var yOffset = reader.ReadInt16(true);
+            var reflectionX = reader.ReadInt16();
+            var reflectionY = reader.ReadInt16();
             var startAddress = reader.ReadInt32();
 
             if ((left == -1) && (top == -1))
@@ -155,8 +154,8 @@ public class MpfFile : Collection<MpfFrame>, ISavable
                     Left = left,
                     Bottom = bottom,
                     Right = right,
-                    XOffset = xOffset,
-                    YOffset = yOffset,
+                    ReflectionX = reflectionX,
+                    ReflectionY = reflectionY,
                     StartAddress = startAddress,
                     Data = new byte[frameWidth * frameHeight]
                 });
@@ -204,7 +203,6 @@ public class MpfFile : Collection<MpfFrame>, ISavable
         writer.Write(this.Sum(frame => frame.Data.Length));
         writer.Write(WalkFrameIndex);
         writer.Write(WalkFrameCount);
-        writer.Write((short)FormatType);
 
         if (FormatType == MpfFormatType.MultipleAttacks)
         {
@@ -229,11 +227,6 @@ public class MpfFile : Collection<MpfFrame>, ISavable
             writer.Write(StopMotionProbability);
         }
 
-        //write palette number
-        writer.Write(-1);
-        writer.Write(new byte[8]);
-        writer.Write(PaletteNumber);
-
         var startAddress = 0;
 
         foreach (var frame in this)
@@ -242,14 +235,21 @@ public class MpfFile : Collection<MpfFrame>, ISavable
             writer.Write(frame.Top);
             writer.Write(frame.Right);
             writer.Write(frame.Bottom);
-            writer.Write(BinaryPrimitives.ReverseEndianness(frame.XOffset));
-            writer.Write(BinaryPrimitives.ReverseEndianness(frame.YOffset));
+            writer.Write(frame.ReflectionX);
+            writer.Write(frame.ReflectionY);
 
             frame.StartAddress = startAddress;
             startAddress += frame.Data.Length;
 
             writer.Write(frame.StartAddress);
         }
+
+        //write palette "frame"
+        //byte.MaxValue == 0xFF, "-1" as a short is 0xFFFF
+        var paletteFrameBuffer = Enumerable.Repeat(byte.MaxValue, 12)
+                                           .ToArray();
+        writer.Write(paletteFrameBuffer);
+        writer.Write(PaletteNumber);
 
         foreach (var frame in this)
             writer.Write(frame.Data);
@@ -270,7 +270,7 @@ public class MpfFile : Collection<MpfFrame>, ISavable
         var height = (short)images.Max(img => img.Height);
 
         var mpfFile = new MpfFile(
-            MpfHeaderType.None,
+            formatType == MpfFormatType.SingleAttack ? MpfHeaderType.None : MpfHeaderType.Unknown,
             formatType,
             width,
             height);
