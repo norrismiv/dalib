@@ -14,8 +14,8 @@ namespace DALib.Drawing;
 
 public sealed class HpfFile : ISavable
 {
-    public byte[] Data { get; }
-    public byte[] HeaderBytes { get; }
+    public byte[] Data { get; set; }
+    public byte[] HeaderBytes { get; set; }
     public int Height => Data.Length / CONSTANTS.HPF_TILE_WIDTH;
 
     public HpfFile(byte[] headerBytes, byte[] data)

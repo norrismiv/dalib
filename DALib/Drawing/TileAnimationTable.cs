@@ -12,6 +12,8 @@ public class TileAnimationTable : ISavable
 {
     private readonly Dictionary<int, TileAnimationEntry> Entries = new();
 
+    public TileAnimationTable() { }
+
     private TileAnimationTable(Stream stream)
     {
         using var reader = new StreamReader(stream, Encoding.Default, leaveOpen: true);
@@ -28,7 +30,8 @@ public class TileAnimationTable : ISavable
 
             for (var i = 0; i < split.Length; ++i)
             {
-                var valueStr = split[i].Trim();
+                var valueStr = split[i]
+                    .Trim();
 
                 if (!ushort.TryParse(valueStr, out var value))
                     continue;

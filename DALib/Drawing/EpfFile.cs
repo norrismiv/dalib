@@ -14,11 +14,11 @@ namespace DALib.Drawing;
 
 public sealed class EpfFile : Collection<EpfFrame>, ISavable
 {
-    public short Height { get; }
-    public byte[] UnknownBytes { get; }
-    public short Width { get; }
+    public short Height { get; set; }
+    public byte[] UnknownBytes { get; set; }
+    public short Width { get; set; }
 
-    private EpfFile(short width, short height)
+    public EpfFile(short width, short height)
     {
         Height = height;
         Width = width;

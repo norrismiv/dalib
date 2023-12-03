@@ -141,7 +141,7 @@ public class Graphics
         using var lfgCache = new SKImageCache<int>();
         using var rfgCache = new SKImageCache<int>();
 
-        //calculate width and height based on orthogonal view
+        //calculate width and height based on isometric view
         var width = map.Width * CONSTANTS.TILE_WIDTH;
         var height = map.Height * (CONSTANTS.TILE_HEIGHT + 1) + FOREGROUND_PADDING;
         using var bitmap = new SKBitmap(width, height);

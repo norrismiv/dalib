@@ -15,13 +15,13 @@ namespace DALib.Drawing;
 
 public sealed class SpfFile : Collection<SpfFrame>, ISavable
 {
-    public uint ColorFormat { get; }
-    public Palette PrimaryColors { get; }
-    public Palette SecondaryColors { get; }
-    public uint Unknown1 { get; }
-    public uint Unknown2 { get; }
+    public uint ColorFormat { get; set; }
+    public Palette PrimaryColors { get; set; }
+    public Palette SecondaryColors { get; set; }
+    public uint Unknown1 { get; set; }
+    public uint Unknown2 { get; set; }
 
-    private SpfFile(Palette primaryColors, Palette secondaryColors)
+    public SpfFile(Palette primaryColors, Palette secondaryColors)
     {
         PrimaryColors = primaryColors;
         SecondaryColors = secondaryColors;

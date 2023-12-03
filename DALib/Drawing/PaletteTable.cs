@@ -20,7 +20,7 @@ public sealed class PaletteTable : ISavable
     private readonly Dictionary<int, int> Entries = new();
     private readonly Dictionary<int, int> Overrides = new();
 
-    private PaletteTable() { }
+    public PaletteTable() { }
 
     private PaletteTable(Stream stream)
     {
@@ -77,6 +77,12 @@ public sealed class PaletteTable : ISavable
             Entries[kvp.Key] = kvp.Value;
     }
 
+    public void Remove(int id)
+    {
+        Overrides.Remove(id);
+        Entries.Remove(id);
+    }
+
     #region SaveTo
     public void Save(string path)
     {
@@ -105,7 +111,9 @@ public sealed class PaletteTable : ISavable
 
         foreach (var set in orderedEntries.GroupBy(kvp => kvp.Value))
         {
-            var orderedKeys = set.Select(kvp => kvp.Key).Order().ToArray();
+            var orderedKeys = set.Select(kvp => kvp.Key)
+                                 .Order()
+                                 .ToArray();
             var ranges = new List<Range>();
 
             //extract ranges of consecutive keys for the same palette

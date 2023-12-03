@@ -21,12 +21,12 @@ public sealed class Palette : Collection<SKColor>, ISavable
             Add(new SKColor(reader.ReadByte(), reader.ReadByte(), reader.ReadByte()));
     }
 
-    internal Palette()
+    public Palette()
         : base(
             Enumerable.Repeat(SKColor.Empty, CONSTANTS.COLORS_PER_PALETTE)
                       .ToList()) { }
 
-    internal Palette(IEnumerable<SKColor> colors)
+    public Palette(IEnumerable<SKColor> colors)
         : this()
     {
         var index = 0;

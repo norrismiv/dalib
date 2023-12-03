@@ -14,7 +14,7 @@ namespace DALib.Drawing;
 
 public sealed class Tileset : Collection<Tile>, ISavable
 {
-    private Tileset() { }
+    public Tileset() { }
 
     private Tileset(Stream stream)
     {
