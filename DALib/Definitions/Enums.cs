@@ -52,3 +52,10 @@ public enum MpfFormatType
     MultipleAttacks = -1,
     SingleAttack = 0
 }
+
+public enum ControlType
+{
+    Anchor = 0,
+    Button = 3,
+    ReadonlyTextBox = 7
+}

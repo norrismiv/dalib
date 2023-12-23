@@ -151,11 +151,11 @@ public sealed class SpfFile : Collection<SpfFrame>, ISavable
     #endregion
 
     #region LoadFrom
-    public static SpfFile FromImages(IEnumerable<SKImage> orderedFrames) => FromImages(orderedFrames.ToArray());
+    public static SpfFile FromImages(QuantizerOptions options, IEnumerable<SKImage> orderedFrames) => FromImages(options, orderedFrames.ToArray());
 
-    public static SpfFile FromImages(params SKImage[] orderedFrames)
+    public static SpfFile FromImages(QuantizerOptions options, params SKImage[] orderedFrames)
     {
-        using var quantized = ImageProcessor.QuantizeMultiple(QuantizerOptions.Default, orderedFrames);
+        using var quantized = ImageProcessor.QuantizeMultiple(options, orderedFrames);
         (var images, var palette) = quantized;
 
         var spfFile = new SpfFile(palette, palette);

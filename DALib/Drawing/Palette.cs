@@ -23,7 +23,7 @@ public sealed class Palette : Collection<SKColor>, ISavable
 
     public Palette()
         : base(
-            Enumerable.Repeat(SKColor.Empty, CONSTANTS.COLORS_PER_PALETTE)
+            Enumerable.Repeat(SKColors.Transparent, CONSTANTS.COLORS_PER_PALETTE)
                       .ToList()) { }
 
     public Palette(IEnumerable<SKColor> colors)

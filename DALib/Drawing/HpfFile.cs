@@ -68,9 +68,9 @@ public sealed class HpfFile : ISavable
     #endregion
 
     #region LoadFrom
-    public static Palettized<HpfFile> FromImage(SKImage image)
+    public static Palettized<HpfFile> FromImage(QuantizerOptions options, SKImage image)
     {
-        using var quantized = ImageProcessor.Quantize(QuantizerOptions.Default, image);
+        using var quantized = ImageProcessor.Quantize(options, image);
 
         (var newImage, var palette) = quantized;
 

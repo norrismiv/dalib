@@ -168,16 +168,11 @@ public sealed class EpfFile : Collection<EpfFrame>, ISavable
         return new EpfFile(stream);
     }
 
-    public static Palettized<EpfFile> FromImages(IEnumerable<SKImage> orderedFrames, int maxColors = CONSTANTS.COLORS_PER_PALETTE)
-        => FromImages(maxColors, orderedFrames.ToArray());
+    public static Palettized<EpfFile> FromImages(QuantizerOptions options, IEnumerable<SKImage> orderedFrames)
+        => FromImages(options, orderedFrames.ToArray());
 
-    public static Palettized<EpfFile> FromImages(int maxColors, params SKImage[] orderedFrames)
+    public static Palettized<EpfFile> FromImages(QuantizerOptions options, params SKImage[] orderedFrames)
     {
-        var options = new QuantizerOptions
-        {
-            MaxColors = maxColors
-        };
-
         using var quantized = ImageProcessor.QuantizeMultiple(options, orderedFrames);
 
         (var images, var palette) = quantized;

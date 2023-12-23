@@ -257,12 +257,12 @@ public sealed class MpfFile : Collection<MpfFrame>, ISavable
     #endregion
 
     #region LoadFrom
-    public static Palettized<MpfFile> FromImages(MpfFormatType formatType, IEnumerable<SKImage> orderedFrames)
-        => FromImages(formatType, orderedFrames.ToArray());
+    public static Palettized<MpfFile> FromImages(QuantizerOptions options, MpfFormatType formatType, IEnumerable<SKImage> orderedFrames)
+        => FromImages(options, formatType, orderedFrames.ToArray());
 
-    public static Palettized<MpfFile> FromImages(MpfFormatType formatType, params SKImage[] orderedFrames)
+    public static Palettized<MpfFile> FromImages(QuantizerOptions options, MpfFormatType formatType, params SKImage[] orderedFrames)
     {
-        using var quantized = ImageProcessor.QuantizeMultiple(new QuantizerOptions(), orderedFrames);
+        using var quantized = ImageProcessor.QuantizeMultiple(options, orderedFrames);
 
         (var images, var palette) = quantized;
 

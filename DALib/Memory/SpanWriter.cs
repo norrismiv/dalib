@@ -335,7 +335,8 @@ public ref struct SpanWriter
     /// <param name="value">The string to write.</param>
     public void WriteString16(string value)
     {
-        var buffer = Encoding.GetBytes(value).AsSpan();
+        var buffer = Encoding.GetBytes(value)
+                             .AsSpan();
 
         if (buffer.Length > ushort.MaxValue)
             buffer = buffer[..ushort.MaxValue];
@@ -350,7 +351,8 @@ public ref struct SpanWriter
     /// <param name="value">The string to write.</param>
     public void WriteString8(string value)
     {
-        var buffer = Encoding.GetBytes(value).AsSpan();
+        var buffer = Encoding.GetBytes(value)
+                             .AsSpan();
 
         if (buffer.Length > byte.MaxValue)
             buffer = buffer[..byte.MaxValue];

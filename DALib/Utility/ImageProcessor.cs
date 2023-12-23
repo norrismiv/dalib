@@ -61,7 +61,6 @@ public static class ImageProcessor
                 }
             }
         } else //otherwise, just quantize the image
-        {
             for (var y = 0; y < image.Height; y++)
             {
                 for (var x = 0; x < image.Width; x++)
@@ -75,7 +74,6 @@ public static class ImageProcessor
                                 .ToSKColor());
                 }
             }
-        }
 
         var quantizedImage = SKImage.FromBitmap(quantizedBitmap);
 

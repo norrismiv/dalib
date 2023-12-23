@@ -1,6 +1,6 @@
 ### DALib
 
-DALib is a class library for Dark Ages written in C# supporting .NET 8 and higher. 
+DALib is a class library for Dark Ages written in C# supporting .NET 8 and higher.
 
 Right now it supports:
 
@@ -8,5 +8,3 @@ Right now it supports:
 * MAP files
 * Palettes
 * Most file formats inside DATs (MPF, SPF, EPF, HPF)
-
-

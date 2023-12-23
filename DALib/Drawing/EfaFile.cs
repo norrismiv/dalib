@@ -256,9 +256,7 @@ public sealed class EfaFile : Collection<EfaFrame>, ISavable
             using var compressed = new MemoryStream();
 
             using (var compressor = new ZLibStream(compressed, CompressionLevel.Optimal, true))
-            {
                 compressor.Write(frame.Data, 0, frame.Data.Length);
-            }
 
             var compressedBytes = compressed.ToArray();
             var compressedSize = compressedBytes.Length;

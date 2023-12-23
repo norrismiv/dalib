@@ -403,7 +403,9 @@ public class PacketCryptoProvider
         var valueBytes = Encoding.ASCII.GetBytes(value);
         var hashBytes = _md5.ComputeHash(valueBytes);
 
-        return BitConverter.ToString(hashBytes).Replace("-", string.Empty).ToLower();
+        return BitConverter.ToString(hashBytes)
+                           .Replace("-", string.Empty)
+                           .ToLower();
     }
 
     private uint NextRandState(ref uint state)

@@ -16,7 +16,7 @@ public class TileAnimationTable : ISavable
 
     private TileAnimationTable(Stream stream)
     {
-        using var reader = new StreamReader(stream, Encoding.Default, leaveOpen: true);
+        using var reader = new StreamReader(stream, leaveOpen: true);
 
         while (!reader.EndOfStream)
         {

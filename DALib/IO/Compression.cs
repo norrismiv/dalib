@@ -42,9 +42,7 @@ public static class Compression
                     l++;
                     k = 0;
                 } else
-                {
                     k++;
-                }
 
                 val = (buffer[4 + (int)l - 1] & (1 << (int)k)) != 0 ? intEven[val] : intOdd[val];
             }
@@ -62,9 +60,7 @@ public static class Compression
                     j = intEven[i];
                     intEven[i] = val3;
                 } else
-                {
                     intOdd[i] = val3;
-                }
 
                 if (intOdd[val2] == val3)
                     intOdd[val2] = j;

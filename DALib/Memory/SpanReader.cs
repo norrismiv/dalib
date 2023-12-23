@@ -115,7 +115,8 @@ public ref struct SpanReader
         var start = Position;
         var end = Position += length;
 
-        return Buffer[start..end].ToArray();
+        return Buffer[start..end]
+            .ToArray();
     }
 
     /// <summary>

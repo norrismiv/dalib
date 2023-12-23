@@ -6,7 +6,16 @@ namespace DALib.Extensions;
 
 public static class StreamExtensions
 {
-    public static Stream Slice(this Stream stream, long offset, long length) => new StreamSegment(stream, offset, length);
+    public static Stream Slice(
+        this Stream stream,
+        long offset,
+        long length,
+        bool leaveOpen = true)
+        => new StreamSegment(
+            stream,
+            offset,
+            length,
+            leaveOpen);
 
     public static byte[] ToArray(this Stream stream)
     {
