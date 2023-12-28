@@ -10,6 +10,8 @@ using DALib.Extensions;
 
 namespace DALib.Data;
 
+/// <summary>
+/// </summary>
 public sealed class DataArchive() : KeyedCollection<string, DataArchiveEntry>(StringComparer.OrdinalIgnoreCase), ISavable, IDisposable
 {
     private bool IsDisposed;

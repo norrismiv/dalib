@@ -1,10 +1,13 @@
-﻿namespace DALib.Drawing;
+﻿using SkiaSharp;
+
+namespace DALib.Drawing;
 
 public sealed class SpfFrame
 {
     public uint ByteCount { get; set; }
     public uint ByteWidth { get; set; }
-    public required byte[] Data { get; set; }
+    public SKColor[]? ColorData { get; set; }
+    public byte[]? Data { get; set; }
     public ushort PadHeight { get; set; }
     public ushort PadWidth { get; set; }
     public ushort PixelHeight { get; set; }

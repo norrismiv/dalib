@@ -4,6 +4,9 @@ using SkiaSharp;
 
 namespace DALib.Utility;
 
+/// <summary>
+///     Defines options used by the quantizer
+/// </summary>
 public sealed class QuantizerOptions
 {
     /// <summary>
@@ -39,6 +42,9 @@ public sealed class QuantizerOptions
     /// </remarks>
     public int MaxColors { get; set; } = CONSTANTS.COLORS_PER_PALETTE;
 
+    /// <summary>
+    ///     The default quantizer options. (256 colors, Rgba8888, no dithering)
+    /// </summary>
     public static QuantizerOptions Default { get; } = new();
 
     /// <summary>

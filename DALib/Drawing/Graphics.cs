@@ -45,6 +45,12 @@ public class Graphics
             hpf.Data,
             palette);
 
+    /// <summary>
+    ///     Renders a palettized SPF image
+    /// </summary>
+    /// <param name="spf"></param>
+    /// <param name="spfPrimaryColorPalette"></param>
+    /// <returns></returns>
     public static SKImage RenderImage(SpfFrame spf, Palette spfPrimaryColorPalette)
     {
         using var bitmap = new SKBitmap(spf.PixelWidth, spf.PixelHeight);
@@ -78,6 +84,33 @@ public class Graphics
         return SKImage.FromBitmap(bitmap);
     }
 
+    /// <summary>
+    ///     Renders a colorized SPF image
+    /// </summary>
+    public static SKImage RenderImage(SpfFrame spf)
+    {
+        using var bitmap = new SKBitmap(spf.PixelWidth, spf.PixelHeight);
+
+        for (var y = 0; y < spf.PixelHeight; y++)
+            for (var x = 0; x < spf.PixelWidth; x++)
+            {
+                if ((x < spf.PadWidth) || (y < spf.PadHeight))
+                {
+                    bitmap.SetPixel(x, y, CONSTANTS.Transparent);
+
+                    continue;
+                }
+
+                //get the palette index for the current pixel
+                //ignore padding on top and left
+                var pixelIndex = (spf.PixelWidth - spf.PadWidth) * (y - spf.PadHeight) + (x - spf.PadWidth);
+
+                bitmap.SetPixel(x, y, spf.ColorData![pixelIndex]);
+            }
+
+        return SKImage.FromBitmap(bitmap);
+    }
+
     public static SKImage RenderImage(EfaFrame efa)
     {
         using var bitmap = new SKBitmap(
@@ -100,7 +133,7 @@ public class Graphics
             for (var x = 0; x < dataWidth; x++)
             {
                 //read the RGB565 color
-                var color = reader.ReadRgb565Color(true);
+                var color = reader.ReadRgb565Color();
 
                 //ignore extra shit on the right and bottom outside the render dimensions
                 if (x >= efa.FrameWidth)
@@ -123,8 +156,10 @@ public class Graphics
         => RenderMap(
             map,
             Tileset.FromArchive("tilea", seoDat),
-            PaletteLookup.FromArchive("mpt", seoDat),
-            PaletteLookup.FromArchive("stc", iaDat),
+            PaletteLookup.FromArchive("mpt", seoDat)
+                         .Freeze(),
+            PaletteLookup.FromArchive("stc", iaDat)
+                         .Freeze(),
             iaDat);
 
     public static SKImage RenderMap(

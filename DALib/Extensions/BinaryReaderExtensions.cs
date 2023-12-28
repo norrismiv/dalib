@@ -1,53 +1,11 @@
 ﻿using System.IO;
 using System.Text;
-using DALib.Definitions;
-using DALib.Utility;
 using SkiaSharp;
 
 namespace DALib.Extensions;
 
 public static class BinaryReaderExtensions
 {
-    public static SKColor ReadArgb1555Color(this BinaryReader reader, bool scaleToArgb8888)
-    {
-        var color = reader.ReadUInt16();
-
-        var a = (color & 0b1) == 0b1; //maybe?
-        var r = (byte)((color >> 10) & CONSTANTS.FIVE_BIT_MASK);
-        var g = (byte)((color >> 5) & CONSTANTS.FIVE_BIT_MASK);
-        var b = (byte)(color & CONSTANTS.FIVE_BIT_MASK);
-
-        if (scaleToArgb8888)
-        {
-            r = MathEx.ScaleRange<byte, byte>(
-                r,
-                0,
-                CONSTANTS.FIVE_BIT_MASK,
-                0,
-                byte.MaxValue);
-
-            g = MathEx.ScaleRange<byte, byte>(
-                g,
-                0,
-                CONSTANTS.FIVE_BIT_MASK,
-                0,
-                byte.MaxValue);
-
-            b = MathEx.ScaleRange<byte, byte>(
-                b,
-                0,
-                CONSTANTS.FIVE_BIT_MASK,
-                0,
-                byte.MaxValue);
-        }
-
-        return new SKColor(
-            r,
-            g,
-            b,
-            a ? byte.MaxValue : byte.MinValue);
-    }
-
     public static short ReadInt16(this BinaryReader reader, bool bigEndian)
     {
         if (!bigEndian)
@@ -68,40 +26,13 @@ public static class BinaryReaderExtensions
         return buffer[3] | (buffer[2] << 8) | (buffer[1] << 16) | (buffer[0] << 24);
     }
 
-    public static SKColor ReadRgb565Color(this BinaryReader reader, bool scaleToRgb888)
-    {
-        var color = reader.ReadUInt16();
+    public static SKColor ReadRgb555Color(this BinaryReader reader)
+        => reader.ReadUInt16()
+                 .ToRgb555Color();
 
-        var r = (byte)(color >> 11);
-        var g = (byte)((color >> 5) & CONSTANTS.SIX_BIT_MASK);
-        var b = (byte)(color & CONSTANTS.FIVE_BIT_MASK);
-
-        if (scaleToRgb888)
-        {
-            r = MathEx.ScaleRange<byte, byte>(
-                r,
-                0,
-                CONSTANTS.FIVE_BIT_MASK,
-                0,
-                byte.MaxValue);
-
-            g = MathEx.ScaleRange<byte, byte>(
-                g,
-                0,
-                CONSTANTS.SIX_BIT_MASK,
-                0,
-                byte.MaxValue);
-
-            b = MathEx.ScaleRange<byte, byte>(
-                b,
-                0,
-                CONSTANTS.FIVE_BIT_MASK,
-                0,
-                byte.MaxValue);
-        }
-
-        return new SKColor(r, g, b);
-    }
+    public static SKColor ReadRgb565Color(this BinaryReader reader)
+        => reader.ReadUInt16()
+                 .ToRgb565Color();
 
     public static string ReadString16(this BinaryReader reader, Encoding encoding, bool bigEndian)
     {

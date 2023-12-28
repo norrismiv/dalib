@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Frozen;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -15,10 +16,10 @@ namespace DALib.Drawing;
 ///     You could search through them in reverse order and return the first one you find, but even still...
 ///     It should be faster this way, where each id is mapped to a palette number
 /// </remarks>
-public sealed class PaletteTable : ISavable
+public class PaletteTable : ISavable
 {
-    private readonly Dictionary<int, int> Entries = new();
-    private readonly Dictionary<int, int> Overrides = new();
+    protected IDictionary<int, int> Entries { get; set; } = new Dictionary<int, int>();
+    protected IDictionary<int, int> Overrides { get; set; } = new Dictionary<int, int>();
 
     public PaletteTable() { }
 
@@ -55,7 +56,9 @@ public sealed class PaletteTable : ISavable
         }
     }
 
-    public void Add(int id, int paletteNumber) => Overrides[id] = paletteNumber;
+    public virtual void Add(int id, int paletteNumber) => Overrides[id] = paletteNumber;
+
+    public virtual PaletteTable Freeze() => new FrozenPaletteTable(this);
 
     public int GetPaletteNumber(int id)
     {
@@ -68,7 +71,7 @@ public sealed class PaletteTable : ISavable
         return 0;
     }
 
-    public void Merge(PaletteTable other)
+    public virtual void Merge(PaletteTable other)
     {
         foreach (var kvp in other.Overrides)
             Overrides[kvp.Key] = kvp.Value;
@@ -77,10 +80,29 @@ public sealed class PaletteTable : ISavable
             Entries[kvp.Key] = kvp.Value;
     }
 
-    public void Remove(int id)
+    public virtual void Remove(int id)
     {
         Overrides.Remove(id);
         Entries.Remove(id);
+    }
+
+    private sealed class FrozenPaletteTable : PaletteTable
+    {
+        public FrozenPaletteTable(PaletteTable table)
+        {
+            base.Merge(table);
+
+            Entries = Entries.ToFrozenDictionary();
+            Overrides = Overrides.ToFrozenDictionary();
+        }
+
+        public override void Add(int id, int paletteNumber) => throw new NotSupportedException("The collection is frozen");
+
+        public override PaletteTable Freeze() => this;
+
+        public override void Merge(PaletteTable other) => throw new NotSupportedException("The collection is frozen");
+
+        public override void Remove(int id) => throw new NotSupportedException("The collection is frozen");
     }
 
     #region SaveTo

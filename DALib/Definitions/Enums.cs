@@ -53,6 +53,12 @@ public enum MpfFormatType
     SingleAttack = 0
 }
 
+public enum SpfFormatType
+{
+    Palettized = 0,
+    Colorized = 2
+}
+
 public enum ControlType
 {
     Anchor = 0,

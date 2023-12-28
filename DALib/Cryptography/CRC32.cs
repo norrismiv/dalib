@@ -1,5 +1,8 @@
 ﻿namespace DALib.Cryptography;
 
+/// <summary>
+///     Provides methods for calculating 32 bit cyclic redundancy checks
+/// </summary>
 public static class CRC32
 {
     private static readonly uint[] CRC32_TABLE =
@@ -262,8 +265,18 @@ public static class CRC32
         0x2D02EF8D
     };
 
+    /// <summary>
+    ///     Calculates the 32bit checksum of the specified buffer
+    /// </summary>
+    /// <param name="buffer">The buffer to calculate the checksum of</param>
     public static uint Calculate(byte[] buffer) => Calculate(buffer, 0, buffer.Length);
 
+    /// <summary>
+    ///     Calculates the 32bit checksum of the specified buffer
+    /// </summary>
+    /// <param name="buffer">The buffer to calculate the checksum of</param>
+    /// <param name="offset">The offset within the buffer to start at</param>
+    /// <param name="count">The number of bytes within the buffer to calculate for</param>
     public static uint Calculate(byte[] buffer, int offset, int count)
     {
         var result = 0xFFFFFFFF;
