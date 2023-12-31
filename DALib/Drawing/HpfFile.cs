@@ -35,6 +35,11 @@ public sealed class HpfFile : ISavable
     public int PixelHeight => Data.Length / CONSTANTS.HPF_TILE_WIDTH;
 
     /// <summary>
+    ///     The pixel width of the image
+    /// </summary>
+    public int PixelWidth => CONSTANTS.HPF_TILE_WIDTH;
+
+    /// <summary>
     ///     Initializes a new instance of the HpfFile class using the specified header bytes and data bytes
     /// </summary>
     /// <param name="headerBytes">The header bytes of the HPF file.</param>

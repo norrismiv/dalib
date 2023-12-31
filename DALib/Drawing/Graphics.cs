@@ -14,87 +14,17 @@ namespace DALib.Drawing;
 /// </summary>
 public static class Graphics
 {
-    private static SKImage PaddedRender(
-        int top,
-        int left,
-        int bottom,
-        int right,
-        byte[] data,
-        Palette palette)
-    {
-        var drawnWidth = right - left;
-        var drawnHeight = bottom - top;
-
-        var hasTransparency = palette[0]
-                                  .Equals(SKColors.Black)
-                              || palette[0]
-                                  .Equals(CONSTANTS.Transparent);
-
-        using var bitmap = new SKBitmap(left, bottom);
-
-        bitmap.Erase(CONSTANTS.Transparent);
-
-        for (var y = 0; y < drawnWidth; y++)
-            for (var x = 0; x < drawnHeight; x++)
-            {
-                var xActual = x + left;
-                var yActual = y + top;
-
-                var pixelIndex = y * drawnWidth + x;
-                var paletteIndex = data[pixelIndex];
-
-                //if the paletteIndex is 0, and that color is pure black or transparent black
-                var color = (paletteIndex == 0) && hasTransparency ? CONSTANTS.Transparent : palette[paletteIndex];
-
-                bitmap.SetPixel(xActual, yActual, color);
-            }
-
-        return SKImage.FromBitmap(bitmap);
-    }
-
-    private static SKImage PaddedRender(
-        int top,
-        int left,
-        int bottom,
-        int right,
-        SKColor[] data)
-    {
-        var drawnWidth = right - left;
-        var drawnHeight = bottom - top;
-
-        using var bitmap = new SKBitmap(drawnWidth, drawnHeight);
-
-        bitmap.Erase(CONSTANTS.Transparent);
-
-        for (var y = 0; y < drawnHeight; y++)
-            for (var x = 0; x < drawnWidth; x++)
-            {
-                var xActual = x + left;
-                var yActual = y + top;
-
-                var pixelIndex = y * drawnWidth + x;
-                var color = data[pixelIndex];
-
-                if ((color == CONSTANTS.Transparent) || (color == SKColors.Black))
-                    continue;
-
-                bitmap.SetPixel(xActual, yActual, color);
-            }
-
-        return SKImage.FromBitmap(bitmap);
-    }
-
     /// <summary>
     ///     Renders an EpfFrame
     /// </summary>
     /// <param name="frame">The frame to render</param>
     /// <param name="palette">A palette containing colors used by the frame</param>
     public static SKImage RenderImage(EpfFrame frame, Palette palette)
-        => PaddedRender(
-            frame.Top,
+        => SimpleRender(
             frame.Left,
-            frame.Bottom,
-            frame.Right,
+            frame.Top,
+            frame.PixelWidth,
+            frame.PixelHeight,
             frame.Data,
             palette);
 
@@ -104,11 +34,11 @@ public static class Graphics
     /// <param name="frame">The frame to render</param>
     /// <param name="palette">A palette containing colors used by the frame</param>
     public static SKImage RenderImage(MpfFrame frame, Palette palette)
-        => PaddedRender(
-            frame.Top,
+        => SimpleRender(
             frame.Left,
-            frame.Bottom,
-            frame.Right,
+            frame.Top,
+            frame.PixelWidth,
+            frame.PixelHeight,
             frame.Data,
             palette);
 
@@ -119,7 +49,9 @@ public static class Graphics
     /// <param name="palette">A palette containing colors used by the frame</param>
     public static SKImage RenderImage(HpfFile hpf, Palette palette)
         => SimpleRender(
-            CONSTANTS.HPF_TILE_WIDTH,
+            0,
+            0,
+            hpf.PixelWidth,
             hpf.PixelHeight,
             hpf.Data,
             palette);
@@ -130,11 +62,11 @@ public static class Graphics
     /// <param name="spf">The frame to render. Must be a palettized SpfFrame</param>
     /// <param name="spfPrimaryColorPalette">The primary color palette of the SpfFile. (see SpfFile.Format)</param>
     public static SKImage RenderImage(SpfFrame spf, Palette spfPrimaryColorPalette)
-        => PaddedRender(
-            spf.Top,
+        => SimpleRender(
             spf.Left,
-            spf.Top + spf.PixelHeight,
-            spf.Left + spf.PixelWidth,
+            spf.Top,
+            spf.PixelWidth,
+            spf.PixelHeight,
             spf.Data!,
             spfPrimaryColorPalette);
 
@@ -143,11 +75,11 @@ public static class Graphics
     /// </summary>
     /// <param name="spf">The frame to render. Must be a colorized SpfFrame. (see SpfFile.Format)</param>
     public static SKImage RenderImage(SpfFrame spf)
-        => PaddedRender(
-            spf.Top,
+        => SimpleRender(
             spf.Left,
-            spf.Top + spf.PixelHeight,
-            spf.Left + spf.PixelWidth,
+            spf.Top,
+            spf.PixelWidth,
+            spf.PixelHeight,
             spf.ColorData!);
 
     /// <summary>
@@ -357,34 +289,67 @@ public static class Graphics
     /// <param name="palette">A palette containing colors used by the tile</param>
     public static SKImage RenderTile(Tile tile, Palette palette)
         => SimpleRender(
-            CONSTANTS.TILE_WIDTH,
-            CONSTANTS.TILE_HEIGHT,
+            0,
+            0,
+            tile.PixelWidth,
+            tile.PixelHeight,
             tile.Data,
             palette);
 
     private static SKImage SimpleRender(
+        int left,
+        int top,
+        int width,
+        int height,
+        SKColor[] data)
+    {
+        using var bitmap = new SKBitmap(width + left, height + top);
+
+        bitmap.Erase(CONSTANTS.Transparent);
+
+        for (var y = 0; y < height; y++)
+            for (var x = 0; x < width; x++)
+            {
+                var xActual = x + left;
+                var yActual = y + top;
+
+                var pixelIndex = y * width + x;
+                var color = data[pixelIndex];
+
+                if ((color == CONSTANTS.Transparent) || (color == SKColors.Black))
+                    continue;
+
+                bitmap.SetPixel(xActual, yActual, color);
+            }
+
+        return SKImage.FromBitmap(bitmap);
+    }
+
+    private static SKImage SimpleRender(
+        int top,
+        int left,
         int width,
         int height,
         byte[] data,
         Palette palette)
     {
-        using var bitmap = new SKBitmap(width, height);
+        using var bitmap = new SKBitmap(width + left, height + top);
 
-        var hasTransparency = palette[0]
-                                  .Equals(SKColors.Black)
-                              || palette[0]
-                                  .Equals(CONSTANTS.Transparent);
+        bitmap.Erase(CONSTANTS.Transparent);
 
         for (var y = 0; y < height; y++)
             for (var x = 0; x < width; x++)
             {
+                var xActual = x + left;
+                var yActual = y + top;
+
                 var pixelIndex = y * width + x;
                 var paletteIndex = data[pixelIndex];
 
                 //if the paletteIndex is 0, and that color is pure black or transparent black
-                var color = (paletteIndex == 0) && hasTransparency ? CONSTANTS.Transparent : palette[paletteIndex];
+                var color = paletteIndex == 0 ? CONSTANTS.Transparent : palette[paletteIndex];
 
-                bitmap.SetPixel(x, y, color);
+                bitmap.SetPixel(xActual, yActual, color);
             }
 
         return SKImage.FromBitmap(bitmap);

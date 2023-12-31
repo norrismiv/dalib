@@ -29,4 +29,14 @@ public sealed class EpfFrame
     ///     The lowest Y coordinate of the frame. Bottom - Top = Height
     /// </summary>
     public short Top { get; set; }
+
+    /// <summary>
+    ///     The pixel height of the frame
+    /// </summary>
+    public int PixelHeight => Bottom - Top;
+
+    /// <summary>
+    ///     The pixel width of the frame
+    /// </summary>
+    public int PixelWidth => Right - Left;
 }

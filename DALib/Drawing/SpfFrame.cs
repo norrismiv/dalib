@@ -8,6 +8,11 @@ namespace DALib.Drawing;
 public sealed class SpfFrame
 {
     /// <summary>
+    ///     The highest Y coordinate of the frame.
+    /// </summary>
+    public ushort Bottom { get; set; }
+
+    /// <summary>
     ///     The number of bytes of image data this frame contains
     /// </summary>
     /// <remarks>
@@ -50,14 +55,9 @@ public sealed class SpfFrame
     public ushort Left { get; set; }
 
     /// <summary>
-    ///     The pixel height of the image
+    ///     The highest X coordinate of the frame.
     /// </summary>
-    public ushort PixelHeight { get; set; }
-
-    /// <summary>
-    ///     The pixel width of the image
-    /// </summary>
-    public ushort PixelWidth { get; set; }
+    public ushort Right { get; set; }
 
     /// <summary>
     ///     The address within the data segment of the file where the image data for this frame can be found
@@ -74,6 +74,16 @@ public sealed class SpfFrame
     ///     LI: figure out what this is for
     /// </summary>
     public uint Unknown2 { get; set; }
+
+    /// <summary>
+    ///     The pixel height of the frame
+    /// </summary>
+    public int PixelHeight => Bottom - Top;
+
+    /// <summary>
+    ///     The pixel width of the frame
+    /// </summary>
+    public int PixelWidth => Right - Left;
 
     /// <summary>
     ///     A value that has an unknown use

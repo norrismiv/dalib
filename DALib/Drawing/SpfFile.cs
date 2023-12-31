@@ -98,30 +98,30 @@ public sealed class SpfFile : Collection<SpfFrame>, ISavable
 
         for (var i = 0; i < frameCount; i++)
         {
-            var padWidth = reader.ReadUInt16();
-            var padHeight = reader.ReadUInt16();
-            var pixelWidth = reader.ReadUInt16();
-            var pixelHeight = reader.ReadUInt16();
+            var left = reader.ReadUInt16();
+            var top = reader.ReadUInt16();
+            var right = reader.ReadUInt16();
+            var bottom = reader.ReadUInt16();
             _ = reader.ReadUInt32();
             var reserved = reader.ReadUInt32();
             var startAddress = reader.ReadUInt32();
             var byteWidth = reader.ReadUInt32();
             var byteCount = reader.ReadUInt32();
-            var semiByteCount = reader.ReadUInt32();
+            var imageByteCount = reader.ReadUInt32();
 
             Add(
                 new SpfFrame
                 {
-                    Left = padWidth,
-                    Top = padHeight,
-                    PixelWidth = pixelWidth,
-                    PixelHeight = pixelHeight,
+                    Left = left,
+                    Top = top,
+                    Right = right,
+                    Bottom = bottom,
                     Unknown2 = reserved,
                     StartAddress = startAddress,
                     ByteWidth = byteWidth,
                     ByteCount = byteCount,
-                    ImageByteCount = semiByteCount,
-                    ColorData = new SKColor[pixelWidth * pixelHeight]
+                    ImageByteCount = imageByteCount,
+                    ColorData = new SKColor[imageByteCount]
                 });
         }
 
@@ -135,9 +135,9 @@ public sealed class SpfFile : Collection<SpfFrame>, ISavable
             segment.Seek(frame.StartAddress, SeekOrigin.Begin);
             var index = 0;
 
-            for (var y = 0; y < frame.PixelHeight; y++)
+            for (var y = 0; y < frame.Bottom; y++)
             {
-                for (var x = 0; x < frame.PixelWidth; x++)
+                for (var x = 0; x < frame.Right; x++)
                 {
                     var color = reader.ReadRgb565Color();
                     frame.ColorData![index++] = color;
@@ -158,29 +158,29 @@ public sealed class SpfFile : Collection<SpfFrame>, ISavable
 
         for (var i = 0; i < frameCount; i++)
         {
-            var padWidth = reader.ReadUInt16();
-            var padHeight = reader.ReadUInt16();
-            var pixelWidth = reader.ReadUInt16();
-            var pixelHeight = reader.ReadUInt16();
+            var left = reader.ReadUInt16();
+            var top = reader.ReadUInt16();
+            var right = reader.ReadUInt16();
+            var bottom = reader.ReadUInt16();
             _ = reader.ReadUInt32();
-            var reserved = reader.ReadUInt32();
+            var unknown2 = reader.ReadUInt32();
             var startAddress = reader.ReadUInt32();
             var byteWidth = reader.ReadUInt32();
             var byteCount = reader.ReadUInt32();
-            var semiByteCount = reader.ReadUInt32();
+            var imageByteCount = reader.ReadUInt32();
 
             Add(
                 new SpfFrame
                 {
-                    Left = padWidth,
-                    Top = padHeight,
-                    PixelWidth = pixelWidth,
-                    PixelHeight = pixelHeight,
-                    Unknown2 = reserved,
+                    Left = left,
+                    Top = top,
+                    Right = right,
+                    Bottom = bottom,
+                    Unknown2 = unknown2,
                     StartAddress = startAddress,
                     ByteWidth = byteWidth,
                     ByteCount = byteCount,
-                    ImageByteCount = semiByteCount,
+                    ImageByteCount = imageByteCount,
                     Data = new byte[byteCount]
                 });
         }
@@ -251,8 +251,8 @@ public sealed class SpfFile : Collection<SpfFrame>, ISavable
 
             writer.Write(frame.Left);
             writer.Write(frame.Top);
-            writer.Write(frame.PixelWidth);
-            writer.Write(frame.PixelHeight);
+            writer.Write(frame.Right);
+            writer.Write(frame.Bottom);
             writer.Write(SpfFrame.Unknown1);
             writer.Write(frame.Unknown2);
             writer.Write(frame.StartAddress);
@@ -270,21 +270,21 @@ public sealed class SpfFile : Collection<SpfFrame>, ISavable
             var frame = Items[i];
 
             //write primary color data
-            for (var y = 0; y < frame.PixelHeight; y++)
+            for (var y = 0; y < frame.Bottom; y++)
             {
-                for (var x = 0; x < frame.PixelWidth; x++)
+                for (var x = 0; x < frame.Right; x++)
                 {
-                    var color = frame.ColorData![y * frame.PixelWidth + x];
+                    var color = frame.ColorData![y * frame.Right + x];
                     writer.WriteRgb565Color(color);
                 }
             }
 
             //write secondary color dta
-            for (var y = 0; y < frame.PixelHeight; y++)
+            for (var y = 0; y < frame.Bottom; y++)
             {
-                for (var x = 0; x < frame.PixelWidth; x++)
+                for (var x = 0; x < frame.Right; x++)
                 {
-                    var color = frame.ColorData![y * frame.PixelWidth + x];
+                    var color = frame.ColorData![y * frame.Right + x];
                     writer.WriteRgb555Color(color);
                 }
             }
@@ -310,8 +310,8 @@ public sealed class SpfFile : Collection<SpfFrame>, ISavable
 
             writer.Write(frame.Left);
             writer.Write(frame.Top);
-            writer.Write(frame.PixelWidth);
-            writer.Write(frame.PixelHeight);
+            writer.Write(frame.Right);
+            writer.Write(frame.Bottom);
             writer.Write(SpfFrame.Unknown1);
             writer.Write(frame.Unknown2);
             writer.Write(frame.StartAddress);
@@ -356,8 +356,8 @@ public sealed class SpfFile : Collection<SpfFrame>, ISavable
             {
                 Left = 0,
                 Top = 0,
-                PixelWidth = (ushort)image.Width,
-                PixelHeight = (ushort)image.Height,
+                Right = (ushort)image.Width,
+                Bottom = (ushort)image.Height,
                 Unknown2 = 0,
                 StartAddress = 0,
                 ByteWidth = (uint)image.Width * 2,
@@ -367,13 +367,11 @@ public sealed class SpfFile : Collection<SpfFrame>, ISavable
             };
 
             for (var y = 0; y < image.Height; y++)
-            {
                 for (var x = 0; x < image.Width; x++)
                 {
                     var color = bitmap.GetPixel(x, y);
                     frame.ColorData[y * image.Width + x] = color;
                 }
-            }
 
             spfFile.Add(frame);
         }
@@ -416,8 +414,8 @@ public sealed class SpfFile : Collection<SpfFrame>, ISavable
                 {
                     Left = 0,
                     Top = 0,
-                    PixelWidth = (ushort)image.Width,
-                    PixelHeight = (ushort)image.Height,
+                    Right = (ushort)image.Width,
+                    Bottom = (ushort)image.Height,
                     Unknown2 = 0,
                     StartAddress = 0,
                     ByteWidth = (uint)image.Width,
