@@ -4,6 +4,9 @@ using System.Text;
 
 namespace DALib.Cryptography;
 
+/// <summary>
+///     Provides cryptographic services for packets.
+/// </summary>
 public class PacketCryptoProvider
 {
     private const int MAXIMUM_SEED = 9;
@@ -20,10 +23,16 @@ public class PacketCryptoProvider
     private byte[] _keystream1;
     private byte[] _keystream2Table;
     private uint _randState;
-    private byte[] _salt;
+    private byte[] _salt = null!;
 
     private byte _seed;
 
+    /// <summary>
+    ///     Gets or sets the Keystream property, which represents the keystream as a string.
+    /// </summary>
+    /// <value>The keystream as a string.</value>
+    /// <exception cref="ArgumentNullException">Thrown if the value is null.</exception>
+    /// <exception cref="Exception">Thrown if the value length is not equal to KEYSTREAM_LENGTH.</exception>
     public string Keystream
     {
         get => Encoding.ASCII.GetString(_keystream1);
@@ -41,6 +50,15 @@ public class PacketCryptoProvider
         }
     }
 
+    /// <summary>
+    ///     Gets or sets the seed value.
+    /// </summary>
+    /// <value>
+    ///     The value of the seed.
+    /// </value>
+    /// <remarks>
+    ///     Setting a new seed value will regenerate the salt using the new seed value.
+    /// </remarks>
     public byte Seed
     {
         get => _seed;
@@ -55,6 +73,10 @@ public class PacketCryptoProvider
         }
     }
 
+    /// <summary>
+    ///     Initializes a new instance of the <see cref="PacketCryptoProvider" /> class.
+    ///     Uses the default seed and keystream values.
+    /// </summary>
     public PacketCryptoProvider()
         : this(DEFAULT_SEED, DEFAULT_KEYSTREAM)
     {
@@ -62,6 +84,13 @@ public class PacketCryptoProvider
         _keystream1[7] = 0xA3; // however Kru somehow managed to fuck that up. :-)
     }
 
+    /// <summary>
+    ///     Represents a packet crypto provider that encrypts and decrypts packets using a seed and a keystream.
+    /// </summary>
+    /// <remarks>
+    ///     The PacketCryptoProvider uses a seed value and a keystream to generate a salt and performs packet encryption and
+    ///     decryption operations.
+    /// </remarks>
     public PacketCryptoProvider(byte seed, string keystream)
     {
         if (seed > MAXIMUM_SEED)
@@ -85,6 +114,16 @@ public class PacketCryptoProvider
         _buffer = new byte[BUFFER_LENGTH];
     }
 
+    /// <summary>
+    ///     Decrypts client data using the specified parameters.
+    /// </summary>
+    /// <param name="data">The byte array containing the encrypted client data.</param>
+    /// <param name="offset">The starting index within the byte array.</param>
+    /// <param name="count">The number of bytes to be decrypted.</param>
+    /// <param name="useKeystream2">Specifies whether to use keystream 2 for decryption.</param>
+    /// <returns>
+    ///     The decrypted client data as a byte array.
+    /// </returns>
     public byte[] DecryptClientData(
         byte[] data,
         int offset,
@@ -142,6 +181,14 @@ public class PacketCryptoProvider
         return result;
     }
 
+    /// <summary>
+    ///     Decrypts server data.
+    /// </summary>
+    /// <param name="data">The data to decrypt.</param>
+    /// <param name="offset">The starting offset in the data.</param>
+    /// <param name="count">The number of bytes to decrypt.</param>
+    /// <param name="useKeystream2">Flag to indicate if keystream2 should be used for transformation.</param>
+    /// <returns>The decrypted server data as a byte array.</returns>
     public byte[] DecryptServerData(
         byte[] data,
         int offset,
@@ -190,6 +237,15 @@ public class PacketCryptoProvider
         return result;
     }
 
+    /// <summary>
+    ///     Encrypts the provided client data using the specified parameters.
+    /// </summary>
+    /// <param name="data">The data to encrypt.</param>
+    /// <param name="offset">The starting index in the data array from which to begin encryption.</param>
+    /// <param name="count">The number of bytes to encrypt.</param>
+    /// <param name="sequence">The sequence value to use during encryption.</param>
+    /// <param name="useKeystream2">Determines whether to use Keystream2 during encryption.</param>
+    /// <returns>The encrypted client data.</returns>
     public byte[] EncryptClientData(
         byte[] data,
         int offset,
@@ -260,6 +316,15 @@ public class PacketCryptoProvider
         return result;
     }
 
+    /// <summary>
+    ///     Encrypts server data using the specified parameters.
+    /// </summary>
+    /// <param name="data">The data to be encrypted.</param>
+    /// <param name="offset">The starting offset within the data array.</param>
+    /// <param name="count">The number of bytes to be encrypted.</param>
+    /// <param name="sequence">The sequence number used for encryption.</param>
+    /// <param name="useKeystream2">Determines whether to use the second keystream for encryption.</param>
+    /// <returns>The encrypted server data as a byte array.</returns>
     public byte[] EncryptServerData(
         byte[] data,
         int offset,
@@ -325,6 +390,10 @@ public class PacketCryptoProvider
             _keystream2[i] = _keystream2Table[(i * (KEYSTREAM_LENGTH * i + b * b) + a) % KEYSTREAM2_TABLE_LENGTH];
     }
 
+    /// <summary>
+    ///     Generates a keystream table based on the given name.
+    /// </summary>
+    /// <param name="name">The name to generate the keystream table from.</param>
     public void GenerateKeystream2Table(string name)
     {
         var table = GetMd5String(GetMd5String(name));

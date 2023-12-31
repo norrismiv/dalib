@@ -7,6 +7,9 @@ using SkiaSharp;
 
 namespace DALib.Utility;
 
+/// <summary>
+///     Provides methods for parsing Controls from a stream
+/// </summary>
 public sealed class ControlFileParser
 {
     private TokenType CurrentToken;
@@ -89,7 +92,7 @@ public sealed class ControlFileParser
                     }
                     case TokenType.Value:
                     {
-                        currentControl.ButtonResultValue = int.Parse(value);
+                        currentControl.ReturnValue = int.Parse(value);
 
                         break;
                     }
@@ -115,6 +118,11 @@ public sealed class ControlFileParser
         }
     }
 
+    /// <summary>
+    ///     Parses Controls from a stream, adding them to the specified controlFile
+    /// </summary>
+    /// <param name="controlFile">The control file object to populate with data.</param>
+    /// <param name="stream">The stream containing the control file data.</param>
     public void Parse(ControlFile controlFile, Stream stream)
     {
         using var reader = new StreamReader(stream, leaveOpen: true);

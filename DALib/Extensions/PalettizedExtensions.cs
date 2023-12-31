@@ -6,11 +6,14 @@ using DALib.Utility;
 
 namespace DALib.Extensions;
 
+/// <summary>
+///     Provides extension methods for Palettized objects
+/// </summary>
 public static class PalettizedExtensions
 {
     /// <summary>
     ///     For EPF images that are for a game type that supports dye colors, this method will arrange the colors in the
-    ///     palette so that they line up with the starting dye index
+    ///     palette so that dye colors line up with the starting dye index
     /// </summary>
     /// <param name="palettized">A palettized epf file</param>
     /// <param name="defaultDyeColors">

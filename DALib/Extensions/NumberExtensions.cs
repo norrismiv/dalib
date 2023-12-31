@@ -4,8 +4,15 @@ using SkiaSharp;
 
 namespace DALib.Extensions;
 
+/// <summary>
+///     Provides extension methods for numbers.
+/// </summary>
 public static class NumberExtensions
 {
+    /// <summary>
+    ///     Converts a 16-bit number to an RGB555 color scaled to RGB888.
+    /// </summary>
+    /// <param name="number">The 16-bit number representing the RGB555 color.</param>
     public static SKColor ToRgb555Color(this ushort number)
     {
         var r = (byte)((number >> 10) & CONSTANTS.FIVE_BIT_MASK);
@@ -36,6 +43,10 @@ public static class NumberExtensions
         return new SKColor(r, g, b);
     }
 
+    /// <summary>
+    ///     Converts a 16-bit number to an RGB565 color scaled to RGB888.
+    /// </summary>
+    /// <param name="number">The 16-bit number representing the RGB565 color.</param>
     public static SKColor ToRgb565Color(this ushort number)
     {
         var r = (byte)(number >> 11);

@@ -15,13 +15,37 @@ using SkiaSharp;
 
 namespace DALib.Drawing;
 
+/// <summary>
+///     Represents an image file with the ".efa" extension. This image format supports one or more fully colorized images
+///     encoded in RGB565, ZLIB compressed image data, luminance-based alpha blending, and a hard coded frame interval
+/// </summary>
 public sealed class EfaFile : Collection<EfaFrame>, ISavable
 {
+    /// <summary>
+    ///     The type of alpha blending to use when the image is rendered
+    /// </summary>
     public EfaBlendingType BlendingType { get; set; }
+
+    /// <summary>
+    ///     The interval between frames in milliseconds
+    /// </summary>
     public int FrameIntervalMs { get; set; }
+
+    /// <summary>
+    ///     A value that has an unknown use
+    ///     LI: figure out what this is for
+    /// </summary>
     public int Unknown1 { get; set; }
+
+    /// <summary>
+    ///     A value that has an unknown use
+    ///     LI: figure out what this is for
+    /// </summary>
     public byte[] Unknown2 { get; set; }
 
+    /// <summary>
+    ///     Creates an EFA file with default values
+    /// </summary>
     public EfaFile()
     {
         Unknown1 = 0;
@@ -45,46 +69,48 @@ public sealed class EfaFile : Collection<EfaFrame>, ISavable
         {
             var unknown1 = reader.ReadInt32();
             var offset = reader.ReadInt32();
-            var size = reader.ReadInt32();
-            var rawSize = reader.ReadInt32();
+            var compressedSize = reader.ReadInt32();
+            var decompressedSize = reader.ReadInt32();
             var unknown2 = reader.ReadInt32();
             var unknown3 = reader.ReadInt32();
             var byteWidth = reader.ReadInt32();
             var unknown4 = reader.ReadInt32();
             var byteCount = reader.ReadInt32();
             var unknown5 = reader.ReadInt32();
-            var originX = reader.ReadInt16();
-            var originY = reader.ReadInt16();
-            var originFlags = reader.ReadInt32();
+            var centerX = reader.ReadInt16();
+            var centerY = reader.ReadInt16();
+            var unknown6 = reader.ReadInt32();
             var imageWidth = reader.ReadInt16();
             var imageHeight = reader.ReadInt16();
-            var pad1Flags = reader.ReadInt32();
+            var padWidth = reader.ReadInt16();
+            var padHeight = reader.ReadInt16();
             var frameWidth = reader.ReadInt16();
             var frameHeight = reader.ReadInt16();
-            var pad2Flags = reader.ReadInt32();
+            var unknown7 = reader.ReadInt32();
 
             Add(
                 new EfaFrame
                 {
                     Unknown1 = unknown1,
-                    Offset = offset,
-                    Size = size,
-                    RawSize = rawSize,
+                    StartAddress = offset,
+                    CompressedSize = compressedSize,
+                    DecompressedSize = decompressedSize,
                     Unknown2 = unknown2,
                     Unknown3 = unknown3,
                     ByteWidth = byteWidth,
                     Unknown4 = unknown4,
                     ByteCount = byteCount,
                     Unknown5 = unknown5,
-                    OriginX = originX,
-                    OriginY = originY,
-                    OriginFlags = originFlags,
-                    ImageWidth = imageWidth,
-                    ImageHeight = imageHeight,
-                    Pad1Flags = pad1Flags,
-                    FrameWidth = frameWidth,
-                    FrameHeight = frameHeight,
-                    Pad2Flags = pad2Flags,
+                    CenterX = centerX,
+                    CenterY = centerY,
+                    Unknown6 = unknown6,
+                    ImagePixelWidth = imageWidth,
+                    ImagePixelHeight = imageHeight,
+                    Left = padWidth,
+                    Top = padHeight,
+                    FramePixelWidth = frameWidth,
+                    FramePixelHeight = frameHeight,
+                    Unknown7 = unknown7,
                     Data = new byte[byteCount]
                 });
         }
@@ -100,6 +126,14 @@ public sealed class EfaFile : Collection<EfaFrame>, ISavable
     }
 
     #region LoadFrom
+    /// <summary>
+    ///     Loads an EfaFile with the specified fileName from the specified archive
+    /// </summary>
+    /// <param name="fileName">The name of the EFA file to search for in the archive.</param>
+    /// <param name="archive">The DataArchive from which to retrieve the EFA file.</param>
+    /// <exception cref="FileNotFoundException">
+    ///     Thrown if the EFA file with the specified name is not found in the archive.
+    /// </exception>
     public static EfaFile FromArchive(string fileName, DataArchive archive)
     {
         if (!archive.TryGetValue(fileName.WithExtension(".efa"), out var entry))
@@ -108,6 +142,10 @@ public sealed class EfaFile : Collection<EfaFrame>, ISavable
         return FromEntry(entry);
     }
 
+    /// <summary>
+    ///     Loads an EfaFile from the specified archive entry
+    /// </summary>
+    /// <param name="entry">The DataArchiveEntry to load the EfaFile from</param>
     public static EfaFile FromEntry(DataArchiveEntry entry)
     {
         using var segment = entry.ToStreamSegment();
@@ -115,6 +153,10 @@ public sealed class EfaFile : Collection<EfaFrame>, ISavable
         return new EfaFile(segment);
     }
 
+    /// <summary>
+    ///     Loads an EfaFile from the specified path
+    /// </summary>
+    /// <param name="path">The path of the file to be read.</param>
     public static EfaFile FromFile(string path)
     {
         using var stream = File.Open(
@@ -130,8 +172,16 @@ public sealed class EfaFile : Collection<EfaFrame>, ISavable
         return new EfaFile(stream);
     }
 
+    /// <summary>
+    ///     Converts a sequence of fully colored images to an EfaFile.
+    /// </summary>
+    /// <param name="orderedFrames">The ordered collection of SKImage frames.</param>
     public static EfaFile FromImages(IEnumerable<SKImage> orderedFrames) => FromImages(orderedFrames.ToArray());
 
+    /// <summary>
+    ///     Converts a collection of fully colored images to an EfaFile
+    /// </summary>
+    /// <param name="orderedFrames">The ordered array of SKImage frames.</param>
     public static EfaFile FromImages(params SKImage[] orderedFrames)
     {
         var efaFile = new EfaFile();
@@ -166,24 +216,25 @@ public sealed class EfaFile : Collection<EfaFrame>, ISavable
                 new EfaFrame
                 {
                     Unknown1 = 3,
-                    Offset = -1,
-                    Size = -1,
-                    RawSize = rawBytes.Length,
+                    StartAddress = -1,
+                    CompressedSize = -1,
+                    DecompressedSize = rawBytes.Length,
                     Unknown2 = 1,
                     Unknown3 = 0,
                     ByteWidth = image.Width * 2,
                     Unknown4 = 4,
                     ByteCount = rawBytes.Length,
                     Unknown5 = 0,
-                    OriginX = 0,
-                    OriginY = 0,
-                    OriginFlags = 0,
-                    ImageWidth = (short)imageWidth,
-                    ImageHeight = (short)imageHeight,
-                    Pad1Flags = 0,
-                    FrameWidth = (short)image.Width,
-                    FrameHeight = (short)image.Height,
-                    Pad2Flags = 0,
+                    CenterX = 0,
+                    CenterY = 0,
+                    Unknown6 = 0,
+                    ImagePixelWidth = (short)imageWidth,
+                    ImagePixelHeight = (short)imageHeight,
+                    Left = 0,
+                    Top = 0,
+                    FramePixelWidth = (short)image.Width,
+                    FramePixelHeight = (short)image.Height,
+                    Unknown7 = 0,
                     Data = rawBytes
                 });
         }
@@ -193,12 +244,12 @@ public sealed class EfaFile : Collection<EfaFrame>, ISavable
 
     private static void DecompressToFrame(Stream dataStream, EfaFrame frame)
     {
-        using var compressedSegment = new StreamSegment(dataStream, frame.Offset, frame.Size);
+        using var compressedSegment = new StreamSegment(dataStream, frame.StartAddress, frame.CompressedSize);
         using var decompressor = new ZLibStream(compressedSegment, CompressionMode.Decompress, true);
 
-        Span<byte> decompressed = stackalloc byte[frame.RawSize];
+        Span<byte> decompressed = stackalloc byte[frame.DecompressedSize];
 
-        decompressor.ReadAtLeast(decompressed, frame.RawSize);
+        decompressor.ReadAtLeast(decompressed, frame.DecompressedSize);
 
         decompressed[..frame.ByteCount]
             .CopyTo(frame.Data);
@@ -219,6 +270,7 @@ public sealed class EfaFile : Collection<EfaFrame>, ISavable
     #endregion
 
     #region SaveTo
+    /// <inheritdoc />
     public void Save(string path)
     {
         using var stream = File.Open(
@@ -234,6 +286,7 @@ public sealed class EfaFile : Collection<EfaFrame>, ISavable
         Save(stream);
     }
 
+    /// <inheritdoc />
     public void Save(Stream stream)
     {
         using var writer = new BinaryWriter(stream, Encoding.Default, true);
@@ -263,28 +316,29 @@ public sealed class EfaFile : Collection<EfaFrame>, ISavable
             compressedFrames[i] = compressedBytes;
 
             //offset starts at 0 and grows with each frame's compressed data size (including the zlib header)
-            frame.Offset = offset;
-            frame.Size = compressedSize;
+            frame.StartAddress = offset;
+            frame.CompressedSize = compressedSize;
 
             writer.Write(frame.Unknown1);
-            writer.Write(frame.Offset);
-            writer.Write(frame.Size);
-            writer.Write(frame.RawSize);
+            writer.Write(frame.StartAddress);
+            writer.Write(frame.CompressedSize);
+            writer.Write(frame.DecompressedSize);
             writer.Write(frame.Unknown2);
             writer.Write(frame.Unknown3);
             writer.Write(frame.ByteWidth);
             writer.Write(frame.Unknown4);
             writer.Write(frame.ByteCount);
             writer.Write(frame.Unknown5);
-            writer.Write(frame.OriginX);
-            writer.Write(frame.OriginY);
-            writer.Write(frame.OriginFlags);
-            writer.Write(frame.ImageWidth);
-            writer.Write(frame.ImageHeight);
-            writer.Write(frame.Pad1Flags);
-            writer.Write(frame.FrameWidth);
-            writer.Write(frame.FrameHeight);
-            writer.Write(frame.Pad2Flags);
+            writer.Write(frame.CenterX);
+            writer.Write(frame.CenterY);
+            writer.Write(frame.Unknown6);
+            writer.Write(frame.ImagePixelWidth);
+            writer.Write(frame.ImagePixelHeight);
+            writer.Write(frame.Left);
+            writer.Write(frame.Top);
+            writer.Write(frame.FramePixelWidth);
+            writer.Write(frame.FramePixelHeight);
+            writer.Write(frame.Unknown7);
 
             offset += compressedSize;
         }

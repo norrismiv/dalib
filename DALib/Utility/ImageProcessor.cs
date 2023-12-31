@@ -7,8 +7,17 @@ using SkiaSharp;
 
 namespace DALib.Utility;
 
+/// <summary>
+///     Provides methods for processing images
+/// </summary>
 public static class ImageProcessor
 {
+    /// <summary>
+    ///     Creates a mosaic image by combining multiple images horizontally.
+    /// </summary>
+    /// <param name="colorType">The color type of the resulting mosaic image.</param>
+    /// <param name="padding">The padding between each image in pixels. Default value is 1.</param>
+    /// <param name="images">The images to be combined into a mosaic.</param>
     public static SKImage CreateMosaic(SKColorType colorType, int padding = 1, params SKImage[] images)
     {
         var width = images.Sum(img => img.Width) + (images.Length - 1) * padding;
@@ -35,6 +44,14 @@ public static class ImageProcessor
         return SKImage.FromBitmap(bitmap);
     }
 
+    /// <summary>
+    ///     Quantizes the given image using the specified quantizer options.
+    /// </summary>
+    /// <param name="options">The quantizer options.</param>
+    /// <param name="image">The image to be quantized.</param>
+    /// <remarks>
+    ///     Quantization is the process of reducing the number of colors in an image. This method uses the Wu algorithm
+    /// </remarks>
     public static Palettized<SKImage> Quantize(QuantizerOptions options, SKImage image)
     {
         using var bitmap = SKBitmap.FromImage(image);
@@ -84,6 +101,15 @@ public static class ImageProcessor
         };
     }
 
+    /// <summary>
+    ///     Quantizes the given images using the specified quantizer options
+    /// </summary>
+    /// <param name="options">The quantizer options.</param>
+    /// <param name="images">The images to be quantized.</param>
+    /// <remarks>
+    ///     Quantization is the process of reducing the number of colors in an image. This method uses the Wu algorithm. All
+    ///     provided images will be quantized together so that the resulting palette is the same for all images
+    /// </remarks>
     public static Palettized<SKImageCollection> QuantizeMultiple(QuantizerOptions options, params SKImage[] images)
     {
         const int PADDING = 1;

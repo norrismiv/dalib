@@ -14,14 +14,46 @@ using SkiaSharp;
 
 namespace DALib.Drawing;
 
+/// <summary>
+///     Represents an image file with the ".spf" extension. This image format supports one or more of either colorized or
+///     palettized images. In the case where a palette is used, the palette will contain 256 RGB565 encoded entries, and
+///     256 RGB555 encoded entries (only the RGB565 entries are used). In the case where colorized images are used, the
+///     image will be encoded as RGB565, and a second copy of the data will encoded as RGB555 per frame.
+/// </summary>
 public sealed class SpfFile : Collection<SpfFrame>, ISavable
 {
+    /// <summary>
+    ///     Indicates whether the images are colorized or palettized
+    /// </summary>
     public SpfFormatType Format { get; set; }
-    public Palette PrimaryColors { get; set; }
-    public Palette SecondaryColors { get; set; }
+
+    /// <summary>
+    ///     The primary palette used for palettized images
+    /// </summary>
+    public Palette? PrimaryColors { get; set; }
+
+    /// <summary>
+    ///     The secondary palette used for palettized images
+    /// </summary>
+    public Palette? SecondaryColors { get; set; }
+
+    /// <summary>
+    ///     A value that has an unknown use
+    ///     LI: figure out what this is for
+    /// </summary>
     public uint Unknown1 { get; set; }
+
+    /// <summary>
+    ///     A value that has an unknown use
+    ///     LI: figure out what this is for
+    /// </summary>
     public uint Unknown2 { get; set; }
 
+    /// <summary>
+    ///     Initializes a new instance of the SpfFile class(palettized) with the specified primary and secondary palettes
+    /// </summary>
+    /// <param name="primaryColors">The primary color palette used by the images (RGB565 scaled to RGB888)</param>
+    /// <param name="secondaryColors">The secondary color palette used by the images (RGB555 scale to RGB888)</param>
     public SpfFile(Palette primaryColors, Palette secondaryColors)
     {
         Format = SpfFormatType.Palettized;
@@ -29,12 +61,10 @@ public sealed class SpfFile : Collection<SpfFrame>, ISavable
         SecondaryColors = secondaryColors;
     }
 
-    public SpfFile()
-    {
-        Format = SpfFormatType.Colorized;
-        PrimaryColors = new Palette();
-        SecondaryColors = new Palette();
-    }
+    /// <summary>
+    ///     Initializes a new instance of the SpfFile class(colorized)
+    /// </summary>
+    public SpfFile() => Format = SpfFormatType.Colorized;
 
     private SpfFile(Stream stream)
     {
@@ -82,15 +112,15 @@ public sealed class SpfFile : Collection<SpfFrame>, ISavable
             Add(
                 new SpfFrame
                 {
-                    PadWidth = padWidth,
-                    PadHeight = padHeight,
+                    Left = padWidth,
+                    Top = padHeight,
                     PixelWidth = pixelWidth,
                     PixelHeight = pixelHeight,
-                    Reserved = reserved,
+                    Unknown2 = reserved,
                     StartAddress = startAddress,
                     ByteWidth = byteWidth,
                     ByteCount = byteCount,
-                    SemiByteCount = semiByteCount,
+                    ImageByteCount = semiByteCount,
                     ColorData = new SKColor[pixelWidth * pixelHeight]
                 });
         }
@@ -119,10 +149,10 @@ public sealed class SpfFile : Collection<SpfFrame>, ISavable
     private void ReadPalettized(BinaryReader reader)
     {
         for (var i = 0; i < 256; i++)
-            PrimaryColors[i] = reader.ReadRgb565Color();
+            PrimaryColors![i] = reader.ReadRgb565Color();
 
         for (var i = 0; i < 256; i++)
-            SecondaryColors[i] = reader.ReadRgb555Color();
+            SecondaryColors![i] = reader.ReadRgb555Color();
 
         var frameCount = reader.ReadUInt32();
 
@@ -142,15 +172,15 @@ public sealed class SpfFile : Collection<SpfFrame>, ISavable
             Add(
                 new SpfFrame
                 {
-                    PadWidth = padWidth,
-                    PadHeight = padHeight,
+                    Left = padWidth,
+                    Top = padHeight,
                     PixelWidth = pixelWidth,
                     PixelHeight = pixelHeight,
-                    Reserved = reserved,
+                    Unknown2 = reserved,
                     StartAddress = startAddress,
                     ByteWidth = byteWidth,
                     ByteCount = byteCount,
-                    SemiByteCount = semiByteCount,
+                    ImageByteCount = semiByteCount,
                     Data = new byte[byteCount]
                 });
         }
@@ -168,6 +198,7 @@ public sealed class SpfFile : Collection<SpfFrame>, ISavable
     }
 
     #region SaveTo
+    /// <inheritdoc />
     public void Save(string path)
     {
         using var stream = File.Open(
@@ -183,7 +214,7 @@ public sealed class SpfFile : Collection<SpfFrame>, ISavable
         Save(stream);
     }
 
-    //TODO: maybe make this always save colorized SPFs?
+    /// <inheritdoc />
     public void Save(Stream stream)
     {
         using var writer = new BinaryWriter(stream, Encoding.Default, true);
@@ -218,16 +249,16 @@ public sealed class SpfFile : Collection<SpfFrame>, ISavable
             frame.StartAddress = startAddress;
             startAddress += frame.ByteCount;
 
-            writer.Write(frame.PadWidth);
-            writer.Write(frame.PadHeight);
+            writer.Write(frame.Left);
+            writer.Write(frame.Top);
             writer.Write(frame.PixelWidth);
             writer.Write(frame.PixelHeight);
-            writer.Write(SpfFrame.Unknown);
-            writer.Write(frame.Reserved);
+            writer.Write(SpfFrame.Unknown1);
+            writer.Write(frame.Unknown2);
             writer.Write(frame.StartAddress);
             writer.Write(frame.ByteWidth);
             writer.Write(frame.ByteCount);
-            writer.Write(frame.SemiByteCount);
+            writer.Write(frame.ImageByteCount);
         }
 
         //startAddress is now the total byte count
@@ -263,10 +294,10 @@ public sealed class SpfFile : Collection<SpfFrame>, ISavable
     private void SavePalettized(BinaryWriter writer)
     {
         for (var i = 0; i < CONSTANTS.COLORS_PER_PALETTE; i++)
-            writer.WriteRgb565Color(PrimaryColors[i]);
+            writer.WriteRgb565Color(PrimaryColors![i]);
 
         for (var i = 0; i < CONSTANTS.COLORS_PER_PALETTE; i++)
-            writer.WriteRgb555Color(SecondaryColors[i]);
+            writer.WriteRgb555Color(SecondaryColors![i]);
 
         writer.Write(Count);
         var startAddress = 0u;
@@ -277,16 +308,16 @@ public sealed class SpfFile : Collection<SpfFrame>, ISavable
             frame.StartAddress = startAddress;
             startAddress += frame.ByteCount;
 
-            writer.Write(frame.PadWidth);
-            writer.Write(frame.PadHeight);
+            writer.Write(frame.Left);
+            writer.Write(frame.Top);
             writer.Write(frame.PixelWidth);
             writer.Write(frame.PixelHeight);
-            writer.Write(SpfFrame.Unknown);
-            writer.Write(frame.Reserved);
+            writer.Write(SpfFrame.Unknown1);
+            writer.Write(frame.Unknown2);
             writer.Write(frame.StartAddress);
             writer.Write(frame.ByteWidth);
             writer.Write(frame.ByteCount);
-            writer.Write(frame.SemiByteCount);
+            writer.Write(frame.ImageByteCount);
         }
 
         //startAddress is now the total byte count
@@ -302,8 +333,16 @@ public sealed class SpfFile : Collection<SpfFrame>, ISavable
     #endregion
 
     #region LoadFrom
+    /// <summary>
+    ///     Converts a sequence of fully colored images to a colorized SpfFile.
+    /// </summary>
+    /// <param name="orderedFrames">The ordered collection of SKImage frames.</param>
     public static SpfFile FromImages(IEnumerable<SKImage> orderedFrames) => FromImages(orderedFrames.ToArray());
 
+    /// <summary>
+    ///     Converts a collection of fully colored images to a colorized SpfFile
+    /// </summary>
+    /// <param name="orderedFrames">The ordered array of SKImage frames.</param>
     public static SpfFile FromImages(params SKImage[] orderedFrames)
     {
         var spfFile = new SpfFile();
@@ -315,15 +354,15 @@ public sealed class SpfFile : Collection<SpfFrame>, ISavable
 
             var frame = new SpfFrame
             {
-                PadWidth = 0,
-                PadHeight = 0,
+                Left = 0,
+                Top = 0,
                 PixelWidth = (ushort)image.Width,
                 PixelHeight = (ushort)image.Height,
-                Reserved = 0,
+                Unknown2 = 0,
                 StartAddress = 0,
                 ByteWidth = (uint)image.Width * 2,
                 ByteCount = (uint)(image.Width * image.Height * 4), //2 bytes per pixel, 2 copies of image
-                SemiByteCount = (uint)(image.Width * image.Height * 2),
+                ImageByteCount = (uint)(image.Width * image.Height * 2),
                 ColorData = new SKColor[image.Width * image.Height]
             };
 
@@ -342,9 +381,25 @@ public sealed class SpfFile : Collection<SpfFrame>, ISavable
         return spfFile;
     }
 
+    /// <summary>
+    ///     Converts a sequence of fully colored images to a palettized SpfFile.
+    /// </summary>
+    /// <param name="options">
+    ///     Options to be used for quantization. Palettized SpfFiles can only have a maximum of 256 colors due to being
+    ///     a palettized format
+    /// </param>
+    /// <param name="orderedFrames">The ordered collection of SKImage frames.</param>
     public static SpfFile FromImages(QuantizerOptions options, IEnumerable<SKImage> orderedFrames)
         => FromImages(options, orderedFrames.ToArray());
 
+    /// <summary>
+    ///     Converts a collection of fully colored images to a palettized SpfFile
+    /// </summary>
+    /// <param name="options">
+    ///     Options to be used for quantization. Palettized SpfFiles can only have a maximum of 256 colors due to being
+    ///     a palettized format
+    /// </param>
+    /// <param name="orderedFrames">The ordered array of SKImage frames.</param>
     public static SpfFile FromImages(QuantizerOptions options, params SKImage[] orderedFrames)
     {
         using var quantized = ImageProcessor.QuantizeMultiple(options, orderedFrames);
@@ -359,15 +414,15 @@ public sealed class SpfFile : Collection<SpfFrame>, ISavable
             spfFile.Add(
                 new SpfFrame
                 {
-                    PadWidth = 0,
-                    PadHeight = 0,
+                    Left = 0,
+                    Top = 0,
                     PixelWidth = (ushort)image.Width,
                     PixelHeight = (ushort)image.Height,
-                    Reserved = 0,
+                    Unknown2 = 0,
                     StartAddress = 0,
                     ByteWidth = (uint)image.Width,
                     ByteCount = (uint)image.Width * (uint)image.Height,
-                    SemiByteCount = (uint)image.Width * (uint)image.Height,
+                    ImageByteCount = (uint)image.Width * (uint)image.Height,
                     Data = image.GetPalettizedPixelData(palette)
                 });
         }
@@ -375,6 +430,14 @@ public sealed class SpfFile : Collection<SpfFrame>, ISavable
         return spfFile;
     }
 
+    /// <summary>
+    ///     Loads an SpfFile with the specified fileName from the specified archive
+    /// </summary>
+    /// <param name="fileName">The name of the SPF file to extract from the archive.</param>
+    /// <param name="archive">The DataArchive from which to retrieve the SPF file.</param>
+    /// <exception cref="FileNotFoundException">
+    ///     Thrown if the SPF file with the specified name is not found in the archive.
+    /// </exception>
     public static SpfFile FromArchive(string fileName, DataArchive archive)
     {
         if (!archive.TryGetValue(fileName.WithExtension(".spf"), out var entry))
@@ -383,6 +446,10 @@ public sealed class SpfFile : Collection<SpfFrame>, ISavable
         return FromEntry(entry);
     }
 
+    /// <summary>
+    ///     Loads an SpfFile from the specified archive entry
+    /// </summary>
+    /// <param name="entry">The DataArchiveEntry to load the SpfFile from</param>
     public static SpfFile FromEntry(DataArchiveEntry entry)
     {
         using var segment = entry.ToStreamSegment();
@@ -390,6 +457,10 @@ public sealed class SpfFile : Collection<SpfFrame>, ISavable
         return new SpfFile(segment);
     }
 
+    /// <summary>
+    ///     Loads an SpfFile from the specified path
+    /// </summary>
+    /// <param name="path">The path of the file to be read.</param>
     public static SpfFile FromFile(string path)
     {
         using var stream = File.Open(

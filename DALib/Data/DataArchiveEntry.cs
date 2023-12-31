@@ -4,18 +4,37 @@ using DALib.Extensions;
 
 namespace DALib.Data;
 
+/// <summary>
+///     Represents an entry in a data archive.
+/// </summary>
 public sealed class DataArchiveEntry(
     DataArchive archive,
     string entryName,
     int address,
     int fileSize)
 {
+    /// <summary>
+    ///     The starting address of the entry within it's containing archive
+    /// </summary>
     public int Address { get; } = address;
 
+    /// <summary>
+    ///     The name of the entry. Will contain file extension if present
+    /// </summary>
     public string EntryName { get; } = entryName;
 
+    /// <summary>
+    ///     The size of the entry in bytes.
+    /// </summary>
     public int FileSize { get; } = fileSize;
 
+    /// <summary>
+    ///     Initializes a new instance of the <see cref="DataArchiveEntry" /> class with it's containing archive, entry name,
+    ///     and file size.
+    /// </summary>
+    /// <param name="archive">The archive that contains the entry.</param>
+    /// <param name="entryName">The name of the entry.</param>
+    /// <param name="fileSize">The size of the file.</param>
     public DataArchiveEntry(DataArchive archive, string entryName, int fileSize)
         : this(
             archive,
@@ -63,6 +82,9 @@ public sealed class DataArchiveEntry(
         }
     }
 
+    /// <summary>
+    ///     Converts the entry to a span of bytes
+    /// </summary>
     public Span<byte> ToSpan()
     {
         archive.ThrowIfDisposed();
@@ -86,25 +108,38 @@ public sealed class DataArchiveEntry(
         return archive.DataStream!.Slice(Address, FileSize, leaveOpen);
     }
 
-    public bool TryGetNumericIdentifier(out int identifier)
+    /// <summary>
+    ///     Attempts to retrieve a numeric identifier from the EntryName property.
+    /// </summary>
+    /// <param name="identifier">The retrieved numeric identifier, if successful.</param>
+    /// <param name="numDigits">The maximum number of digits to consider as the identifier.</param>
+    /// <returns>True if a numeric identifier is successfully retrieved, false otherwise.</returns>
+    public bool TryGetNumericIdentifier(out int identifier, int numDigits = int.MaxValue)
     {
         identifier = -1;
 
         var fileName = Path.GetFileNameWithoutExtension(EntryName);
-        var indexOfFirstNumber = -1;
+        var numberStartIndex = -1;
+        var numberEndIndex = -1;
 
         for (var i = 0; i < fileName.Length; ++i)
             if (char.IsDigit(fileName[i]))
             {
-                indexOfFirstNumber = i;
+                if (numberStartIndex == -1)
+                    numberStartIndex = i;
 
-                break;
+                numberEndIndex = i;
             }
 
-        if (indexOfFirstNumber == -1)
+        if (numberStartIndex == -1)
             return false;
 
-        var numericIdentifierStr = fileName[indexOfFirstNumber..];
+        numberEndIndex++;
+
+        if ((numberEndIndex - numberStartIndex) > numDigits)
+            numberEndIndex = numberStartIndex + numDigits;
+
+        var numericIdentifierStr = fileName[numberStartIndex..numberEndIndex];
 
         return int.TryParse(numericIdentifierStr, out identifier);
     }

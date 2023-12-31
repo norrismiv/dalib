@@ -9,8 +9,14 @@ using DALib.Memory;
 
 namespace DALib.Data;
 
+/// <summary>
+///     Represents a collection of metadata entries stored in a file format. Can be used to view or manipulate entries.
+/// </summary>
 public sealed class MetaFile : Collection<MetaFileEntry>, ISavable
 {
+    /// <summary>
+    ///     Represents a file that contains meta data entries
+    /// </summary>
     public MetaFile() { }
 
     private MetaFile(Stream stream)
@@ -39,6 +45,11 @@ public sealed class MetaFile : Collection<MetaFileEntry>, ISavable
     }
 
     #region LoadFrom
+    /// <summary>
+    ///     Loads a MetaFile from the specified path
+    /// </summary>
+    /// <param name="path">The path of the file.</param>
+    /// <param name="isCompressed">A value indicating whether the file is compressed.</param>
     public static MetaFile FromFile(string path, bool isCompressed)
     {
         using var stream = File.Open(
@@ -61,6 +72,7 @@ public sealed class MetaFile : Collection<MetaFileEntry>, ISavable
     #endregion
 
     #region SaveTo
+    /// <inheritdoc />
     public void Save(string path)
     {
         using var stream = File.Open(
@@ -76,6 +88,7 @@ public sealed class MetaFile : Collection<MetaFileEntry>, ISavable
         Save(stream);
     }
 
+    /// <inheritdoc />
     public void Save(Stream stream)
     {
         var encoding = CodePagesEncodingProvider.Instance.GetEncoding(949)!;

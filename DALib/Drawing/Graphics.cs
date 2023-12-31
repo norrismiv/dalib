@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using System;
+using System.Text;
 using DALib.Data;
 using DALib.Definitions;
 using DALib.Extensions;
@@ -8,114 +9,157 @@ using SkiaSharp;
 
 namespace DALib.Drawing;
 
-public class Graphics
+/// <summary>
+///     Graphics class provides various methods for rendering images
+/// </summary>
+public static class Graphics
 {
-    public static SKImage RenderImage(EpfFrame frame, Palette palette)
+    private static SKImage PaddedRender(
+        int top,
+        int left,
+        int bottom,
+        int right,
+        byte[] data,
+        Palette palette)
     {
-        var fullWidth = frame.Right;
-        var fullHeight = frame.Bottom;
-        var drawnWidth = frame.Right - frame.Left;
-        var drawnHeight = frame.Bottom - frame.Top;
+        var drawnWidth = right - left;
+        var drawnHeight = bottom - top;
 
-        using var image = new SKBitmap(fullWidth, fullHeight);
-        using var canvas = new SKCanvas(image);
+        var hasTransparency = palette[0]
+                                  .Equals(SKColors.Black)
+                              || palette[0]
+                                  .Equals(CONSTANTS.Transparent);
 
-        using var drawnPart = SimpleRender(
-            drawnWidth,
-            drawnHeight,
-            frame.Data,
-            palette);
+        using var bitmap = new SKBitmap(left, bottom);
 
-        canvas.DrawImage(drawnPart, frame.Left, frame.Top);
+        bitmap.Erase(CONSTANTS.Transparent);
 
-        return SKImage.FromBitmap(image);
+        for (var y = 0; y < drawnWidth; y++)
+            for (var x = 0; x < drawnHeight; x++)
+            {
+                var xActual = x + left;
+                var yActual = y + top;
+
+                var pixelIndex = y * drawnWidth + x;
+                var paletteIndex = data[pixelIndex];
+
+                //if the paletteIndex is 0, and that color is pure black or transparent black
+                var color = (paletteIndex == 0) && hasTransparency ? CONSTANTS.Transparent : palette[paletteIndex];
+
+                bitmap.SetPixel(xActual, yActual, color);
+            }
+
+        return SKImage.FromBitmap(bitmap);
     }
 
-    public static SKImage RenderImage(MpfFrame frame, Palette palette)
-        => SimpleRender(
-            frame.Width,
-            frame.Height,
+    private static SKImage PaddedRender(
+        int top,
+        int left,
+        int bottom,
+        int right,
+        SKColor[] data)
+    {
+        var drawnWidth = right - left;
+        var drawnHeight = bottom - top;
+
+        using var bitmap = new SKBitmap(drawnWidth, drawnHeight);
+
+        bitmap.Erase(CONSTANTS.Transparent);
+
+        for (var y = 0; y < drawnHeight; y++)
+            for (var x = 0; x < drawnWidth; x++)
+            {
+                var xActual = x + left;
+                var yActual = y + top;
+
+                var pixelIndex = y * drawnWidth + x;
+                var color = data[pixelIndex];
+
+                if ((color == CONSTANTS.Transparent) || (color == SKColors.Black))
+                    continue;
+
+                bitmap.SetPixel(xActual, yActual, color);
+            }
+
+        return SKImage.FromBitmap(bitmap);
+    }
+
+    /// <summary>
+    ///     Renders an EpfFrame
+    /// </summary>
+    /// <param name="frame">The frame to render</param>
+    /// <param name="palette">A palette containing colors used by the frame</param>
+    public static SKImage RenderImage(EpfFrame frame, Palette palette)
+        => PaddedRender(
+            frame.Top,
+            frame.Left,
+            frame.Bottom,
+            frame.Right,
             frame.Data,
             palette);
 
+    /// <summary>
+    ///     Renders an MpfFrame
+    /// </summary>
+    /// <param name="frame">The frame to render</param>
+    /// <param name="palette">A palette containing colors used by the frame</param>
+    public static SKImage RenderImage(MpfFrame frame, Palette palette)
+        => PaddedRender(
+            frame.Top,
+            frame.Left,
+            frame.Bottom,
+            frame.Right,
+            frame.Data,
+            palette);
+
+    /// <summary>
+    ///     Renders an HpfFile
+    /// </summary>
+    /// <param name="hpf">The file to render</param>
+    /// <param name="palette">A palette containing colors used by the frame</param>
     public static SKImage RenderImage(HpfFile hpf, Palette palette)
         => SimpleRender(
             CONSTANTS.HPF_TILE_WIDTH,
-            hpf.Height,
+            hpf.PixelHeight,
             hpf.Data,
             palette);
 
     /// <summary>
-    ///     Renders a palettized SPF image
+    ///     Renders a palettized SPF frame
     /// </summary>
-    /// <param name="spf"></param>
-    /// <param name="spfPrimaryColorPalette"></param>
-    /// <returns></returns>
+    /// <param name="spf">The frame to render. Must be a palettized SpfFrame</param>
+    /// <param name="spfPrimaryColorPalette">The primary color palette of the SpfFile. (see SpfFile.Format)</param>
     public static SKImage RenderImage(SpfFrame spf, Palette spfPrimaryColorPalette)
-    {
-        using var bitmap = new SKBitmap(spf.PixelWidth, spf.PixelHeight);
-
-        for (var y = 0; y < spf.PixelHeight; y++)
-            for (var x = 0; x < spf.PixelWidth; x++)
-            {
-                if ((x < spf.PadWidth) || (y < spf.PadHeight))
-                {
-                    bitmap.SetPixel(x, y, CONSTANTS.Transparent);
-
-                    continue;
-                }
-
-                //get the palette index for the current pixel
-                //ignore padding on top and left
-                var pixelIndex = (spf.PixelWidth - spf.PadWidth) * (y - spf.PadHeight) + (x - spf.PadWidth);
-                var paletteIndex = spf.Data[pixelIndex];
-
-                if (paletteIndex == 0)
-                {
-                    bitmap.SetPixel(x, y, CONSTANTS.Transparent);
-
-                    continue;
-                }
-
-                var color = spfPrimaryColorPalette[paletteIndex];
-                bitmap.SetPixel(x, y, color);
-            }
-
-        return SKImage.FromBitmap(bitmap);
-    }
+        => PaddedRender(
+            spf.Top,
+            spf.Left,
+            spf.Top + spf.PixelHeight,
+            spf.Left + spf.PixelWidth,
+            spf.Data!,
+            spfPrimaryColorPalette);
 
     /// <summary>
-    ///     Renders a colorized SPF image
+    ///     Renders a colorized SpfFrame
     /// </summary>
+    /// <param name="spf">The frame to render. Must be a colorized SpfFrame. (see SpfFile.Format)</param>
     public static SKImage RenderImage(SpfFrame spf)
-    {
-        using var bitmap = new SKBitmap(spf.PixelWidth, spf.PixelHeight);
+        => PaddedRender(
+            spf.Top,
+            spf.Left,
+            spf.Top + spf.PixelHeight,
+            spf.Left + spf.PixelWidth,
+            spf.ColorData!);
 
-        for (var y = 0; y < spf.PixelHeight; y++)
-            for (var x = 0; x < spf.PixelWidth; x++)
-            {
-                if ((x < spf.PadWidth) || (y < spf.PadHeight))
-                {
-                    bitmap.SetPixel(x, y, CONSTANTS.Transparent);
-
-                    continue;
-                }
-
-                //get the palette index for the current pixel
-                //ignore padding on top and left
-                var pixelIndex = (spf.PixelWidth - spf.PadWidth) * (y - spf.PadHeight) + (x - spf.PadWidth);
-
-                bitmap.SetPixel(x, y, spf.ColorData![pixelIndex]);
-            }
-
-        return SKImage.FromBitmap(bitmap);
-    }
-
-    public static SKImage RenderImage(EfaFrame efa)
+    /// <summary>
+    ///     Renders an EfaFrame
+    /// </summary>
+    /// <param name="efa">The frame to render</param>
+    /// <param name="efaBlendingType">The alpha blending type to use</param>
+    public static SKImage RenderImage(EfaFrame efa, EfaBlendingType efaBlendingType = EfaBlendingType.Luminance)
     {
         using var bitmap = new SKBitmap(
-            efa.ImageWidth,
-            efa.ImageHeight,
+            efa.ImagePixelWidth,
+            efa.ImagePixelHeight,
             SKColorType.Rgba8888,
             SKAlphaType.Premul);
 
@@ -126,32 +170,54 @@ public class Graphics
 
         var reader = new SpanReader(Encoding.Default, efa.Data, Endianness.LittleEndian);
 
+        //we will iterate over the data to render the image
         var dataWidth = efa.ByteWidth / 2;
         var dataHeight = efa.ByteCount / efa.ByteWidth;
 
         for (var y = 0; y < dataHeight; y++)
             for (var x = 0; x < dataWidth; x++)
             {
+                //left and top are padding, add them to the x/y
+                var xActual = x + efa.Left;
+                var yActual = y + efa.Top;
+
                 //read the RGB565 color
                 var color = reader.ReadRgb565Color();
 
-                //ignore extra shit on the right and bottom outside the render dimensions
-                if (x >= efa.FrameWidth)
+                //for some reason these images can have extra trash data on the right and bottom
+                //we avoid it by obeying the frame pixel width/height vs padded x/y
+                if (xActual >= efa.FramePixelWidth)
                     continue;
 
-                if (y >= efa.FrameHeight)
+                if (yActual >= efa.FramePixelHeight)
                     continue;
 
                 // set alpha based on luminance
-                // TODO: may need adjusting
-                var adjustedColor = color.WithLuminanceAlpha();
+                // this may be slightly off, but it's close enough for now
+                var coefficient = efaBlendingType switch
+                {
+                    EfaBlendingType.Luminance     => 1f,
+                    EfaBlendingType.LessLuminance => 1.25f, //more alpha is less transparent
+                    EfaBlendingType.NotSure       => -1f,
+                    _                             => throw new ArgumentOutOfRangeException(nameof(efaBlendingType), efaBlendingType, null)
+                };
 
-                bitmap.SetPixel(x, y, adjustedColor);
+                //if the coefficient is positive, add luminance alpha to the color
+                if (coefficient > 0)
+                    color = color.WithLuminanceAlpha(coefficient);
+
+                bitmap.SetPixel(xActual, yActual, color);
             }
 
         return SKImage.FromBitmap(bitmap);
     }
 
+    /// <summary>
+    ///     Renders a MapFile, given the archives that contain required data
+    /// </summary>
+    /// <param name="map">The map file to render.</param>
+    /// <param name="seoDat">The SEO archive.</param>
+    /// <param name="iaDat">The IA archive.</param>
     public static SKImage RenderMap(MapFile map, DataArchive seoDat, DataArchive iaDat)
         => RenderMap(
             map,
@@ -162,6 +228,14 @@ public class Graphics
                          .Freeze(),
             iaDat);
 
+    /// <summary>
+    ///     Renders a MapFile, given already extracted information
+    /// </summary>
+    /// <param name="map">The MapFile to render</param>
+    /// <param name="tiles">A collection of background tiles</param>
+    /// <param name="bgPaletteLookup">PaletteLookup for background tiles</param>
+    /// <param name="fgPaletteLookup">PaletteLookup for foreground tiles</param>
+    /// <param name="iaDat">IA archive for reading foreground tile files</param>
     public static SKImage RenderMap(
         MapFile map,
         Tileset tiles,
@@ -276,6 +350,11 @@ public class Graphics
         return SKImage.FromBitmap(bitmap);
     }
 
+    /// <summary>
+    ///     Renders a Tile
+    /// </summary>
+    /// <param name="tile">The tile to render</param>
+    /// <param name="palette">A palette containing colors used by the tile</param>
     public static SKImage RenderTile(Tile tile, Palette palette)
         => SimpleRender(
             CONSTANTS.TILE_WIDTH,
@@ -291,15 +370,19 @@ public class Graphics
     {
         using var bitmap = new SKBitmap(width, height);
 
+        var hasTransparency = palette[0]
+                                  .Equals(SKColors.Black)
+                              || palette[0]
+                                  .Equals(CONSTANTS.Transparent);
+
         for (var y = 0; y < height; y++)
             for (var x = 0; x < width; x++)
             {
                 var pixelIndex = y * width + x;
                 var paletteIndex = data[pixelIndex];
 
-                //apparently palette index 0 is transparent
-                //TODO: check if this is also the case for SpfFile
-                var color = paletteIndex == 0 ? CONSTANTS.Transparent : palette[paletteIndex];
+                //if the paletteIndex is 0, and that color is pure black or transparent black
+                var color = (paletteIndex == 0) && hasTransparency ? CONSTANTS.Transparent : palette[paletteIndex];
 
                 bitmap.SetPixel(x, y, color);
             }
