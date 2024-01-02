@@ -192,7 +192,9 @@ public sealed class EfaFile : Collection<EfaFrame>, ISavable
         for (var i = 0; i < orderedFrames.Length; i++)
         {
             var image = orderedFrames[i];
+
             using var bitmap = SKBitmap.FromImage(image);
+
             byte[] rawBytes;
 
             if (image.ColorType == SKColorType.Rgb565)

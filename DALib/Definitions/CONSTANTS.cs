@@ -66,4 +66,14 @@ public static class CONSTANTS
     ///     Transparent black, commonly used to represent transparency in DarkAges image formats
     /// </summary>
     public static readonly SKColor Transparent = SKColors.Black.WithAlpha(0);
+
+    /// <summary>
+    ///     The darkest black that wont downscale to true black when converted to RGB555
+    /// </summary>
+    public static readonly SKColor RGB555_ALMOST_BLACK = new(9, 9, 9);
+
+    /// <summary>
+    ///     The loss factor of data when converting from 8-bit to 5-bit
+    /// </summary>
+    public const byte RGB555_COLOR_LOSS_FACTOR = byte.MaxValue / FIVE_BIT_MASK;
 }

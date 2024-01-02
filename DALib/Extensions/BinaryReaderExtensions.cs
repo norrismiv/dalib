@@ -1,5 +1,6 @@
 ﻿using System.IO;
 using System.Text;
+using DALib.Utility;
 using SkiaSharp;
 
 namespace DALib.Extensions;
@@ -50,9 +51,7 @@ public static class BinaryReaderExtensions
     /// <remarks>
     ///     The color is read as an RGB555 encoded color, then scaled to RGB888 and stored as an SKColor
     /// </remarks>
-    public static SKColor ReadRgb555Color(this BinaryReader reader)
-        => reader.ReadUInt16()
-                 .ToRgb555Color();
+    public static SKColor ReadRgb555Color(this BinaryReader reader) => ColorCodec.DecodeRgb555(reader.ReadUInt16());
 
     /// <summary>
     ///     Reads a 16-bit color value encoded as RGB565 from the specified BinaryReader and scales it to RGB888
@@ -61,9 +60,7 @@ public static class BinaryReaderExtensions
     /// <remarks>
     ///     The color is read as an RGB565 encoded color, then scaled to RGB888 and stored as an SKColor
     /// </remarks>
-    public static SKColor ReadRgb565Color(this BinaryReader reader)
-        => reader.ReadUInt16()
-                 .ToRgb565Color();
+    public static SKColor ReadRgb565Color(this BinaryReader reader) => ColorCodec.DecodeRgb565(reader.ReadUInt16());
 
     /// <summary>
     ///     Reads a string from the BinaryReader

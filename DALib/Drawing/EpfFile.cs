@@ -227,6 +227,8 @@ public sealed class EpfFile : Collection<EpfFrame>, ISavable
     /// <param name="orderedFrames">The ordered array of SKImage frames.</param>
     public static Palettized<EpfFile> FromImages(QuantizerOptions options, params SKImage[] orderedFrames)
     {
+        ImageProcessor.PreserveNonTransparentBlacks(orderedFrames);
+
         using var quantized = ImageProcessor.QuantizeMultiple(options, orderedFrames);
 
         (var images, var palette) = quantized;

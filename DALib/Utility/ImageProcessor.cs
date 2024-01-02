@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using DALib.Definitions;
 using DALib.Extensions;
 using KGySoft.Drawing.Imaging;
 using KGySoft.Drawing.SkiaSharp;
@@ -42,6 +43,43 @@ public static class ImageProcessor
         }
 
         return SKImage.FromBitmap(bitmap);
+    }
+
+    /// <summary>
+    ///     Preserves non-transparent black pixels in the given image by converting them to a very dark gray (1, 1, 1)
+    /// </summary>
+    /// <param name="image">The image whose black pixels to preserve</param>
+    public static void PreserveNonTransparentBlacks(SKImage image)
+    {
+        using var bitmap = SKBitmap.FromImage(image);
+
+        PreserveNonTransparentBlacks(bitmap);
+    }
+
+    /// <summary>
+    ///     Preserves non-transparent black pixels in the given image by converting them to a very dark gray (1, 1, 1)
+    /// </summary>
+    /// <param name="bitmap">The image whose black pixels to preserve</param>
+    public static void PreserveNonTransparentBlacks(SKBitmap bitmap)
+    {
+        for (var y = 0; y < bitmap.Height; y++)
+            for (var x = 0; x < bitmap.Width; x++)
+            {
+                var color = bitmap.GetPixel(x, y);
+
+                if (color.IsNearBlack())
+                    bitmap.SetPixel(x, y, CONSTANTS.RGB555_ALMOST_BLACK);
+            }
+    }
+
+    /// <summary>
+    ///     Preserves non-transparent black pixels in the given images by converting them to a very dark gray (1, 1, 1)
+    /// </summary>
+    /// <param name="images">The images whose black pixels to preserve</param>
+    public static void PreserveNonTransparentBlacks(IEnumerable<SKImage> images)
+    {
+        foreach (var image in images)
+            PreserveNonTransparentBlacks(image);
     }
 
     /// <summary>

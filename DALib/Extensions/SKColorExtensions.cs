@@ -1,4 +1,5 @@
 using System;
+using DALib.Definitions;
 using SkiaSharp;
 
 namespace DALib.Extensions;
@@ -17,30 +18,17 @@ public static class SKColorExtensions
         => (0.299f * color.Red + 0.587f * color.Green + 0.114f * color.Blue) * coefficient;
 
     /// <summary>
-    ///     Converts the given SKColor to a RGB555 number.
+    ///     Checks if a color is close to black
     /// </summary>
-    /// <param name="color">The SKColor to convert.</param>
-    public static ushort ToRgb555Number(this SKColor color)
-    {
-        var r = color.Red >> 3;
-        var g = color.Green >> 3;
-        var b = color.Blue >> 3;
-
-        return (ushort)((r << 10) | (g << 5) | b);
-    }
-
-    /// <summary>
-    ///     Converts the given SKColor to a RGB565 number.
-    /// </summary>
-    /// <param name="color">The SKColor to convert.</param>
-    public static ushort ToRgb565Number(this SKColor color)
-    {
-        var r = color.Red >> 3;
-        var g = color.Green >> 2;
-        var b = color.Blue >> 3;
-
-        return (ushort)((r << 11) | (g << 5) | b);
-    }
+    /// <param name="color">The color to check</param>
+    public static bool IsNearBlack(this SKColor color)
+        => color is
+        {
+            Alpha: 255,
+            Red: <= CONSTANTS.RGB555_COLOR_LOSS_FACTOR,
+            Green: <= CONSTANTS.RGB555_COLOR_LOSS_FACTOR,
+            Blue: <= CONSTANTS.RGB555_COLOR_LOSS_FACTOR
+        };
 
     /// <summary>
     ///     Returns a new SKColor with the alpha set based on the luminance of the color

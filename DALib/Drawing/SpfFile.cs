@@ -351,6 +351,7 @@ public sealed class SpfFile : Collection<SpfFrame>, ISavable
         {
             var image = orderedFrames[i];
             using var bitmap = SKBitmap.FromImage(image);
+            ImageProcessor.PreserveNonTransparentBlacks(bitmap);
 
             var frame = new SpfFrame
             {
@@ -400,6 +401,8 @@ public sealed class SpfFile : Collection<SpfFrame>, ISavable
     /// <param name="orderedFrames">The ordered array of SKImage frames.</param>
     public static SpfFile FromImages(QuantizerOptions options, params SKImage[] orderedFrames)
     {
+        ImageProcessor.PreserveNonTransparentBlacks(orderedFrames);
+
         using var quantized = ImageProcessor.QuantizeMultiple(options, orderedFrames);
         (var images, var palette) = quantized;
 

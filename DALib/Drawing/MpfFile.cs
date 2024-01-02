@@ -379,6 +379,8 @@ public sealed class MpfFile : Collection<MpfFrame>, ISavable
     /// </remarks>
     public static Palettized<MpfFile> FromImages(QuantizerOptions options, MpfFormatType formatType, params SKImage[] orderedFrames)
     {
+        ImageProcessor.PreserveNonTransparentBlacks(orderedFrames);
+
         using var quantized = ImageProcessor.QuantizeMultiple(options, orderedFrames);
 
         (var images, var palette) = quantized;
