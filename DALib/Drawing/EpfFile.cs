@@ -5,23 +5,43 @@ using System.Linq;
 using System.Text;
 using DALib.Abstractions;
 using DALib.Data;
-using DALib.Definitions;
 using DALib.Extensions;
 using DALib.Utility;
 using SkiaSharp;
 
 namespace DALib.Drawing;
 
+/// <summary>
+///     Represents an image file with the ".epf" extension. This image format supports one or more palettized images only.
+///     The palettes will be stored in a separate file and will support full RGB888
+/// </summary>
 public sealed class EpfFile : Collection<EpfFrame>, ISavable
 {
-    public short Height { get; set; }
-    public byte[] UnknownBytes { get; set; }
-    public short Width { get; set; }
+    /// <summary>
+    ///     The pixel height of the image
+    /// </summary>
+    public short PixelHeight { get; set; }
 
+    /// <summary>
+    ///     The pixel width of the image
+    /// </summary>
+    public short PixelWidth { get; set; }
+
+    /// <summary>
+    ///     A value that has an unknown use
+    ///     LI: figure out what this is for
+    /// </summary>
+    public byte[] UnknownBytes { get; set; }
+
+    /// <summary>
+    ///     Initializes a new instance of the EpfFile class with the specified width and height.
+    /// </summary>
+    /// <param name="width">The width of the EpfFile.</param>
+    /// <param name="height">The height of the EpfFile.</param>
     public EpfFile(short width, short height)
     {
-        Height = height;
-        Width = width;
+        PixelHeight = height;
+        PixelWidth = width;
         UnknownBytes = new byte[2];
     }
 
@@ -34,8 +54,8 @@ public sealed class EpfFile : Collection<EpfFrame>, ISavable
         using (var headerReader = new BinaryReader(stream, Encoding.Default, true))
         {
             frameCount = headerReader.ReadInt16();
-            Width = headerReader.ReadInt16();
-            Height = headerReader.ReadInt16();
+            PixelWidth = headerReader.ReadInt16();
+            PixelHeight = headerReader.ReadInt16();
             UnknownBytes = headerReader.ReadBytes(2);
             tocAddress = headerReader.ReadInt32();
         }
@@ -80,6 +100,7 @@ public sealed class EpfFile : Collection<EpfFrame>, ISavable
     }
 
     #region SaveTo
+    /// <inheritdoc />
     public void Save(string path)
     {
         using var stream = File.Open(
@@ -95,13 +116,14 @@ public sealed class EpfFile : Collection<EpfFrame>, ISavable
         Save(stream);
     }
 
+    /// <inheritdoc />
     public void Save(Stream stream)
     {
         using var writer = new BinaryWriter(stream, Encoding.Default, true);
 
         writer.Write((short)Count);
-        writer.Write(Width);
-        writer.Write(Height);
+        writer.Write(PixelWidth);
+        writer.Write(PixelHeight);
         writer.Write(UnknownBytes);
 
         var footerStartAddress = this.Sum(frame => frame.Data.Length);
@@ -138,6 +160,14 @@ public sealed class EpfFile : Collection<EpfFrame>, ISavable
     #endregion
 
     #region LoadFrom
+    /// <summary>
+    ///     Loads an EpfFile with the specified fileName from the specified archive
+    /// </summary>
+    /// <param name="fileName">The name of the EPF file to extract from the archive.</param>
+    /// <param name="archive">The DataArchive from which to retrieve the EPF file.</param>
+    /// <exception cref="FileNotFoundException">
+    ///     Thrown if the EPF file with the specified name is not found in the archive.
+    /// </exception>
     public static EpfFile FromArchive(string fileName, DataArchive archive)
     {
         if (!archive.TryGetValue(fileName.WithExtension(".epf"), out var entry))
@@ -146,6 +176,10 @@ public sealed class EpfFile : Collection<EpfFrame>, ISavable
         return FromEntry(entry);
     }
 
+    /// <summary>
+    ///     Loads an EpfFile from the specified archive entry
+    /// </summary>
+    /// <param name="entry">The DataArchiveEntry to load the EpfFile from</param>
     public static EpfFile FromEntry(DataArchiveEntry entry)
     {
         using var segment = entry.ToStreamSegment();
@@ -153,6 +187,10 @@ public sealed class EpfFile : Collection<EpfFrame>, ISavable
         return new EpfFile(segment);
     }
 
+    /// <summary>
+    ///     Loads an EpfFile from the specified path
+    /// </summary>
+    /// <param name="path">The path of the file to be read.</param>
     public static EpfFile FromFile(string path)
     {
         using var stream = File.Open(
@@ -168,15 +206,28 @@ public sealed class EpfFile : Collection<EpfFrame>, ISavable
         return new EpfFile(stream);
     }
 
-    public static Palettized<EpfFile> FromImages(IEnumerable<SKImage> orderedFrames, int maxColors = CONSTANTS.COLORS_PER_PALETTE)
-        => FromImages(maxColors, orderedFrames.ToArray());
+    /// <summary>
+    ///     Converts a sequence of fully colored images to an EpfFile.
+    /// </summary>
+    /// <param name="options">
+    ///     Options to be used for quantization. EpfFiles can only have a maximum of 256 colors due to being
+    ///     a palettized format
+    /// </param>
+    /// <param name="orderedFrames">The ordered collection of SKImage frames.</param>
+    public static Palettized<EpfFile> FromImages(QuantizerOptions options, IEnumerable<SKImage> orderedFrames)
+        => FromImages(options, orderedFrames.ToArray());
 
-    public static Palettized<EpfFile> FromImages(int maxColors, params SKImage[] orderedFrames)
+    /// <summary>
+    ///     Converts a collection of fully colored images to an EpfFile
+    /// </summary>
+    /// <param name="options">
+    ///     Options to be used for quantization. EpfFiles can only have a maximum of 256 colors due to being
+    ///     a palettized format
+    /// </param>
+    /// <param name="orderedFrames">The ordered array of SKImage frames.</param>
+    public static Palettized<EpfFile> FromImages(QuantizerOptions options, params SKImage[] orderedFrames)
     {
-        var options = new QuantizerOptions
-        {
-            MaxColors = maxColors
-        };
+        ImageProcessor.PreserveNonTransparentBlacks(orderedFrames);
 
         using var quantized = ImageProcessor.QuantizeMultiple(options, orderedFrames);
 

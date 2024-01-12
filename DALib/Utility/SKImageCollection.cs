@@ -6,6 +6,9 @@ using SkiaSharp;
 
 namespace DALib.Utility;
 
+/// <summary>
+///     Represents a disposable collection of SKImages.
+/// </summary>
 public class SKImageCollection(IEnumerable<SKImage> images) : Collection<SKImage>(images.ToList()), IDisposable
 {
     /// <inheritdoc />

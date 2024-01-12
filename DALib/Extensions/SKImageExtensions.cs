@@ -5,11 +5,21 @@ using SkiaSharp;
 
 namespace DALib.Extensions;
 
+/// <summary>
+///     Provides extension methods for SKImages
+/// </summary>
 public static class SKImageExtensions
 {
+    /// <summary>
+    ///     Retrieves the pixel data from an SKImage encoded as palette indexes pointing to the provided palette
+    /// </summary>
+    /// <param name="image">The SKImage to retrieve the pixel data from.</param>
+    /// <param name="palette">A palette containing all of the colors in the image</param>
     public static byte[] GetPalettizedPixelData(this SKImage image, Palette palette)
     {
-        var colorMap = palette.Select((c, i) => (c, i)).DistinctBy(set => set.c).ToDictionary(set => set.c, c => (byte)c.i);
+        var colorMap = palette.Select((c, i) => (c, i))
+                              .DistinctBy(set => set.c)
+                              .ToDictionary(set => set.c, c => (byte)c.i);
         var pixelData = new byte[image.Width * image.Height];
 
         for (var y = 0; y < image.Height; ++y)
@@ -18,7 +28,9 @@ public static class SKImageExtensions
             {
                 var pixelIndex = y * image.Width + x;
                 using var pixels = image.PeekPixels();
-                var color = pixels.GetPixelColor(x, y).WithAlpha(byte.MaxValue);
+
+                var color = pixels.GetPixelColor(x, y)
+                                  .WithAlpha(byte.MaxValue);
 
                 if (!colorMap.TryGetValue(color, out var colorIndex))
                     throw new InvalidOperationException("Color not found in palette.");

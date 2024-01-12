@@ -13,27 +13,116 @@ using SkiaSharp;
 
 namespace DALib.Drawing;
 
+/// <summary>
+///     Represents an image file with the ".mpf" extension. This image format supports one or more palettized images only.
+///     This format is used primarily for StopMotion Animation. The palettes will be stored in a separate file and will
+///     support full RGB888
+/// </summary>
 public sealed class MpfFile : Collection<MpfFrame>, ISavable
 {
+    /// <summary>
+    ///     The number of frames for the second attack animation
+    /// </summary>
     public byte Attack2FrameCount { get; set; }
-    public byte Attack2StartIndex { get; set; }
-    public byte Attack3FrameCount { get; set; }
-    public byte Attack3StartIndex { get; set; }
-    public byte AttackFrameCount { get; set; }
-    public byte AttackFrameIndex { get; set; }
-    public MpfFormatType FormatType { get; set; }
-    public MpfHeaderType HeaderType { get; set; }
-    public short Height { get; set; }
-    public int PaletteNumber { get; set; }
-    public byte StopFrameCount { get; set; }
-    public byte StopFrameIndex { get; set; }
-    public byte StopMotionFrameCount { get; set; }
-    public byte StopMotionProbability { get; set; }
-    public byte[] UnknownHeaderBytes { get; set; }
-    public byte WalkFrameCount { get; set; }
-    public byte WalkFrameIndex { get; set; }
-    public short Width { get; set; }
 
+    /// <summary>
+    ///     The starting frame index of the second attack animation
+    /// </summary>
+    public byte Attack2StartIndex { get; set; }
+
+    /// <summary>
+    ///     The number of frames for the third attack animation
+    /// </summary>
+    public byte Attack3FrameCount { get; set; }
+
+    /// <summary>
+    ///     The starting frame index of the third attack animation
+    /// </summary>
+    public byte Attack3StartIndex { get; set; }
+
+    /// <summary>
+    ///     The number of frames for the primary attack animation
+    /// </summary>
+    public byte AttackFrameCount { get; set; }
+
+    /// <summary>
+    ///     The starting frame index of the primary attack animation
+    /// </summary>
+    public byte AttackFrameIndex { get; set; }
+
+    /// <summary>
+    ///     Indicates whether the MpfFile will contains multiple attack animations or not
+    /// </summary>
+    public MpfFormatType FormatType { get; set; }
+
+    /// <summary>
+    ///     Indicates if the image will have 4 extra bytes at the beginning of the header
+    /// </summary>
+    public MpfHeaderType HeaderType { get; set; }
+
+    /// <summary>
+    ///     The palette number used to colorize this image
+    /// </summary>
+    public int PaletteNumber { get; set; }
+
+    /// <summary>
+    ///     The pixel height of the image
+    /// </summary>
+    public short PixelHeight { get; set; }
+
+    /// <summary>
+    ///     The pixel width of the image
+    /// </summary>
+    public short PixelWidth { get; set; }
+
+    /// <summary>
+    ///     The number of frames for the standing animation
+    /// </summary>
+    public byte StandingFrameCount { get; set; }
+
+    /// <summary>
+    ///     The starting frame index of the standing animation
+    /// </summary>
+    public byte StandingFrameIndex { get; set; }
+
+    /// <summary>
+    ///     Specifies the ratio of switching to other frames from the frames designated in StopMotionFrameCount. For example,
+    ///     if you set this to 10 for a guy spinning nunchucks, about once every 10 times, he hits his own head. (about once
+    ///     every 10 times the client will play the StopMotion frames)
+    /// </summary>
+    public byte StopMotionFailureRatio { get; set; }
+
+    /// <summary>
+    ///     Number of frames in the stationary action (For example, a guy continuously spinning nunchucks
+    ///     would need two frames for the spinning action, so it should be written as 2)
+    ///     Usually, it should be written as 0. If it's written as 0, it continuously repeats the entire action frame
+    ///     and if it's a number other than 0, it repeats only that many frames and occasionally animates with the remaining
+    ///     frames.
+    /// </summary>
+    public byte StopMotionFrameCount { get; set; }
+
+    /// <summary>
+    ///     Unknown header bytes at the beginning of the file. Only used if HeaderType is set to Unknown
+    /// </summary>
+    public byte[] UnknownHeaderBytes { get; set; }
+
+    /// <summary>
+    ///     The number of frames for the walking animation
+    /// </summary>
+    public byte WalkFrameCount { get; set; }
+
+    /// <summary>
+    ///     The starting frame index of the walking animation
+    /// </summary>
+    public byte WalkFrameIndex { get; set; }
+
+    /// <summary>
+    ///     Initializes a new instance of the MpfFile class with the specified width and height.
+    /// </summary>
+    /// <param name="headerType">Used to determine if 4 empty bytes will be written to the header</param>
+    /// <param name="formatType">Used to determine how many attack animations there are</param>
+    /// <param name="width">The pixel width of the image</param>
+    /// <param name="height">The pixel height of the image</param>
     public MpfFile(
         MpfHeaderType headerType,
         MpfFormatType formatType,
@@ -43,8 +132,8 @@ public sealed class MpfFile : Collection<MpfFrame>, ISavable
         HeaderType = headerType;
         FormatType = formatType;
         UnknownHeaderBytes = HeaderType == MpfHeaderType.Unknown ? new byte[4] : Array.Empty<byte>();
-        Width = width;
-        Height = height;
+        PixelWidth = width;
+        PixelHeight = height;
     }
 
     private MpfFile(Stream stream)
@@ -84,8 +173,8 @@ public sealed class MpfFile : Collection<MpfFrame>, ISavable
 
         var frameCount = reader.ReadByte();
 
-        Width = reader.ReadInt16();
-        Height = reader.ReadInt16();
+        PixelWidth = reader.ReadInt16();
+        PixelHeight = reader.ReadInt16();
 
         var dataLength = reader.ReadInt32();
 
@@ -97,10 +186,10 @@ public sealed class MpfFile : Collection<MpfFrame>, ISavable
         switch (FormatType)
         {
             case MpfFormatType.MultipleAttacks:
-                StopFrameIndex = reader.ReadByte();
-                StopFrameCount = reader.ReadByte();
+                StandingFrameIndex = reader.ReadByte();
+                StandingFrameCount = reader.ReadByte();
                 StopMotionFrameCount = reader.ReadByte();
-                StopMotionProbability = reader.ReadByte();
+                StopMotionFailureRatio = reader.ReadByte();
                 AttackFrameIndex = reader.ReadByte();
                 AttackFrameCount = reader.ReadByte();
                 Attack2StartIndex = reader.ReadByte();
@@ -114,10 +203,10 @@ public sealed class MpfFile : Collection<MpfFrame>, ISavable
 
                 AttackFrameIndex = reader.ReadByte();
                 AttackFrameCount = reader.ReadByte();
-                StopFrameIndex = reader.ReadByte();
-                StopFrameCount = reader.ReadByte();
+                StandingFrameIndex = reader.ReadByte();
+                StandingFrameCount = reader.ReadByte();
                 StopMotionFrameCount = reader.ReadByte();
-                StopMotionProbability = reader.ReadByte();
+                StopMotionFailureRatio = reader.ReadByte();
 
                 break;
         }
@@ -170,6 +259,7 @@ public sealed class MpfFile : Collection<MpfFrame>, ISavable
     }
 
     #region SaveTo
+    /// <inheritdoc />
     public void Save(string path)
     {
         using var stream = File.Open(
@@ -185,6 +275,7 @@ public sealed class MpfFile : Collection<MpfFrame>, ISavable
         Save(stream);
     }
 
+    /// <inheritdoc />
     public void Save(Stream stream)
     {
         using var writer = new BinaryWriter(stream, Encoding.Default, true);
@@ -198,8 +289,8 @@ public sealed class MpfFile : Collection<MpfFrame>, ISavable
         var frameCount = (byte)(Count + 1);
 
         writer.Write(frameCount);
-        writer.Write(Width);
-        writer.Write(Height);
+        writer.Write(PixelWidth);
+        writer.Write(PixelHeight);
         writer.Write(this.Sum(frame => frame.Data.Length));
         writer.Write(WalkFrameIndex);
         writer.Write(WalkFrameCount);
@@ -207,10 +298,10 @@ public sealed class MpfFile : Collection<MpfFrame>, ISavable
         if (FormatType == MpfFormatType.MultipleAttacks)
         {
             writer.Write((short)FormatType);
-            writer.Write(StopFrameIndex);
-            writer.Write(StopFrameCount);
+            writer.Write(StandingFrameIndex);
+            writer.Write(StandingFrameCount);
             writer.Write(StopMotionFrameCount);
-            writer.Write(StopMotionProbability);
+            writer.Write(StopMotionFailureRatio);
             writer.Write(AttackFrameIndex);
             writer.Write(AttackFrameCount);
             writer.Write(Attack2StartIndex);
@@ -221,10 +312,10 @@ public sealed class MpfFile : Collection<MpfFrame>, ISavable
         {
             writer.Write(AttackFrameIndex);
             writer.Write(AttackFrameCount);
-            writer.Write(StopFrameIndex);
-            writer.Write(StopFrameCount);
+            writer.Write(StandingFrameIndex);
+            writer.Write(StandingFrameCount);
             writer.Write(StopMotionFrameCount);
-            writer.Write(StopMotionProbability);
+            writer.Write(StopMotionFailureRatio);
         }
 
         var startAddress = 0;
@@ -257,12 +348,40 @@ public sealed class MpfFile : Collection<MpfFrame>, ISavable
     #endregion
 
     #region LoadFrom
-    public static Palettized<MpfFile> FromImages(MpfFormatType formatType, IEnumerable<SKImage> orderedFrames)
-        => FromImages(formatType, orderedFrames.ToArray());
+    /// <summary>
+    ///     Converts a sequence of fully colorized images to an MpfFile
+    /// </summary>
+    /// <param name="options">
+    ///     Options to be used for quantization. EpfFiles can only have a maximum of 256 colors due to being
+    ///     a palettized format
+    /// </param>
+    /// <param name="formatType">The MpfFormat type of the resulting image</param>
+    /// <param name="orderedFrames">The ordered collection of SKImage frames.</param>
+    /// <remarks>
+    ///     The resulting MpfFile will have a palette number of 0, and the indexes/frame counts/stopMotionRatio will not be
+    ///     set. These details will need to manually be set by you.
+    /// </remarks>
+    public static Palettized<MpfFile> FromImages(QuantizerOptions options, MpfFormatType formatType, IEnumerable<SKImage> orderedFrames)
+        => FromImages(options, formatType, orderedFrames.ToArray());
 
-    public static Palettized<MpfFile> FromImages(MpfFormatType formatType, params SKImage[] orderedFrames)
+    /// <summary>
+    ///     Converts a collection of fully colorized images to an MpfFile
+    /// </summary>
+    /// <param name="options">
+    ///     Options to be used for quantization. EpfFiles can only have a maximum of 256 colors due to being
+    ///     a palettized format
+    /// </param>
+    /// <param name="formatType">The MpfFormat type of the resulting image</param>
+    /// <param name="orderedFrames">The ordered collection of SKImage frames.</param>
+    /// <remarks>
+    ///     The resulting MpfFile will have a palette number of 0, and the indexes/frame counts/stopMotionRatio will not be
+    ///     set. These details will need to manually be set by you.
+    /// </remarks>
+    public static Palettized<MpfFile> FromImages(QuantizerOptions options, MpfFormatType formatType, params SKImage[] orderedFrames)
     {
-        using var quantized = ImageProcessor.QuantizeMultiple(new QuantizerOptions(), orderedFrames);
+        ImageProcessor.PreserveNonTransparentBlacks(orderedFrames);
+
+        using var quantized = ImageProcessor.QuantizeMultiple(options, orderedFrames);
 
         (var images, var palette) = quantized;
 
@@ -292,6 +411,14 @@ public sealed class MpfFile : Collection<MpfFrame>, ISavable
         };
     }
 
+    /// <summary>
+    ///     Loads an MpfFile with the specified fileName from the specified archive
+    /// </summary>
+    /// <param name="fileName">The name of the MPF file to extract from the archive.</param>
+    /// <param name="archive">The DataArchive from which to retreive the MPF file.</param>
+    /// <exception cref="FileNotFoundException">
+    ///     Thrown if the MPF file with the specified name is not found in the archive.
+    /// </exception>
     public static MpfFile FromArchive(string fileName, DataArchive archive)
     {
         if (!archive.TryGetValue(fileName.WithExtension(".mpf"), out var entry))
@@ -300,6 +427,11 @@ public sealed class MpfFile : Collection<MpfFrame>, ISavable
         return FromEntry(entry);
     }
 
+    /// <summary>
+    ///     Loads an MpfFile from the specified archive entry
+    /// </summary>
+    /// <param name="entry">The DataArchiveEntry to load the MpfFile from</param>
+    /// <returns></returns>
     public static MpfFile FromEntry(DataArchiveEntry entry)
     {
         using var segment = entry.ToStreamSegment();
@@ -307,6 +439,10 @@ public sealed class MpfFile : Collection<MpfFrame>, ISavable
         return new MpfFile(segment);
     }
 
+    /// <summary>
+    ///     Loads an MpfFile from the specified path
+    /// </summary>
+    /// <param name="path">The path of the file to be read.</param>
     public static MpfFile FromFile(string path)
     {
         using var stream = File.Open(

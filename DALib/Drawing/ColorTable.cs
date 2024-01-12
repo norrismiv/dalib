@@ -6,6 +6,9 @@ using SkiaSharp;
 
 namespace DALib.Drawing;
 
+/// <summary>
+///     Represents a table of colors. These are most commonly used as dye tables.
+/// </summary>
 public sealed class ColorTable() : KeyedCollection<int, ColorTableEntry>
 {
     private ColorTable(Stream stream)
@@ -36,9 +39,7 @@ public sealed class ColorTable() : KeyedCollection<int, ColorTableEntry>
 
                     colors[i] = new SKColor((byte)(r % 256), (byte)(g % 256), (byte)(b % 256));
                 } else
-                {
                     colors[i] = new SKColor();
-                }
             }
 
             Add(
@@ -56,6 +57,11 @@ public sealed class ColorTable() : KeyedCollection<int, ColorTableEntry>
     #endregion
 
     #region LoadFrom
+    /// <summary>
+    ///     Loads a ColorTable from the specified archive entry
+    /// </summary>
+    /// <param name="entry">The DataArchiveEntry to convert into a ColorTable.</param>
+    /// <returns>A ColorTable object created from the provided DataArchiveEntry.</returns>
     public static ColorTable FromEntry(DataArchiveEntry entry)
     {
         using var segment = entry.ToStreamSegment();
@@ -63,6 +69,11 @@ public sealed class ColorTable() : KeyedCollection<int, ColorTableEntry>
         return new ColorTable(segment);
     }
 
+    /// <summary>
+    ///     Loads a ColorTable from the specified path
+    /// </summary>
+    /// <param name="path">The path to the color table file.</param>
+    /// <returns>The color table read from the file.</returns>
     public static ColorTable FromFile(string path)
     {
         using var stream = File.Open(

@@ -1,9 +1,12 @@
 ﻿namespace DALib.Cryptography;
 
+/// <summary>
+///     Provides methods for calculating 16 bit cyclic redundancy checks
+/// </summary>
 public static class CRC16
 {
     private static readonly ushort[] CRC16_TABLE =
-    {
+    [
         0x0000,
         0x1021,
         0x2042,
@@ -260,10 +263,20 @@ public static class CRC16
         0x3EB2,
         0x0ED1,
         0x1EF0
-    };
+    ];
 
+    /// <summary>
+    ///     Calculates the 16bit checksum of the specified buffer
+    /// </summary>
+    /// <param name="buffer">The buffer to calculate the checksum of</param>
     public static ushort Calculate(byte[] buffer) => Calculate(buffer, 0, buffer.Length);
 
+    /// <summary>
+    ///     Calculates the 16bit checksum of the specified buffer
+    /// </summary>
+    /// <param name="buffer">The buffer to calculate the checksum of</param>
+    /// <param name="offset">The offset within the buffer to start at</param>
+    /// <param name="count">The number of bytes within the buffer to calculate for</param>
     public static ushort Calculate(byte[] buffer, int offset, int count)
     {
         ushort result = 0;

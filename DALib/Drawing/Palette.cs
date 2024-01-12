@@ -11,6 +11,9 @@ using SkiaSharp;
 
 namespace DALib.Drawing;
 
+/// <summary>
+///     Represents a palette of 256 colors
+/// </summary>
 public sealed class Palette : Collection<SKColor>, ISavable
 {
     private Palette(Stream stream)
@@ -21,11 +24,18 @@ public sealed class Palette : Collection<SKColor>, ISavable
             Add(new SKColor(reader.ReadByte(), reader.ReadByte(), reader.ReadByte()));
     }
 
+    /// <summary>
+    ///     Initializes a new instance of the Palette class with 256 transparent-black colors
+    /// </summary>
     public Palette()
         : base(
-            Enumerable.Repeat(SKColor.Empty, CONSTANTS.COLORS_PER_PALETTE)
+            Enumerable.Repeat(SKColors.Transparent, CONSTANTS.COLORS_PER_PALETTE)
                       .ToList()) { }
 
+    /// <summary>
+    ///     Initializes a new instance of the Palette class with the specified colors
+    /// </summary>
+    /// <param name="colors">The colors of the palette</param>
     public Palette(IEnumerable<SKColor> colors)
         : this()
     {
@@ -35,6 +45,17 @@ public sealed class Palette : Collection<SKColor>, ISavable
             this[index++] = color;
     }
 
+    /// <summary>
+    ///     Applies a dye to this palette beginning at the specified color index, and continuing for the length of the color
+    ///     table entry
+    /// </summary>
+    /// <param name="colorTableEntry">The color table entry to apply to this palette</param>
+    /// <param name="dyeIndexStart">The index to start copying colors to from the color table entry</param>
+    /// <remarks>
+    ///     This will create a new instance of the palette and return it. The existing palette instance will not be modified.
+    ///     For the most part, this method is used to apply dye table entries to a palette, in which case the index start will
+    ///     be 98, and the table entry will contain 6 colors
+    /// </remarks>
     public Palette Dye(ColorTableEntry colorTableEntry, int dyeIndexStart = CONSTANTS.PALETTE_DYE_INDEX_START)
     {
         var dyedPalette = new Palette(this);
@@ -46,6 +67,7 @@ public sealed class Palette : Collection<SKColor>, ISavable
     }
 
     #region SaveTo
+    /// <inheritdoc />
     public void Save(string path)
     {
         using var stream = File.Open(
@@ -61,6 +83,7 @@ public sealed class Palette : Collection<SKColor>, ISavable
         Save(stream);
     }
 
+    /// <inheritdoc />
     public void Save(Stream stream)
     {
         using var writer = new BinaryWriter(stream, Encoding.Default, true);
@@ -85,6 +108,11 @@ public sealed class Palette : Collection<SKColor>, ISavable
     #endregion
 
     #region LoadFrom
+    /// <summary>
+    ///     Loads all palettes from the specified archive that match the specified pattern
+    /// </summary>
+    /// <param name="pattern">The pattern to match</param>
+    /// <param name="archive">The archive from which to extract palettes</param>
     public static Dictionary<int, Palette> FromArchive(string pattern, DataArchive archive)
     {
         var palettes = new Dictionary<int, Palette>();
@@ -94,12 +122,16 @@ public sealed class Palette : Collection<SKColor>, ISavable
             if (!entry.TryGetNumericIdentifier(out var identifier))
                 continue;
 
-            palettes.Add(identifier, FromEntry(entry));
+            palettes[identifier] = FromEntry(entry);
         }
 
         return palettes;
     }
 
+    /// <summary>
+    ///     Loads a palette from the specified archive entry
+    /// </summary>
+    /// <param name="entry">The DataArchiveEntry to load the palette from</param>
     public static Palette FromEntry(DataArchiveEntry entry)
     {
         using var segment = entry.ToStreamSegment();
@@ -107,6 +139,10 @@ public sealed class Palette : Collection<SKColor>, ISavable
         return new Palette(segment);
     }
 
+    /// <summary>
+    ///     Loads a palette from the specified path
+    /// </summary>
+    /// <param name="path">The path of the file to be read.</param>
     public static Palette FromFile(string path)
     {
         using var stream = File.Open(

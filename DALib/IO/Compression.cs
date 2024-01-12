@@ -2,8 +2,15 @@
 
 namespace DALib.IO;
 
+/// <summary>
+///     Provides methods for compression and decompression
+/// </summary>
 public static class Compression
 {
+    /// <summary>
+    ///     Decompresses HPF data in-place.
+    /// </summary>
+    /// <param name="buffer">The buffer containing the HPF data to decompress.</param>
     public static void DecompressHpf(ref Span<byte> buffer)
     {
         // method written by Eru/illuvatar
@@ -42,9 +49,7 @@ public static class Compression
                     l++;
                     k = 0;
                 } else
-                {
                     k++;
-                }
 
                 val = (buffer[4 + (int)l - 1] & (1 << (int)k)) != 0 ? intEven[val] : intOdd[val];
             }
@@ -62,9 +67,7 @@ public static class Compression
                     j = intEven[i];
                     intEven[i] = val3;
                 } else
-                {
                     intOdd[i] = val3;
-                }
 
                 if (intOdd[val2] == val3)
                     intOdd[val2] = j;

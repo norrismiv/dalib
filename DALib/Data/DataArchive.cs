@@ -10,6 +10,9 @@ using DALib.Extensions;
 
 namespace DALib.Data;
 
+/// <summary>
+///     Represents a DarkAges data archive that can be used for storing and manipulating data entries.
+/// </summary>
 public sealed class DataArchive() : KeyedCollection<string, DataArchiveEntry>(StringComparer.OrdinalIgnoreCase), ISavable, IDisposable
 {
     private bool IsDisposed;
@@ -55,6 +58,12 @@ public sealed class DataArchive() : KeyedCollection<string, DataArchiveEntry>(St
         }
     }
 
+    /// <summary>
+    ///     Returns a collection of data archive entries that match the given pattern and extension.
+    /// </summary>
+    /// <param name="pattern">The pattern to match the entry name against.</param>
+    /// <param name="extension">The extension to match the entry name against.</param>
+    /// <returns>A collection of <see cref="DataArchiveEntry" /> objects that match the pattern and extension.</returns>
     public IEnumerable<DataArchiveEntry> GetEntries(string pattern, string extension)
     {
         foreach (var entry in this)
@@ -69,6 +78,14 @@ public sealed class DataArchive() : KeyedCollection<string, DataArchiveEntry>(St
         }
     }
 
+    /// <summary>
+    ///     Retrieves all entries with a specified extension.
+    /// </summary>
+    /// <param name="extension">The extension to filter the entries with.</param>
+    /// <returns>
+    ///     An <see cref="IEnumerable{T}" /> of <see cref="DataArchiveEntry" /> containing all entries with the specified
+    ///     extension.
+    /// </returns>
     public IEnumerable<DataArchiveEntry> GetEntries(string extension)
     {
         foreach (var entry in this)
@@ -85,6 +102,13 @@ public sealed class DataArchive() : KeyedCollection<string, DataArchiveEntry>(St
     protected override string GetKeyForItem(DataArchiveEntry item) => item.EntryName;
     #endregion
 
+    /// <summary>
+    ///     Patches the DataArchive by appending a new entry that replaces an existing entry with the same name, or adds a new
+    ///     entry if no existing entry has the same name.
+    /// </summary>
+    /// <param name="entryName">The name of the entry to be patched.</param>
+    /// <param name="item">The item to be patched.</param>
+    /// <exception cref="InvalidOperationException">Thrown if the DataArchive is not in memory.</exception>
     public void Patch(string entryName, ISavable item)
     {
         ThrowIfDisposed();
@@ -116,6 +140,11 @@ public sealed class DataArchive() : KeyedCollection<string, DataArchiveEntry>(St
     }
 
     #region SaveTo
+    /// <inheritdoc />
+    /// <exception cref="ObjectDisposedException">Thrown if the object is already disposed.</exception>
+    /// <exception cref="ArgumentNullException">Thrown if the path is null.</exception>
+    /// <exception cref="ArgumentException">Thrown if the path is empty or contains invalid characters.</exception>
+    /// <exception cref="PathTooLongException">Thrown if the path exceeds the maximum length allowed.</exception>
     public void Save(string path)
     {
         ThrowIfDisposed();
@@ -134,6 +163,9 @@ public sealed class DataArchive() : KeyedCollection<string, DataArchiveEntry>(St
         Save(stream);
     }
 
+    /// <inheritdoc />
+    /// <exception cref="ObjectDisposedException">Thrown if the object has been disposed.</exception>
+    /// <exception cref="InvalidOperationException">Thrown if an entry name is too long (must be 13 characters or less).</exception>
     public void Save(Stream stream)
     {
         ThrowIfDisposed();
@@ -182,6 +214,11 @@ public sealed class DataArchive() : KeyedCollection<string, DataArchiveEntry>(St
         }
     }
 
+    /// <summary>
+    ///     Extracts the contents of the current archive to the specified directory.
+    /// </summary>
+    /// <param name="dir">The directory to which the contents will be extracted.</param>
+    /// <exception cref="InvalidOperationException">Thrown when the archive is already disposed.</exception>
     public void ExtractTo(string dir)
     {
         ThrowIfDisposed();
@@ -199,6 +236,11 @@ public sealed class DataArchive() : KeyedCollection<string, DataArchiveEntry>(St
     #endregion
 
     #region LoadFrom
+    /// <summary>
+    ///     Loads a DataArchive from a directory that contains already extracted entries
+    /// </summary>
+    /// <param name="dir">The directory path.</param>
+    /// <returns>A new DataArchive object.</returns>
     public static DataArchive FromDirectory(string dir)
     {
         //create a new in-memory archive
@@ -241,6 +283,16 @@ public sealed class DataArchive() : KeyedCollection<string, DataArchiveEntry>(St
         return archive;
     }
 
+    /// <summary>
+    ///     Loads a DataArchive from the specified path
+    /// </summary>
+    /// <param name="path">The path to the file to create the DataArchive from.</param>
+    /// <param name="cacheArchive">
+    ///     Indicates whether to cache the archive in memory or read from file using pointers. Default
+    ///     is false.
+    /// </param>
+    /// <param name="newformat">Indicates whether to use the new format when reading the archive. Default is false.</param>
+    /// <returns>A new instance of the DataArchive class.</returns>
     public static DataArchive FromFile(string path, bool cacheArchive = false, bool newformat = false)
     {
         //if we don't want to cache the archive

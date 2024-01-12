@@ -5,9 +5,16 @@ using KGPalette = KGySoft.Drawing.Imaging.Palette;
 
 namespace DALib.Extensions;
 
+/// <summary>
+///     Provides extension methods for KGPalettes
+/// </summary>
 public static class KGPaletteExtensions
 {
-    public static Palette ToDALibPalette(this KGPalette palette, bool isDyableType = false)
+    /// <summary>
+    ///     Converts a KGPalette to a DALib.Palette
+    /// </summary>
+    /// <param name="palette">The KGPalette to convert.</param>
+    public static Palette ToDALibPalette(this KGPalette palette)
     {
         var orderedColors = palette.GetEntries()
                                    .Select(c => c.ToSKColor())
