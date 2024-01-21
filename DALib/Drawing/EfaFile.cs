@@ -32,14 +32,12 @@ public sealed class EfaFile : Collection<EfaFrame>, ISavable
     public int FrameIntervalMs { get; set; }
 
     /// <summary>
-    ///     A value that has an unknown use
-    ///     LI: figure out what this is for
+    ///     A value that has an unknown use LI: figure out what this is for
     /// </summary>
     public int Unknown1 { get; set; }
 
     /// <summary>
-    ///     A value that has an unknown use
-    ///     LI: figure out what this is for
+    ///     A value that has an unknown use LI: figure out what this is for
     /// </summary>
     public byte[] Unknown2 { get; set; }
 
@@ -129,8 +127,12 @@ public sealed class EfaFile : Collection<EfaFrame>, ISavable
     /// <summary>
     ///     Loads an EfaFile with the specified fileName from the specified archive
     /// </summary>
-    /// <param name="fileName">The name of the EFA file to search for in the archive.</param>
-    /// <param name="archive">The DataArchive from which to retrieve the EFA file.</param>
+    /// <param name="fileName">
+    ///     The name of the EFA file to search for in the archive.
+    /// </param>
+    /// <param name="archive">
+    ///     The DataArchive from which to retrieve the EFA file.
+    /// </param>
     /// <exception cref="FileNotFoundException">
     ///     Thrown if the EFA file with the specified name is not found in the archive.
     /// </exception>
@@ -145,7 +147,9 @@ public sealed class EfaFile : Collection<EfaFrame>, ISavable
     /// <summary>
     ///     Loads an EfaFile from the specified archive entry
     /// </summary>
-    /// <param name="entry">The DataArchiveEntry to load the EfaFile from</param>
+    /// <param name="entry">
+    ///     The DataArchiveEntry to load the EfaFile from
+    /// </param>
     public static EfaFile FromEntry(DataArchiveEntry entry)
     {
         using var segment = entry.ToStreamSegment();
@@ -156,7 +160,9 @@ public sealed class EfaFile : Collection<EfaFrame>, ISavable
     /// <summary>
     ///     Loads an EfaFile from the specified path
     /// </summary>
-    /// <param name="path">The path of the file to be read.</param>
+    /// <param name="path">
+    ///     The path of the file to be read.
+    /// </param>
     public static EfaFile FromFile(string path)
     {
         using var stream = File.Open(
@@ -175,13 +181,17 @@ public sealed class EfaFile : Collection<EfaFrame>, ISavable
     /// <summary>
     ///     Converts a sequence of fully colored images to an EfaFile.
     /// </summary>
-    /// <param name="orderedFrames">The ordered collection of SKImage frames.</param>
+    /// <param name="orderedFrames">
+    ///     The ordered collection of SKImage frames.
+    /// </param>
     public static EfaFile FromImages(IEnumerable<SKImage> orderedFrames) => FromImages(orderedFrames.ToArray());
 
     /// <summary>
     ///     Converts a collection of fully colored images to an EfaFile
     /// </summary>
-    /// <param name="orderedFrames">The ordered array of SKImage frames.</param>
+    /// <param name="orderedFrames">
+    ///     The ordered array of SKImage frames.
+    /// </param>
     public static EfaFile FromImages(params SKImage[] orderedFrames)
     {
         var efaFile = new EfaFile();

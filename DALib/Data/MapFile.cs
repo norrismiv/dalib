@@ -51,10 +51,18 @@ public sealed class MapFile(int width, int height) : ISavable
     /// <summary>
     ///     Loads a MapFile from the specified path
     /// </summary>
-    /// <param name="path">The path to the file to read.</param>
-    /// <param name="width">The width of the map.</param>
-    /// <param name="height">The height of the map.</param>
-    /// <returns>A new instance of the MapFile class.</returns>
+    /// <param name="path">
+    ///     The path to the file to read.
+    /// </param>
+    /// <param name="width">
+    ///     The width of the map.
+    /// </param>
+    /// <param name="height">
+    ///     The height of the map.
+    /// </param>
+    /// <returns>
+    ///     A new instance of the MapFile class.
+    /// </returns>
     public static MapFile FromFile(string path, int width, int height)
     {
         using var stream = File.Open(
@@ -74,9 +82,15 @@ public sealed class MapFile(int width, int height) : ISavable
     /// <summary>
     ///     Gets the MapTile at the specified coordinates.
     /// </summary>
-    /// <param name="x">The x-coordinate of the MapTile.</param>
-    /// <param name="y">The y-coordinate of the MapTile.</param>
-    /// <returns>The MapTile at the specified coordinates.</returns>
+    /// <param name="x">
+    ///     The x-coordinate of the MapTile.
+    /// </param>
+    /// <param name="y">
+    ///     The y-coordinate of the MapTile.
+    /// </param>
+    /// <returns>
+    ///     The MapTile at the specified coordinates.
+    /// </returns>
     public MapTile this[int x, int y] => Tiles[x, y];
 
     #region SaveTo

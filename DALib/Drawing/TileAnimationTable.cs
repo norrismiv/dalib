@@ -59,7 +59,9 @@ public class TileAnimationTable : ISavable
     /// <summary>
     ///     Adds a TileAnimationEntry to the table
     /// </summary>
-    /// <param name="entry">The TileAnimationEntry to be added.</param>
+    /// <param name="entry">
+    ///     The TileAnimationEntry to be added.
+    /// </param>
     public void Add(TileAnimationEntry entry)
     {
         foreach (var tileId in entry.TileSequence)
@@ -69,7 +71,9 @@ public class TileAnimationTable : ISavable
     /// <summary>
     ///     Removes a TileAnimationEntry from the table
     /// </summary>
-    /// <param name="entry">The TileAnimationEntry to remove.</param>
+    /// <param name="entry">
+    ///     The TileAnimationEntry to remove.
+    /// </param>
     public void Remove(TileAnimationEntry entry)
     {
         foreach (var tileId in entry.TileSequence)
@@ -113,8 +117,12 @@ public class TileAnimationTable : ISavable
     /// <summary>
     ///     Loads a TileAnimationTable with the specified fileName from the specified archive
     /// </summary>
-    /// <param name="fileName">The name of the TBL file to search for in the archive</param>
-    /// <param name="archive">The DataArchive from which to retrieve the TBL file.</param>
+    /// <param name="fileName">
+    ///     The name of the TBL file to search for in the archive
+    /// </param>
+    /// <param name="archive">
+    ///     The DataArchive from which to retrieve the TBL file.
+    /// </param>
     public static TileAnimationTable FromArchive(string fileName, DataArchive archive)
     {
         if (!archive.TryGetValue(fileName.WithExtension(".tbl"), out var entry))
@@ -126,7 +134,9 @@ public class TileAnimationTable : ISavable
     /// <summary>
     ///     Loads a TileAnimationTable from the specified entry
     /// </summary>
-    /// <param name="entry">The DataArchiveEntry to load the TileAnimationTable from.</param>
+    /// <param name="entry">
+    ///     The DataArchiveEntry to load the TileAnimationTable from.
+    /// </param>
     public static TileAnimationTable FromEntry(DataArchiveEntry entry)
     {
         using var segment = entry.ToStreamSegment();
@@ -137,7 +147,9 @@ public class TileAnimationTable : ISavable
     /// <summary>
     ///     Loads a TileAnimationTable from the specified path
     /// </summary>
-    /// <param name="path">The path to the file to be read</param>
+    /// <param name="path">
+    ///     The path to the file to be read
+    /// </param>
     public static TileAnimationTable FromFile(string path)
     {
         using var stream = File.Open(

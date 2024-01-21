@@ -32,9 +32,15 @@ public sealed class DataArchiveEntry(
     ///     Initializes a new instance of the <see cref="DataArchiveEntry" /> class with it's containing archive, entry name,
     ///     and file size.
     /// </summary>
-    /// <param name="archive">The archive that contains the entry.</param>
-    /// <param name="entryName">The name of the entry.</param>
-    /// <param name="fileSize">The size of the file.</param>
+    /// <param name="archive">
+    ///     The archive that contains the entry.
+    /// </param>
+    /// <param name="entryName">
+    ///     The name of the entry.
+    /// </param>
+    /// <param name="fileSize">
+    ///     The size of the file.
+    /// </param>
     public DataArchiveEntry(DataArchive archive, string entryName, int fileSize)
         : this(
             archive,
@@ -43,10 +49,11 @@ public sealed class DataArchiveEntry(
             fileSize) { }
 
     /// <summary>
-    ///     Returns a dedicated stream for the portion of data for this entry.
-    ///     Dedicated streams can be used concurrently.
+    ///     Returns a dedicated stream for the portion of data for this entry. Dedicated streams can be used concurrently.
     /// </summary>
-    /// <exception cref="ArgumentOutOfRangeException">If the archive's stream is of an unexpected type</exception>
+    /// <exception cref="ArgumentOutOfRangeException">
+    ///     If the archive's stream is of an unexpected type
+    /// </exception>
     public Stream ToDedicatedStream()
     {
         archive.ThrowIfDisposed();
@@ -97,10 +104,12 @@ public sealed class DataArchiveEntry(
     }
 
     /// <summary>
-    ///     Returns a segment of the underlying stream that represents the portion of data for this entry.
-    ///     Segments of an underlying stream should not be used concurrently.
+    ///     Returns a segment of the underlying stream that represents the portion of data for this entry. Segments of an
+    ///     underlying stream should not be used concurrently.
     /// </summary>
-    /// <param name="leaveOpen">Whether or not to leave the underlying stream open when this segment is disposed</param>
+    /// <param name="leaveOpen">
+    ///     Whether or not to leave the underlying stream open when this segment is disposed
+    /// </param>
     public Stream ToStreamSegment(bool leaveOpen = true)
     {
         archive.ThrowIfDisposed();
@@ -111,9 +120,15 @@ public sealed class DataArchiveEntry(
     /// <summary>
     ///     Attempts to retrieve a numeric identifier from the EntryName property.
     /// </summary>
-    /// <param name="identifier">The retrieved numeric identifier, if successful.</param>
-    /// <param name="numDigits">The maximum number of digits to consider as the identifier.</param>
-    /// <returns>True if a numeric identifier is successfully retrieved, false otherwise.</returns>
+    /// <param name="identifier">
+    ///     The retrieved numeric identifier, if successful.
+    /// </param>
+    /// <param name="numDigits">
+    ///     The maximum number of digits to consider as the identifier.
+    /// </param>
+    /// <returns>
+    ///     True if a numeric identifier is successfully retrieved, false otherwise.
+    /// </returns>
     public bool TryGetNumericIdentifier(out int identifier, int numDigits = int.MaxValue)
     {
         identifier = -1;

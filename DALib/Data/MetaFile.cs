@@ -48,8 +48,12 @@ public sealed class MetaFile : Collection<MetaFileEntry>, ISavable
     /// <summary>
     ///     Loads a MetaFile from the specified path
     /// </summary>
-    /// <param name="path">The path of the file.</param>
-    /// <param name="isCompressed">A value indicating whether the file is compressed.</param>
+    /// <param name="path">
+    ///     The path of the file.
+    /// </param>
+    /// <param name="isCompressed">
+    ///     A value indicating whether the file is compressed.
+    /// </param>
     public static MetaFile FromFile(string path, bool isCompressed)
     {
         using var stream = File.Open(

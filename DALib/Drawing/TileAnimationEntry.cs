@@ -12,12 +12,9 @@ public sealed class TileAnimationEntry : IEnumerable<ushort>
     ///     The number of milliseconds to wait between each frame of the animation.
     /// </summary>
     /// <remarks>
-    ///     This property determines the delay between each frame in the animation.
-    ///     It is measured in milliseconds.
-    ///     The default value is 500 milliseconds.
-    ///     The actual duration of the interval is calculated by multiplying this
-    ///     value by 100. This is necessary because the value is stored in a
-    ///     text file as a hundredth of the desired interval time.
+    ///     This property determines the delay between each frame in the animation. It is measured in milliseconds. The default
+    ///     value is 500 milliseconds. The actual duration of the interval is calculated by multiplying this value by 100. This
+    ///     is necessary because the value is stored in a text file as a hundredth of the desired interval time.
     /// </remarks>
     public int AnimationIntervalMs { get; set; } = 500;
 
@@ -34,7 +31,9 @@ public sealed class TileAnimationEntry : IEnumerable<ushort>
     /// <summary>
     ///     Retrieves the ID of the next tile in the sequence, based on the given current tile ID.
     /// </summary>
-    /// <param name="currentTileId">The ID of the current tile</param>
+    /// <param name="currentTileId">
+    ///     The ID of the current tile
+    /// </param>
     public int GetNextTileId(ushort currentTileId)
     {
         var currentIndex = TileSequence.IndexOf(currentTileId);

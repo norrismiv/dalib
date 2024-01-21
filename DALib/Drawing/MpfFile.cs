@@ -93,11 +93,10 @@ public sealed class MpfFile : Collection<MpfFrame>, ISavable
     public byte StopMotionFailureRatio { get; set; }
 
     /// <summary>
-    ///     Number of frames in the stationary action (For example, a guy continuously spinning nunchucks
-    ///     would need two frames for the spinning action, so it should be written as 2)
-    ///     Usually, it should be written as 0. If it's written as 0, it continuously repeats the entire action frame
-    ///     and if it's a number other than 0, it repeats only that many frames and occasionally animates with the remaining
-    ///     frames.
+    ///     Number of frames in the stationary action (For example, a guy continuously spinning nunchucks would need two frames
+    ///     for the spinning action, so it should be written as 2) Usually, it should be written as 0. If it's written as 0, it
+    ///     continuously repeats the entire action frame and if it's a number other than 0, it repeats only that many frames
+    ///     and occasionally animates with the remaining frames.
     /// </summary>
     public byte StopMotionFrameCount { get; set; }
 
@@ -119,10 +118,18 @@ public sealed class MpfFile : Collection<MpfFrame>, ISavable
     /// <summary>
     ///     Initializes a new instance of the MpfFile class with the specified width and height.
     /// </summary>
-    /// <param name="headerType">Used to determine if 4 empty bytes will be written to the header</param>
-    /// <param name="formatType">Used to determine how many attack animations there are</param>
-    /// <param name="width">The pixel width of the image</param>
-    /// <param name="height">The pixel height of the image</param>
+    /// <param name="headerType">
+    ///     Used to determine if 4 empty bytes will be written to the header
+    /// </param>
+    /// <param name="formatType">
+    ///     Used to determine how many attack animations there are
+    /// </param>
+    /// <param name="width">
+    ///     The pixel width of the image
+    /// </param>
+    /// <param name="height">
+    ///     The pixel height of the image
+    /// </param>
     public MpfFile(
         MpfHeaderType headerType,
         MpfFormatType formatType,
@@ -352,11 +359,15 @@ public sealed class MpfFile : Collection<MpfFrame>, ISavable
     ///     Converts a sequence of fully colorized images to an MpfFile
     /// </summary>
     /// <param name="options">
-    ///     Options to be used for quantization. EpfFiles can only have a maximum of 256 colors due to being
-    ///     a palettized format
+    ///     Options to be used for quantization. EpfFiles can only have a maximum of 256 colors due to being a palettized
+    ///     format
     /// </param>
-    /// <param name="formatType">The MpfFormat type of the resulting image</param>
-    /// <param name="orderedFrames">The ordered collection of SKImage frames.</param>
+    /// <param name="formatType">
+    ///     The MpfFormat type of the resulting image
+    /// </param>
+    /// <param name="orderedFrames">
+    ///     The ordered collection of SKImage frames.
+    /// </param>
     /// <remarks>
     ///     The resulting MpfFile will have a palette number of 0, and the indexes/frame counts/stopMotionRatio will not be
     ///     set. These details will need to manually be set by you.
@@ -368,11 +379,15 @@ public sealed class MpfFile : Collection<MpfFrame>, ISavable
     ///     Converts a collection of fully colorized images to an MpfFile
     /// </summary>
     /// <param name="options">
-    ///     Options to be used for quantization. EpfFiles can only have a maximum of 256 colors due to being
-    ///     a palettized format
+    ///     Options to be used for quantization. EpfFiles can only have a maximum of 256 colors due to being a palettized
+    ///     format
     /// </param>
-    /// <param name="formatType">The MpfFormat type of the resulting image</param>
-    /// <param name="orderedFrames">The ordered collection of SKImage frames.</param>
+    /// <param name="formatType">
+    ///     The MpfFormat type of the resulting image
+    /// </param>
+    /// <param name="orderedFrames">
+    ///     The ordered collection of SKImage frames.
+    /// </param>
     /// <remarks>
     ///     The resulting MpfFile will have a palette number of 0, and the indexes/frame counts/stopMotionRatio will not be
     ///     set. These details will need to manually be set by you.
@@ -414,8 +429,12 @@ public sealed class MpfFile : Collection<MpfFrame>, ISavable
     /// <summary>
     ///     Loads an MpfFile with the specified fileName from the specified archive
     /// </summary>
-    /// <param name="fileName">The name of the MPF file to extract from the archive.</param>
-    /// <param name="archive">The DataArchive from which to retreive the MPF file.</param>
+    /// <param name="fileName">
+    ///     The name of the MPF file to extract from the archive.
+    /// </param>
+    /// <param name="archive">
+    ///     The DataArchive from which to retreive the MPF file.
+    /// </param>
     /// <exception cref="FileNotFoundException">
     ///     Thrown if the MPF file with the specified name is not found in the archive.
     /// </exception>
@@ -430,8 +449,11 @@ public sealed class MpfFile : Collection<MpfFrame>, ISavable
     /// <summary>
     ///     Loads an MpfFile from the specified archive entry
     /// </summary>
-    /// <param name="entry">The DataArchiveEntry to load the MpfFile from</param>
-    /// <returns></returns>
+    /// <param name="entry">
+    ///     The DataArchiveEntry to load the MpfFile from
+    /// </param>
+    /// <returns>
+    /// </returns>
     public static MpfFile FromEntry(DataArchiveEntry entry)
     {
         using var segment = entry.ToStreamSegment();
@@ -442,7 +464,9 @@ public sealed class MpfFile : Collection<MpfFrame>, ISavable
     /// <summary>
     ///     Loads an MpfFile from the specified path
     /// </summary>
-    /// <param name="path">The path of the file to be read.</param>
+    /// <param name="path">
+    ///     The path of the file to be read.
+    /// </param>
     public static MpfFile FromFile(string path)
     {
         using var stream = File.Open(

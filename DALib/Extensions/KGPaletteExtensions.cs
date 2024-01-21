@@ -13,7 +13,9 @@ public static class KGPaletteExtensions
     /// <summary>
     ///     Converts a KGPalette to a DALib.Palette
     /// </summary>
-    /// <param name="palette">The KGPalette to convert.</param>
+    /// <param name="palette">
+    ///     The KGPalette to convert.
+    /// </param>
     public static Palette ToDALibPalette(this KGPalette palette)
     {
         var orderedColors = palette.GetEntries()

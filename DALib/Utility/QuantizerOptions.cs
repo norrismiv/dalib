@@ -17,10 +17,14 @@ public sealed class QuantizerOptions
     /// <summary>
     ///     The default ditherer is null, but here are some possible options:
     ///     <br />
-    ///     "ErrorDiffusionDitherer.FloydSteinberg" <br />
-    ///     "new InterleavedGradientNoiseDitherer(AutoStrengthMode.Default)" <br />
-    ///     "OrderedDitherer.Bayer2x2", 3x3, or 4x4, <br />
-    ///     "ErrorDiffusionDitherer.Atkinson" <br />
+    ///     "ErrorDiffusionDitherer.FloydSteinberg"
+    ///     <br />
+    ///     "new InterleavedGradientNoiseDitherer(AutoStrengthMode.Default)"
+    ///     <br />
+    ///     "OrderedDitherer.Bayer2x2", 3x3, or 4x4,
+    ///     <br />
+    ///     "ErrorDiffusionDitherer.Atkinson"
+    ///     <br />
     /// </summary>
     /// <remarks>
     ///     The larger the matrix, the larger the spread of the error diffusion. This means the patterns used to dither the
@@ -50,9 +54,12 @@ public sealed class QuantizerOptions
     /// <summary>
     ///     The default ditherer is Floyd-Steinberg, but you can try out some of the others. Here are some other options:
     ///     <br />
-    ///     "new InterleavedGradientNoiseDitherer(AutoStrengthMode.Default)" <br />
-    ///     "OrderedDitherer.Bayer2x2", 3x3, or 4x4, <br />
-    ///     "ErrorDiffusionDitherer.Atkinson" <br />
+    ///     "new InterleavedGradientNoiseDitherer(AutoStrengthMode.Default)"
+    ///     <br />
+    ///     "OrderedDitherer.Bayer2x2", 3x3, or 4x4,
+    ///     <br />
+    ///     "ErrorDiffusionDitherer.Atkinson"
+    ///     <br />
     /// </summary>
     /// <remarks>
     ///     The larger the matrix, the larger the spread of the error diffusion. This means the patterns used to dither the

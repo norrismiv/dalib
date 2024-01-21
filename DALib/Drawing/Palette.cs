@@ -35,7 +35,9 @@ public sealed class Palette : Collection<SKColor>, ISavable
     /// <summary>
     ///     Initializes a new instance of the Palette class with the specified colors
     /// </summary>
-    /// <param name="colors">The colors of the palette</param>
+    /// <param name="colors">
+    ///     The colors of the palette
+    /// </param>
     public Palette(IEnumerable<SKColor> colors)
         : this()
     {
@@ -49,8 +51,12 @@ public sealed class Palette : Collection<SKColor>, ISavable
     ///     Applies a dye to this palette beginning at the specified color index, and continuing for the length of the color
     ///     table entry
     /// </summary>
-    /// <param name="colorTableEntry">The color table entry to apply to this palette</param>
-    /// <param name="dyeIndexStart">The index to start copying colors to from the color table entry</param>
+    /// <param name="colorTableEntry">
+    ///     The color table entry to apply to this palette
+    /// </param>
+    /// <param name="dyeIndexStart">
+    ///     The index to start copying colors to from the color table entry
+    /// </param>
     /// <remarks>
     ///     This will create a new instance of the palette and return it. The existing palette instance will not be modified.
     ///     For the most part, this method is used to apply dye table entries to a palette, in which case the index start will
@@ -111,8 +117,12 @@ public sealed class Palette : Collection<SKColor>, ISavable
     /// <summary>
     ///     Loads all palettes from the specified archive that match the specified pattern
     /// </summary>
-    /// <param name="pattern">The pattern to match</param>
-    /// <param name="archive">The archive from which to extract palettes</param>
+    /// <param name="pattern">
+    ///     The pattern to match
+    /// </param>
+    /// <param name="archive">
+    ///     The archive from which to extract palettes
+    /// </param>
     public static Dictionary<int, Palette> FromArchive(string pattern, DataArchive archive)
     {
         var palettes = new Dictionary<int, Palette>();
@@ -131,7 +141,9 @@ public sealed class Palette : Collection<SKColor>, ISavable
     /// <summary>
     ///     Loads a palette from the specified archive entry
     /// </summary>
-    /// <param name="entry">The DataArchiveEntry to load the palette from</param>
+    /// <param name="entry">
+    ///     The DataArchiveEntry to load the palette from
+    /// </param>
     public static Palette FromEntry(DataArchiveEntry entry)
     {
         using var segment = entry.ToStreamSegment();
@@ -142,7 +154,9 @@ public sealed class Palette : Collection<SKColor>, ISavable
     /// <summary>
     ///     Loads a palette from the specified path
     /// </summary>
-    /// <param name="path">The path of the file to be read.</param>
+    /// <param name="path">
+    ///     The path of the file to be read.
+    /// </param>
     public static Palette FromFile(string path)
     {
         using var stream = File.Open(

@@ -30,9 +30,15 @@ public class PacketCryptoProvider
     /// <summary>
     ///     Gets or sets the Keystream property, which represents the keystream as a string.
     /// </summary>
-    /// <value>The keystream as a string.</value>
-    /// <exception cref="ArgumentNullException">Thrown if the value is null.</exception>
-    /// <exception cref="Exception">Thrown if the value length is not equal to KEYSTREAM_LENGTH.</exception>
+    /// <value>
+    ///     The keystream as a string.
+    /// </value>
+    /// <exception cref="ArgumentNullException">
+    ///     Thrown if the value is null.
+    /// </exception>
+    /// <exception cref="Exception">
+    ///     Thrown if the value length is not equal to KEYSTREAM_LENGTH.
+    /// </exception>
     public string Keystream
     {
         get => Encoding.ASCII.GetString(_keystream1);
@@ -74,8 +80,8 @@ public class PacketCryptoProvider
     }
 
     /// <summary>
-    ///     Initializes a new instance of the <see cref="PacketCryptoProvider" /> class.
-    ///     Uses the default seed and keystream values.
+    ///     Initializes a new instance of the <see cref="PacketCryptoProvider" /> class. Uses the default seed and keystream
+    ///     values.
     /// </summary>
     public PacketCryptoProvider()
         : this(DEFAULT_SEED, DEFAULT_KEYSTREAM)
@@ -117,10 +123,18 @@ public class PacketCryptoProvider
     /// <summary>
     ///     Decrypts client data using the specified parameters.
     /// </summary>
-    /// <param name="data">The byte array containing the encrypted client data.</param>
-    /// <param name="offset">The starting index within the byte array.</param>
-    /// <param name="count">The number of bytes to be decrypted.</param>
-    /// <param name="useKeystream2">Specifies whether to use keystream 2 for decryption.</param>
+    /// <param name="data">
+    ///     The byte array containing the encrypted client data.
+    /// </param>
+    /// <param name="offset">
+    ///     The starting index within the byte array.
+    /// </param>
+    /// <param name="count">
+    ///     The number of bytes to be decrypted.
+    /// </param>
+    /// <param name="useKeystream2">
+    ///     Specifies whether to use keystream 2 for decryption.
+    /// </param>
     /// <returns>
     ///     The decrypted client data as a byte array.
     /// </returns>
@@ -184,11 +198,21 @@ public class PacketCryptoProvider
     /// <summary>
     ///     Decrypts server data.
     /// </summary>
-    /// <param name="data">The data to decrypt.</param>
-    /// <param name="offset">The starting offset in the data.</param>
-    /// <param name="count">The number of bytes to decrypt.</param>
-    /// <param name="useKeystream2">Flag to indicate if keystream2 should be used for transformation.</param>
-    /// <returns>The decrypted server data as a byte array.</returns>
+    /// <param name="data">
+    ///     The data to decrypt.
+    /// </param>
+    /// <param name="offset">
+    ///     The starting offset in the data.
+    /// </param>
+    /// <param name="count">
+    ///     The number of bytes to decrypt.
+    /// </param>
+    /// <param name="useKeystream2">
+    ///     Flag to indicate if keystream2 should be used for transformation.
+    /// </param>
+    /// <returns>
+    ///     The decrypted server data as a byte array.
+    /// </returns>
     public byte[] DecryptServerData(
         byte[] data,
         int offset,
@@ -240,12 +264,24 @@ public class PacketCryptoProvider
     /// <summary>
     ///     Encrypts the provided client data using the specified parameters.
     /// </summary>
-    /// <param name="data">The data to encrypt.</param>
-    /// <param name="offset">The starting index in the data array from which to begin encryption.</param>
-    /// <param name="count">The number of bytes to encrypt.</param>
-    /// <param name="sequence">The sequence value to use during encryption.</param>
-    /// <param name="useKeystream2">Determines whether to use Keystream2 during encryption.</param>
-    /// <returns>The encrypted client data.</returns>
+    /// <param name="data">
+    ///     The data to encrypt.
+    /// </param>
+    /// <param name="offset">
+    ///     The starting index in the data array from which to begin encryption.
+    /// </param>
+    /// <param name="count">
+    ///     The number of bytes to encrypt.
+    /// </param>
+    /// <param name="sequence">
+    ///     The sequence value to use during encryption.
+    /// </param>
+    /// <param name="useKeystream2">
+    ///     Determines whether to use Keystream2 during encryption.
+    /// </param>
+    /// <returns>
+    ///     The encrypted client data.
+    /// </returns>
     public byte[] EncryptClientData(
         byte[] data,
         int offset,
@@ -319,12 +355,24 @@ public class PacketCryptoProvider
     /// <summary>
     ///     Encrypts server data using the specified parameters.
     /// </summary>
-    /// <param name="data">The data to be encrypted.</param>
-    /// <param name="offset">The starting offset within the data array.</param>
-    /// <param name="count">The number of bytes to be encrypted.</param>
-    /// <param name="sequence">The sequence number used for encryption.</param>
-    /// <param name="useKeystream2">Determines whether to use the second keystream for encryption.</param>
-    /// <returns>The encrypted server data as a byte array.</returns>
+    /// <param name="data">
+    ///     The data to be encrypted.
+    /// </param>
+    /// <param name="offset">
+    ///     The starting offset within the data array.
+    /// </param>
+    /// <param name="count">
+    ///     The number of bytes to be encrypted.
+    /// </param>
+    /// <param name="sequence">
+    ///     The sequence number used for encryption.
+    /// </param>
+    /// <param name="useKeystream2">
+    ///     Determines whether to use the second keystream for encryption.
+    /// </param>
+    /// <returns>
+    ///     The encrypted server data as a byte array.
+    /// </returns>
     public byte[] EncryptServerData(
         byte[] data,
         int offset,
@@ -393,7 +441,9 @@ public class PacketCryptoProvider
     /// <summary>
     ///     Generates a keystream table based on the given name.
     /// </summary>
-    /// <param name="name">The name to generate the keystream table from.</param>
+    /// <param name="name">
+    ///     The name to generate the keystream table from.
+    /// </param>
     public void GenerateKeystream2Table(string name)
     {
         var table = GetMd5String(GetMd5String(name));
