@@ -1,6 +1,5 @@
 ﻿using DALib.Definitions;
 using KGySoft.Drawing.Imaging;
-using SkiaSharp;
 
 namespace DALib.Utility;
 
@@ -9,11 +8,6 @@ namespace DALib.Utility;
 /// </summary>
 public sealed class QuantizerOptions
 {
-    /// <summary>
-    ///     Do not change this value unless you know what you're doing
-    /// </summary>
-    public SKColorType ColorType { get; set; } = SKColorType.Rgba8888;
-
     /// <summary>
     ///     The default ditherer is null, but here are some possible options:
     ///     <br />

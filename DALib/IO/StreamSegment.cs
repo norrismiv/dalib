@@ -134,6 +134,9 @@ public class StreamSegment : Stream
         if (BaseStream.Position != OffsetPosition)
             BaseStream.Seek(OffsetPosition, SeekOrigin.Begin);
 
+        if ((Position + count) > Length)
+            throw new ArgumentOutOfRangeException(nameof(count), count, null);
+
         BaseStream.Write(buffer, offset, count);
 
         SetPositionFromBaseStream();
