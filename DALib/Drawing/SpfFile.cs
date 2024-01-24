@@ -38,22 +38,24 @@ public sealed class SpfFile : Collection<SpfFrame>, ISavable
     public Palette? SecondaryColors { get; set; }
 
     /// <summary>
-    ///     A value that has an unknown use
-    ///     LI: figure out what this is for
+    ///     A value that has an unknown use LI: figure out what this is for
     /// </summary>
     public uint Unknown1 { get; set; }
 
     /// <summary>
-    ///     A value that has an unknown use
-    ///     LI: figure out what this is for
+    ///     A value that has an unknown use LI: figure out what this is for
     /// </summary>
     public uint Unknown2 { get; set; }
 
     /// <summary>
     ///     Initializes a new instance of the SpfFile class(palettized) with the specified primary and secondary palettes
     /// </summary>
-    /// <param name="primaryColors">The primary color palette used by the images (RGB565 scaled to RGB888)</param>
-    /// <param name="secondaryColors">The secondary color palette used by the images (RGB555 scale to RGB888)</param>
+    /// <param name="primaryColors">
+    ///     The primary color palette used by the images (RGB565 scaled to RGB888)
+    /// </param>
+    /// <param name="secondaryColors">
+    ///     The secondary color palette used by the images (RGB555 scale to RGB888)
+    /// </param>
     public SpfFile(Palette primaryColors, Palette secondaryColors)
     {
         Format = SpfFormatType.Palettized;
@@ -336,13 +338,17 @@ public sealed class SpfFile : Collection<SpfFrame>, ISavable
     /// <summary>
     ///     Converts a sequence of fully colored images to a colorized SpfFile.
     /// </summary>
-    /// <param name="orderedFrames">The ordered collection of SKImage frames.</param>
+    /// <param name="orderedFrames">
+    ///     The ordered collection of SKImage frames.
+    /// </param>
     public static SpfFile FromImages(IEnumerable<SKImage> orderedFrames) => FromImages(orderedFrames.ToArray());
 
     /// <summary>
     ///     Converts a collection of fully colored images to a colorized SpfFile
     /// </summary>
-    /// <param name="orderedFrames">The ordered array of SKImage frames.</param>
+    /// <param name="orderedFrames">
+    ///     The ordered array of SKImage frames.
+    /// </param>
     public static SpfFile FromImages(params SKImage[] orderedFrames)
     {
         var spfFile = new SpfFile();
@@ -384,10 +390,12 @@ public sealed class SpfFile : Collection<SpfFrame>, ISavable
     ///     Converts a sequence of fully colored images to a palettized SpfFile.
     /// </summary>
     /// <param name="options">
-    ///     Options to be used for quantization. Palettized SpfFiles can only have a maximum of 256 colors due to being
-    ///     a palettized format
+    ///     Options to be used for quantization. Palettized SpfFiles can only have a maximum of 256 colors due to being a
+    ///     palettized format
     /// </param>
-    /// <param name="orderedFrames">The ordered collection of SKImage frames.</param>
+    /// <param name="orderedFrames">
+    ///     The ordered collection of SKImage frames.
+    /// </param>
     public static SpfFile FromImages(QuantizerOptions options, IEnumerable<SKImage> orderedFrames)
         => FromImages(options, orderedFrames.ToArray());
 
@@ -395,10 +403,12 @@ public sealed class SpfFile : Collection<SpfFrame>, ISavable
     ///     Converts a collection of fully colored images to a palettized SpfFile
     /// </summary>
     /// <param name="options">
-    ///     Options to be used for quantization. Palettized SpfFiles can only have a maximum of 256 colors due to being
-    ///     a palettized format
+    ///     Options to be used for quantization. Palettized SpfFiles can only have a maximum of 256 colors due to being a
+    ///     palettized format
     /// </param>
-    /// <param name="orderedFrames">The ordered array of SKImage frames.</param>
+    /// <param name="orderedFrames">
+    ///     The ordered array of SKImage frames.
+    /// </param>
     public static SpfFile FromImages(QuantizerOptions options, params SKImage[] orderedFrames)
     {
         ImageProcessor.PreserveNonTransparentBlacks(orderedFrames);
@@ -434,8 +444,12 @@ public sealed class SpfFile : Collection<SpfFrame>, ISavable
     /// <summary>
     ///     Loads an SpfFile with the specified fileName from the specified archive
     /// </summary>
-    /// <param name="fileName">The name of the SPF file to extract from the archive.</param>
-    /// <param name="archive">The DataArchive from which to retrieve the SPF file.</param>
+    /// <param name="fileName">
+    ///     The name of the SPF file to extract from the archive.
+    /// </param>
+    /// <param name="archive">
+    ///     The DataArchive from which to retrieve the SPF file.
+    /// </param>
     /// <exception cref="FileNotFoundException">
     ///     Thrown if the SPF file with the specified name is not found in the archive.
     /// </exception>
@@ -450,7 +464,9 @@ public sealed class SpfFile : Collection<SpfFrame>, ISavable
     /// <summary>
     ///     Loads an SpfFile from the specified archive entry
     /// </summary>
-    /// <param name="entry">The DataArchiveEntry to load the SpfFile from</param>
+    /// <param name="entry">
+    ///     The DataArchiveEntry to load the SpfFile from
+    /// </param>
     public static SpfFile FromEntry(DataArchiveEntry entry)
     {
         using var segment = entry.ToStreamSegment();
@@ -461,7 +477,9 @@ public sealed class SpfFile : Collection<SpfFrame>, ISavable
     /// <summary>
     ///     Loads an SpfFile from the specified path
     /// </summary>
-    /// <param name="path">The path of the file to be read.</param>
+    /// <param name="path">
+    ///     The path of the file to be read.
+    /// </param>
     public static SpfFile FromFile(string path)
     {
         using var stream = File.Open(

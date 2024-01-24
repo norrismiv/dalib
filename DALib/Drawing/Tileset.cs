@@ -80,7 +80,9 @@ public sealed class Tileset : Collection<Tile>, ISavable
     /// <summary>
     ///     Converts a sequence of fully colored images to a Tileset
     /// </summary>
-    /// <param name="images">The sequence of SKImages.</param>
+    /// <param name="images">
+    ///     The sequence of SKImages.
+    /// </param>
     /// <remarks>
     ///     This method will take a set of images and convert them to a Tileset. However, in order to save this tileset, you
     ///     will need to load the existing tilesets (tilea and tileas) from the archive and append this tileset to the existing
@@ -135,7 +137,9 @@ public sealed class Tileset : Collection<Tile>, ISavable
     /// <summary>
     ///     Converts a collection of fully colored images to a Tileset
     /// </summary>
-    /// <param name="images">The collection of SKImages.</param>
+    /// <param name="images">
+    ///     The collection of SKImages.
+    /// </param>
     /// <remarks>
     ///     This method will take a set of images and convert them to a Tileset. However, in order to save this tileset, you
     ///     will need to load the existing tilesets (tilea and tileas) from the archive and append this tileset to the existing
@@ -185,7 +189,9 @@ public sealed class Tileset : Collection<Tile>, ISavable
     /// ]]>
     /// </code>
     /// </example>
-    /// <exception cref="InvalidDataException">Thrown if any of the images has a size different than CONSTANTS.TILE_SIZE.</exception>
+    /// <exception cref="InvalidDataException">
+    ///     Thrown if any of the images has a size different than CONSTANTS.TILE_SIZE.
+    /// </exception>
     public static Palettized<Tileset> FromImages(params SKImage[] images)
     {
         if (images.Any(img => (img.Height * img.Width) != CONSTANTS.TILE_SIZE))
@@ -215,8 +221,12 @@ public sealed class Tileset : Collection<Tile>, ISavable
     /// <summary>
     ///     Loads a Tileset with the specified fileName from the specified archive
     /// </summary>
-    /// <param name="fileName">The name of the Tileset to search for in the archive.</param>
-    /// <param name="archive">The DataArchive from which to retreive the Tileset from</param>
+    /// <param name="fileName">
+    ///     The name of the Tileset to search for in the archive.
+    /// </param>
+    /// <param name="archive">
+    ///     The DataArchive from which to retreive the Tileset from
+    /// </param>
     public static Tileset FromArchive(string fileName, DataArchive archive)
     {
         if (!archive.TryGetValue(fileName.WithExtension(".bmp"), out var entry))
@@ -228,7 +238,9 @@ public sealed class Tileset : Collection<Tile>, ISavable
     /// <summary>
     ///     Loads a Tileset from the specified archive entry
     /// </summary>
-    /// <param name="entry">The DataArchiveEntry to load the TileSet from</param>
+    /// <param name="entry">
+    ///     The DataArchiveEntry to load the TileSet from
+    /// </param>
     public static Tileset FromEntry(DataArchiveEntry entry)
     {
         using var segment = entry.ToStreamSegment();
@@ -239,7 +251,9 @@ public sealed class Tileset : Collection<Tile>, ISavable
     /// <summary>
     ///     Loads an TileSet from the specified path
     /// </summary>
-    /// <param name="path">The path of the file to be read.</param>
+    /// <param name="path">
+    ///     The path of the file to be read.
+    /// </param>
     public static Tileset FromFile(string path)
     {
         using var stream = File.Open(

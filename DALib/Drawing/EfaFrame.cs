@@ -86,44 +86,37 @@ public sealed class EfaFrame
     public short Top { get; set; }
 
     /// <summary>
-    ///     A value that has an unknown use
-    ///     LI: figure out what this is for
+    ///     A value that has an unknown use LI: figure out what this is for
     /// </summary>
     public int Unknown1 { get; set; }
 
     /// <summary>
-    ///     A value that has an unknown use
-    ///     LI: figure out what this is for
+    ///     A value that has an unknown use LI: figure out what this is for
     /// </summary>
     public int Unknown2 { get; set; }
 
     /// <summary>
-    ///     A value that has an unknown use
-    ///     LI: figure out what this is for
+    ///     A value that has an unknown use LI: figure out what this is for
     /// </summary>
     public int Unknown3 { get; set; }
 
     /// <summary>
-    ///     A value that has an unknown use
-    ///     LI: figure out what this is for
+    ///     A value that has an unknown use LI: figure out what this is for
     /// </summary>
     public int Unknown4 { get; set; }
 
     /// <summary>
-    ///     A value that has an unknown use
-    ///     LI: figure out what this is for
+    ///     A value that has an unknown use LI: figure out what this is for
     /// </summary>
     public int Unknown5 { get; set; }
 
     /// <summary>
-    ///     A value that has an unknown use
-    ///     LI: figure out what this is for
+    ///     A value that has an unknown use LI: figure out what this is for
     /// </summary>
     public int Unknown6 { get; set; }
 
     /// <summary>
-    ///     A value that has an unknown use
-    ///     LI: figure out what this is for
+    ///     A value that has an unknown use LI: figure out what this is for
     /// </summary>
     public int Unknown7 { get; set; }
 }

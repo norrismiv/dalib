@@ -12,13 +12,28 @@ public static class StreamExtensions
     /// <summary>
     ///     Returns a slice of the original stream, starting from the specified offset and with the specified length.
     /// </summary>
-    /// <param name="stream">The original stream.</param>
-    /// <param name="offset">The starting position of the slice.</param>
-    /// <param name="length">The length of the slice.</param>
+    /// <param name="stream">
+    ///     The original stream.
+    /// </param>
+    /// <param name="offset">
+    ///     The starting position of the slice.
+    /// </param>
+    /// <param name="length">
+    ///     The length of the slice.
+    /// </param>
     /// <param name="leaveOpen">
-    ///     <c>true</c> to leave the original stream open when the slice is disposed;
-    ///     <c>false</c> to close it.
-    ///     Default is <c>true</c>.
+    ///     <c>
+    ///         true
+    ///     </c>
+    ///     to leave the original stream open when the slice is disposed;
+    ///     <c>
+    ///         false
+    ///     </c>
+    ///     to close it. Default is
+    ///     <c>
+    ///         true
+    ///     </c>
+    ///     .
     /// </param>
     /// <remarks>
     ///     This creates a <see cref="StreamSegment" /> that wraps the original stream. This segment can not be used
@@ -38,7 +53,9 @@ public static class StreamExtensions
     /// <summary>
     ///     Reads the remaining data from the stream and returns it as a byte array
     /// </summary>
-    /// <param name="stream">The stream to convert.</param>
+    /// <param name="stream">
+    ///     The stream to convert.
+    /// </param>
     public static byte[] ToArray(this Stream stream)
     {
         if (stream is MemoryStream memoryStream)
@@ -53,7 +70,9 @@ public static class StreamExtensions
     /// <summary>
     ///     Reads the remaining data from the stream and returns it as a span of bytes
     /// </summary>
-    /// <param name="stream">The stream to convert.</param>
+    /// <param name="stream">
+    ///     The stream to convert.
+    /// </param>
     public static Span<byte> ToSpan(this Stream stream)
     {
         var buffer = new Span<byte>(new byte[stream.Length - stream.Position]);

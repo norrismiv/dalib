@@ -13,8 +13,12 @@ public static class SKImageExtensions
     /// <summary>
     ///     Retrieves the pixel data from an SKImage encoded as palette indexes pointing to the provided palette
     /// </summary>
-    /// <param name="image">The SKImage to retrieve the pixel data from.</param>
-    /// <param name="palette">A palette containing all of the colors in the image</param>
+    /// <param name="image">
+    ///     The SKImage to retrieve the pixel data from.
+    /// </param>
+    /// <param name="palette">
+    ///     A palette containing all of the colors in the image
+    /// </param>
     public static byte[] GetPalettizedPixelData(this SKImage image, Palette palette)
     {
         var colorMap = palette.Select((c, i) => (c, i))

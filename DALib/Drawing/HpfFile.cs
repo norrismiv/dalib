@@ -42,8 +42,12 @@ public sealed class HpfFile : ISavable
     /// <summary>
     ///     Initializes a new instance of the HpfFile class using the specified header bytes and data bytes
     /// </summary>
-    /// <param name="headerBytes">The header bytes of the HPF file.</param>
-    /// <param name="data">The data bytes of the HPF file.</param>
+    /// <param name="headerBytes">
+    ///     The header bytes of the HPF file.
+    /// </param>
+    /// <param name="data">
+    ///     The data bytes of the HPF file.
+    /// </param>
     public HpfFile(byte[] headerBytes, byte[] data)
     {
         HeaderBytes = headerBytes;
@@ -100,10 +104,12 @@ public sealed class HpfFile : ISavable
     ///     Converts a fully colorized image to an HpfFile
     /// </summary>
     /// <param name="options">
-    ///     Options to be used for quantization. EpfFiles can only have a maximum of 256 colors due to being
-    ///     a palettized format
+    ///     Options to be used for quantization. EpfFiles can only have a maximum of 256 colors due to being a palettized
+    ///     format
     /// </param>
-    /// <param name="image">A fully colorized SKImage</param>
+    /// <param name="image">
+    ///     A fully colorized SKImage
+    /// </param>
     public static Palettized<HpfFile> FromImage(QuantizerOptions options, SKImage image)
     {
         using var quantized = ImageProcessor.Quantize(options, image);
@@ -120,8 +126,12 @@ public sealed class HpfFile : ISavable
     /// <summary>
     ///     Loads an HpfFile with the specified fileName from the specified archive
     /// </summary>
-    /// <param name="fileName">The name of the HPF file to extract from the archive</param>
-    /// <param name="archive">The DataArchive from which to retreive the HPF file</param>
+    /// <param name="fileName">
+    ///     The name of the HPF file to extract from the archive
+    /// </param>
+    /// <param name="archive">
+    ///     The DataArchive from which to retreive the HPF file
+    /// </param>
     /// <exception cref="FileNotFoundException">
     ///     Thrown if the HPF file with the specified name is not found in the archive.
     /// </exception>
@@ -136,13 +146,17 @@ public sealed class HpfFile : ISavable
     /// <summary>
     ///     Loads an HpfFile from the specified archive entry
     /// </summary>
-    /// <param name="entry">The DataArchiveEntry to load the HpfFile from</param>
+    /// <param name="entry">
+    ///     The DataArchiveEntry to load the HpfFile from
+    /// </param>
     public static HpfFile FromEntry(DataArchiveEntry entry) => new(entry.ToSpan());
 
     /// <summary>
     ///     Loads an HpfFile from the specified path
     /// </summary>
-    /// <param name="path">The path of the file to be read.</param>
+    /// <param name="path">
+    ///     The path of the file to be read.
+    /// </param>
     public static HpfFile FromFile(string path)
     {
         using var stream = File.Open(

@@ -15,10 +15,10 @@ namespace DALib.Drawing;
 ///     Represents a palette table used to map external ids to palette ids
 /// </summary>
 /// <remarks>
-///     As a palette table is populated, newer entries override older ones. This is intended behavior.
-///     In my opinion this makes it meaningless to store and search through all of the entries.
-///     You could search through them in reverse order and return the first one you find, but even still...
-///     It should be faster this way, as a dictionary, where each id is mapped to a palette number
+///     As a palette table is populated, newer entries override older ones. This is intended behavior. In my opinion this
+///     makes it meaningless to store and search through all of the entries. You could search through them in reverse order
+///     and return the first one you find, but even still... It should be faster this way, as a dictionary, where each id
+///     is mapped to a palette number
 /// </remarks>
 public class PaletteTable : ISavable
 {
@@ -105,10 +105,17 @@ public class PaletteTable : ISavable
     /// <summary>
     ///     Adds a new entry to the palette table
     /// </summary>
-    /// <param name="id">The external id for which the specified palette number is mapped to</param>
-    /// <param name="paletteNumber">The id of the palette</param>
-    /// <param name="overrideType">The type of override to favor if this palette association is for a KHAN archive</param>
-    /// <exception cref="ArgumentOutOfRangeException"></exception>
+    /// <param name="id">
+    ///     The external id for which the specified palette number is mapped to
+    /// </param>
+    /// <param name="paletteNumber">
+    ///     The id of the palette
+    /// </param>
+    /// <param name="overrideType">
+    ///     The type of override to favor if this palette association is for a KHAN archive
+    /// </param>
+    /// <exception cref="ArgumentOutOfRangeException">
+    /// </exception>
     public virtual void Add(int id, int paletteNumber, KhanPalOverrideType overrideType = KhanPalOverrideType.None)
     {
         switch (overrideType)
@@ -138,8 +145,12 @@ public class PaletteTable : ISavable
     /// <summary>
     ///     Gets the palette number for the specified id
     /// </summary>
-    /// <param name="id">The external id for which to find the associated palette</param>
-    /// <param name="overrideType">The type of override to favor if working with a KHAN archive</param>
+    /// <param name="id">
+    ///     The external id for which to find the associated palette
+    /// </param>
+    /// <param name="overrideType">
+    ///     The type of override to favor if working with a KHAN archive
+    /// </param>
     public int GetPaletteNumber(int id, KhanPalOverrideType overrideType = KhanPalOverrideType.None)
     {
         // ReSharper disable once ConvertIfStatementToSwitchStatement
@@ -161,7 +172,9 @@ public class PaletteTable : ISavable
     /// <summary>
     ///     Merges the specified palette table into this one
     /// </summary>
-    /// <param name="other">Another palette table</param>
+    /// <param name="other">
+    ///     Another palette table
+    /// </param>
     public virtual void Merge(PaletteTable other)
     {
         foreach (var kvp in other.MaleOverrides)
@@ -180,7 +193,9 @@ public class PaletteTable : ISavable
     /// <summary>
     ///     Removes the specified id from the palette table (removes it from all collections)
     /// </summary>
-    /// <param name="id">The external id to remove</param>
+    /// <param name="id">
+    ///     The external id to remove
+    /// </param>
     public virtual void Remove(int id)
     {
         MaleOverrides.Remove(id);
@@ -285,9 +300,14 @@ public class PaletteTable : ISavable
     /// <summary>
     ///     Loads a palette table from the specified archive by searching for PaletteTables that match the given pattern
     /// </summary>
-    /// <param name="pattern">The pattern to match</param>
-    /// <param name="archive">The archive from which to extract PaletteTables</param>
-    /// <returns></returns>
+    /// <param name="pattern">
+    ///     The pattern to match
+    /// </param>
+    /// <param name="archive">
+    ///     The archive from which to extract PaletteTables
+    /// </param>
+    /// <returns>
+    /// </returns>
     public static PaletteTable FromArchive(string pattern, DataArchive archive)
     {
         var table = new PaletteTable();
@@ -305,7 +325,9 @@ public class PaletteTable : ISavable
     /// <summary>
     ///     Loads a palette table from the specified archive entry
     /// </summary>
-    /// <param name="entry">The DataArchiveEntry to load the palette table from</param>
+    /// <param name="entry">
+    ///     The DataArchiveEntry to load the palette table from
+    /// </param>
     public static PaletteTable FromEntry(DataArchiveEntry entry)
     {
         using var segment = entry.ToStreamSegment();
@@ -316,7 +338,9 @@ public class PaletteTable : ISavable
     /// <summary>
     ///     Loads a palette table from the specified path
     /// </summary>
-    /// <param name="path">The path of the file to be read.</param>
+    /// <param name="path">
+    ///     The path of the file to be read.
+    /// </param>
     public static PaletteTable FromFile(string path)
     {
         using var stream = File.Open(

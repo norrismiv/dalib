@@ -15,11 +15,14 @@ public static class PalettizedExtensions
     ///     For EPF images that are for a game type that supports dye colors, this method will arrange the colors in the
     ///     palette so that dye colors line up with the starting dye index
     /// </summary>
-    /// <param name="palettized">A palettized epf file</param>
+    /// <param name="palettized">
+    ///     A palettized epf file
+    /// </param>
     /// <param name="defaultDyeColors">
     ///     The dye colors present in the image. Set this to null if the type is dyeable, but the specific image is not
     /// </param>
-    /// <exception cref="InvalidOperationException"></exception>
+    /// <exception cref="InvalidOperationException">
+    /// </exception>
     /// <remarks>
     ///     If the type is dyeable, but the specific image is not intended to be dyeable, make sure you specify only 250 colors
     ///     during quantization, so that there is room for the 6 dyeable color slots to be empty

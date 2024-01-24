@@ -11,7 +11,9 @@ public static class ColorCodec
     /// <summary>
     ///     Decodes a 16-bit encoded RGB555 color value into an SKColor and scales the color to RGB888
     /// </summary>
-    /// <param name="encodedColor">The 16-bit encoded RGB555 color value </param>
+    /// <param name="encodedColor">
+    ///     The 16-bit encoded RGB555 color value
+    /// </param>
     public static SKColor DecodeRgb555(ushort encodedColor)
     {
         var r = (byte)((encodedColor >> 10) & CONSTANTS.FIVE_BIT_MASK);
@@ -45,7 +47,9 @@ public static class ColorCodec
     /// <summary>
     ///     Decodes a 16-bit encoded RGB565 color value into an SKColor and scales the color to RGB888
     /// </summary>
-    /// <param name="encodedColor">The 16-bit encoded RGB555 color value </param>
+    /// <param name="encodedColor">
+    ///     The 16-bit encoded RGB555 color value
+    /// </param>
     public static SKColor DecodeRgb565(ushort encodedColor)
     {
         var r = (byte)(encodedColor >> 11);
@@ -79,7 +83,9 @@ public static class ColorCodec
     /// <summary>
     ///     Encodes an SKColor into a 16 bit RGB555 encoded color
     /// </summary>
-    /// <param name="color">The SKColor to encode.</param>
+    /// <param name="color">
+    ///     The SKColor to encode.
+    /// </param>
     public static ushort EncodeRgb555(SKColor color)
     {
         var r = MathEx.ScaleRange<byte, byte>(
@@ -109,7 +115,9 @@ public static class ColorCodec
     /// <summary>
     ///     Encodes an SKColor into a 16 bit RGB565 encoded color
     /// </summary>
-    /// <param name="color">The SKColor to encode.</param>
+    /// <param name="color">
+    ///     The SKColor to encode.
+    /// </param>
     public static ushort EncodeRgb565(SKColor color)
     {
         var r = MathEx.ScaleRange<byte, byte>(

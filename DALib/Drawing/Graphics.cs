@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Runtime.InteropServices;
 using System.Text;
 using DALib.Data;
 using DALib.Definitions;
@@ -17,8 +18,12 @@ public static class Graphics
     /// <summary>
     ///     Renders an EpfFrame
     /// </summary>
-    /// <param name="frame">The frame to render</param>
-    /// <param name="palette">A palette containing colors used by the frame</param>
+    /// <param name="frame">
+    ///     The frame to render
+    /// </param>
+    /// <param name="palette">
+    ///     A palette containing colors used by the frame
+    /// </param>
     public static SKImage RenderImage(EpfFrame frame, Palette palette)
         => SimpleRender(
             frame.Left,
@@ -31,8 +36,12 @@ public static class Graphics
     /// <summary>
     ///     Renders an MpfFrame
     /// </summary>
-    /// <param name="frame">The frame to render</param>
-    /// <param name="palette">A palette containing colors used by the frame</param>
+    /// <param name="frame">
+    ///     The frame to render
+    /// </param>
+    /// <param name="palette">
+    ///     A palette containing colors used by the frame
+    /// </param>
     public static SKImage RenderImage(MpfFrame frame, Palette palette)
         => SimpleRender(
             frame.Left,
@@ -45,8 +54,12 @@ public static class Graphics
     /// <summary>
     ///     Renders an HpfFile
     /// </summary>
-    /// <param name="hpf">The file to render</param>
-    /// <param name="palette">A palette containing colors used by the frame</param>
+    /// <param name="hpf">
+    ///     The file to render
+    /// </param>
+    /// <param name="palette">
+    ///     A palette containing colors used by the frame
+    /// </param>
     public static SKImage RenderImage(HpfFile hpf, Palette palette)
         => SimpleRender(
             0,
@@ -59,8 +72,12 @@ public static class Graphics
     /// <summary>
     ///     Renders a palettized SPF frame
     /// </summary>
-    /// <param name="spf">The frame to render. Must be a palettized SpfFrame</param>
-    /// <param name="spfPrimaryColorPalette">The primary color palette of the SpfFile. (see SpfFile.Format)</param>
+    /// <param name="spf">
+    ///     The frame to render. Must be a palettized SpfFrame
+    /// </param>
+    /// <param name="spfPrimaryColorPalette">
+    ///     The primary color palette of the SpfFile. (see SpfFile.Format)
+    /// </param>
     public static SKImage RenderImage(SpfFrame spf, Palette spfPrimaryColorPalette)
         => SimpleRender(
             spf.Left,
@@ -73,7 +90,9 @@ public static class Graphics
     /// <summary>
     ///     Renders a colorized SpfFrame
     /// </summary>
-    /// <param name="spf">The frame to render. Must be a colorized SpfFrame. (see SpfFile.Format)</param>
+    /// <param name="spf">
+    ///     The frame to render. Must be a colorized SpfFrame. (see SpfFile.Format)
+    /// </param>
     public static SKImage RenderImage(SpfFrame spf)
         => SimpleRender(
             spf.Left,
@@ -85,17 +104,18 @@ public static class Graphics
     /// <summary>
     ///     Renders an EfaFrame
     /// </summary>
-    /// <param name="efa">The frame to render</param>
-    /// <param name="efaBlendingType">The alpha blending type to use</param>
+    /// <param name="efa">
+    ///     The frame to render
+    /// </param>
+    /// <param name="efaBlendingType">
+    ///     The alpha blending type to use
+    /// </param>
     public static SKImage RenderImage(EfaFrame efa, EfaBlendingType efaBlendingType = EfaBlendingType.Luminance)
     {
-        using var bitmap = new SKBitmap(
-            efa.ImagePixelWidth,
-            efa.ImagePixelHeight,
-            SKColorType.Rgba8888,
-            SKAlphaType.Premul);
+        using var bitmap = new SKBitmap(efa.ImagePixelWidth, efa.ImagePixelHeight);
 
-        bitmap.Erase(CONSTANTS.Transparent);
+        var pixelBuffer = new SKColor[bitmap.Width * bitmap.Height];
+        Array.Fill(pixelBuffer, CONSTANTS.Transparent);
 
         if (efa.ByteCount == 0)
             return SKImage.FromBitmap(bitmap);
@@ -138,8 +158,17 @@ public static class Graphics
                 if (coefficient > 0)
                     color = color.WithLuminanceAlpha(coefficient);
 
-                bitmap.SetPixel(xActual, yActual, color);
+                pixelBuffer[yActual * bitmap.Width + xActual] = color;
             }
+
+        var handle = GCHandle.Alloc(pixelBuffer, GCHandleType.Pinned);
+
+        bitmap.InstallPixels(
+            bitmap.Info,
+            handle.AddrOfPinnedObject(),
+            bitmap.RowBytes,
+            Helpers.FreeHandle,
+            handle);
 
         return SKImage.FromBitmap(bitmap);
     }
@@ -147,9 +176,15 @@ public static class Graphics
     /// <summary>
     ///     Renders a MapFile, given the archives that contain required data
     /// </summary>
-    /// <param name="map">The map file to render.</param>
-    /// <param name="seoDat">The SEO archive.</param>
-    /// <param name="iaDat">The IA archive.</param>
+    /// <param name="map">
+    ///     The map file to render.
+    /// </param>
+    /// <param name="seoDat">
+    ///     The SEO archive.
+    /// </param>
+    /// <param name="iaDat">
+    ///     The IA archive.
+    /// </param>
     public static SKImage RenderMap(MapFile map, DataArchive seoDat, DataArchive iaDat)
         => RenderMap(
             map,
@@ -163,11 +198,21 @@ public static class Graphics
     /// <summary>
     ///     Renders a MapFile, given already extracted information
     /// </summary>
-    /// <param name="map">The MapFile to render</param>
-    /// <param name="tiles">A collection of background tiles</param>
-    /// <param name="bgPaletteLookup">PaletteLookup for background tiles</param>
-    /// <param name="fgPaletteLookup">PaletteLookup for foreground tiles</param>
-    /// <param name="iaDat">IA archive for reading foreground tile files</param>
+    /// <param name="map">
+    ///     The MapFile to render
+    /// </param>
+    /// <param name="tiles">
+    ///     A collection of background tiles
+    /// </param>
+    /// <param name="bgPaletteLookup">
+    ///     PaletteLookup for background tiles
+    /// </param>
+    /// <param name="fgPaletteLookup">
+    ///     PaletteLookup for foreground tiles
+    /// </param>
+    /// <param name="iaDat">
+    ///     IA archive for reading foreground tile files
+    /// </param>
     public static SKImage RenderMap(
         MapFile map,
         Tileset tiles,
@@ -285,8 +330,12 @@ public static class Graphics
     /// <summary>
     ///     Renders a Tile
     /// </summary>
-    /// <param name="tile">The tile to render</param>
-    /// <param name="palette">A palette containing colors used by the tile</param>
+    /// <param name="tile">
+    ///     The tile to render
+    /// </param>
+    /// <param name="palette">
+    ///     A palette containing colors used by the tile
+    /// </param>
     public static SKImage RenderTile(Tile tile, Palette palette)
         => SimpleRender(
             0,
@@ -305,7 +354,8 @@ public static class Graphics
     {
         using var bitmap = new SKBitmap(width + left, height + top);
 
-        bitmap.Erase(CONSTANTS.Transparent);
+        var pixelBuffer = new SKColor[bitmap.Width * bitmap.Height];
+        Array.Fill(pixelBuffer, CONSTANTS.Transparent);
 
         for (var y = 0; y < height; y++)
             for (var x = 0; x < width; x++)
@@ -319,8 +369,17 @@ public static class Graphics
                 if ((color == CONSTANTS.Transparent) || (color == SKColors.Black))
                     continue;
 
-                bitmap.SetPixel(xActual, yActual, color);
+                pixelBuffer[yActual * bitmap.Width + xActual] = color;
             }
+
+        var handle = GCHandle.Alloc(pixelBuffer, GCHandleType.Pinned);
+
+        bitmap.InstallPixels(
+            bitmap.Info,
+            handle.AddrOfPinnedObject(),
+            bitmap.RowBytes,
+            Helpers.FreeHandle,
+            handle);
 
         return SKImage.FromBitmap(bitmap);
     }
@@ -335,7 +394,8 @@ public static class Graphics
     {
         using var bitmap = new SKBitmap(width + left, height + top);
 
-        bitmap.Erase(CONSTANTS.Transparent);
+        var pixelBuffer = new SKColor[bitmap.Width * bitmap.Height];
+        Array.Fill(pixelBuffer, CONSTANTS.Transparent);
 
         for (var y = 0; y < height; y++)
             for (var x = 0; x < width; x++)
@@ -349,8 +409,17 @@ public static class Graphics
                 //if the paletteIndex is 0, and that color is pure black or transparent black
                 var color = paletteIndex == 0 ? CONSTANTS.Transparent : palette[paletteIndex];
 
-                bitmap.SetPixel(xActual, yActual, color);
+                pixelBuffer[yActual * bitmap.Width + xActual] = color;
             }
+
+        var handle = GCHandle.Alloc(pixelBuffer, GCHandleType.Pinned);
+
+        bitmap.InstallPixels(
+            bitmap.Info,
+            handle.AddrOfPinnedObject(),
+            bitmap.RowBytes,
+            Helpers.FreeHandle,
+            handle);
 
         return SKImage.FromBitmap(bitmap);
     }
