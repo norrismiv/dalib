@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
@@ -110,11 +111,17 @@ public static class ImageProcessor
 
         using var qSession = quantizer.Initialize(source);
         using var quantizedBitmap = new SKBitmap(image.Info);
+        var existingPixels = bitmap.Pixels;
+
+        var colorCount = existingPixels.Distinct()
+                                       .Count();
 
         var pixelBuffer = new SKColor[quantizedBitmap.Width * quantizedBitmap.Height];
 
-        //if a ditherer was specified, use it
-        if (options.Ditherer is not null)
+        //dont quantize/dither if the image already has less than maximum number of colors
+        if (colorCount <= options.MaxColors)
+            existingPixels.CopyTo(pixelBuffer.AsSpan());
+        else if (options.Ditherer is not null)
         {
             using var dSession = options.Ditherer!.Initialize(source, qSession);
 
@@ -130,7 +137,7 @@ public static class ImageProcessor
                     pixelBuffer[y * image.Width + x] = ditheredColor;
                 }
             }
-        } else //otherwise, just quantize the image
+        } else
             for (var y = 0; y < image.Height; y++)
             {
                 for (var x = 0; x < image.Width; x++)
