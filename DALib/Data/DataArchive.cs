@@ -76,6 +76,21 @@ public class DataArchive : KeyedCollection<string, DataArchiveEntry>, ISavable, 
     }
 
     /// <summary>
+    ///     Compiles the contents of the specified directory into a new archive.
+    /// </summary>
+    /// <param name="fromDir">
+    ///     The directory to compile into an archive
+    /// </param>
+    /// <param name="toPath">
+    ///     The destination path of the archive
+    /// </param>
+    public static void Compile(string fromDir, string toPath)
+    {
+        using var dat = FromDirectory(fromDir);
+        dat.Save(toPath);
+    }
+
+    /// <summary>
     ///     Extracts the contents of the current archive to the specified directory.
     /// </summary>
     /// <param name="dir">
@@ -300,15 +315,21 @@ public class DataArchive : KeyedCollection<string, DataArchiveEntry>, ISavable, 
     /// </returns>
     public static DataArchive FromDirectory(string dir)
     {
+        //create a buffer with a count of 0 entries
         var buffer = new MemoryStream();
+        buffer.Write(new byte[4]);
+        buffer.Seek(0, SeekOrigin.Begin);
 
         //create a new in-memory archive
+        //this will read the stream, finding 0 entries
         var archive = new DataArchive(buffer);
+        buffer.Seek(0, SeekOrigin.End); //just incase
 
-        var address = 0;
+        //start the address at 4, since the first 4 bytes are the entry count
+        var address = 4;
 
         //enumerate the directory, copying each file into the memory archive
-        //maintain accurate address offsets for each file so that the archive is useable
+        //maintain accurate address offsets for each file so that the archive is usable
         foreach (var file in Directory.EnumerateFiles(dir))
         {
             using var stream = File.Open(
@@ -337,6 +358,8 @@ public class DataArchive : KeyedCollection<string, DataArchiveEntry>, ISavable, 
 
             archive.Add(entry);
         }
+
+        buffer.Seek(0, SeekOrigin.Begin);
 
         return archive;
     }
