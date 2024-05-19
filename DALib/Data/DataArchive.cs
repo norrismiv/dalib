@@ -86,8 +86,61 @@ public class DataArchive : KeyedCollection<string, DataArchiveEntry>, ISavable, 
     /// </param>
     public static void Compile(string fromDir, string toPath)
     {
-        using var dat = FromDirectory(fromDir);
-        dat.Save(toPath);
+        const int HEADER_LENGTH = 4;
+        const int ENTRY_HEADER_LENGTH = 4 + CONSTANTS.DATA_ARCHIVE_ENTRY_NAME_LENGTH;
+
+        var files = Directory.GetFiles(fromDir);
+        var dataStreams = new List<Stream>();
+
+        using var dat = File.Create(toPath.WithExtension(".dat"));
+        using var writer = new BinaryWriter(dat, Encoding.Default, true);
+
+        writer.Write(files.Length + 1);
+
+        //add the file header length
+        //plus the entry header length * number of entries
+        //plus 4 bytes for the final entry's end address (which could also be considered the total number of bytes)
+        var address = HEADER_LENGTH + files.Length * ENTRY_HEADER_LENGTH + 4;
+
+        foreach (var file in files)
+        {
+            var nameStr = Path.GetFileName(file);
+
+            // ReSharper disable once ConvertIfStatementToSwitchStatement
+            if (nameStr.Length > CONSTANTS.DATA_ARCHIVE_ENTRY_NAME_LENGTH)
+                throw new InvalidOperationException("Entry name is too long, must be 13 characters or less");
+
+            if (nameStr.Length < CONSTANTS.DATA_ARCHIVE_ENTRY_NAME_LENGTH)
+                nameStr = nameStr.PadRight(CONSTANTS.DATA_ARCHIVE_ENTRY_NAME_LENGTH, '\0');
+
+            //get bytes for the name field (binaryWriter.Write(string) doesn't work for this)
+            var nameStrBytes = Encoding.ASCII.GetBytes(nameStr);
+
+            writer.Write(address);
+            writer.Write(nameStrBytes);
+
+            var dataStream = File.Open(
+                file,
+                new FileStreamOptions
+                {
+                    Access = FileAccess.Read,
+                    Mode = FileMode.Open,
+                    Options = FileOptions.SequentialScan,
+                    Share = FileShare.ReadWrite,
+                    BufferSize = 8192
+                });
+            dataStreams.Add(dataStream);
+
+            address += (int)dataStream.Length;
+        }
+
+        writer.Write(address);
+
+        foreach (var stream in dataStreams)
+        {
+            stream.CopyTo(dat);
+            stream.Dispose();
+        }
     }
 
     /// <summary>
