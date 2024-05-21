@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -11,7 +12,7 @@ namespace DALib.Drawing;
 /// <summary>
 ///     Represents a table of tile animations.
 /// </summary>
-public class TileAnimationTable : ISavable
+public sealed class TileAnimationTable : ISavable
 {
     private readonly Dictionary<int, TileAnimationEntry> Entries = new();
 
@@ -79,6 +80,17 @@ public class TileAnimationTable : ISavable
         foreach (var tileId in entry.TileSequence)
             Entries.Remove(tileId);
     }
+
+    /// <summary>
+    ///     Attempts to retrieve a TileAnimationEntry from the table
+    /// </summary>
+    /// <param name="tileId">
+    ///     The current tile id
+    /// </param>
+    /// <param name="entry">
+    ///     An entry containing a sequence of tiles
+    /// </param>
+    public bool TryGetEntry(int tileId, [MaybeNullWhen(false)] out TileAnimationEntry entry) => Entries.TryGetValue(tileId, out entry);
 
     #region SaveTo
     /// <inheritdoc />

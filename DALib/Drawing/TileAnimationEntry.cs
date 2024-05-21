@@ -21,7 +21,7 @@ public sealed class TileAnimationEntry : IEnumerable<ushort>
     /// <summary>
     ///     A sequence of tile IDs that make up the animation.
     /// </summary>
-    public List<ushort> TileSequence { get; set; } = new();
+    public List<ushort> TileSequence { get; set; } = [];
 
     /// <inheritdoc />
     public IEnumerator<ushort> GetEnumerator() => TileSequence.GetEnumerator();

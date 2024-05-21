@@ -60,10 +60,13 @@ public static class Graphics
     /// <param name="palette">
     ///     A palette containing colors used by the frame
     /// </param>
-    public static SKImage RenderImage(HpfFile hpf, Palette palette)
+    /// <param name="yOffset">
+    ///     An optional custom offset used to move the image down, since these images are rendered from the bottom up
+    /// </param>
+    public static SKImage RenderImage(HpfFile hpf, Palette palette, int yOffset = 0)
         => SimpleRender(
             0,
-            0,
+            yOffset,
             hpf.PixelWidth,
             hpf.PixelHeight,
             hpf.Data,
@@ -385,8 +388,8 @@ public static class Graphics
     }
 
     private static SKImage SimpleRender(
-        int top,
         int left,
+        int top,
         int width,
         int height,
         byte[] data,
