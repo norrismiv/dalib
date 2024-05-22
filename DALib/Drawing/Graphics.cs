@@ -117,8 +117,9 @@ public static class Graphics
     {
         using var bitmap = new SKBitmap(efa.ImagePixelWidth, efa.ImagePixelHeight);
 
-        var pixelBuffer = new SKColor[bitmap.Width * bitmap.Height];
-        Array.Fill(pixelBuffer, CONSTANTS.Transparent);
+        using var pixMap = bitmap.PeekPixels();
+        var pixelBuffer = pixMap.GetPixelSpan<SKColor>();
+        pixelBuffer.Fill(CONSTANTS.Transparent);
 
         if (efa.ByteCount == 0)
             return SKImage.FromBitmap(bitmap);
@@ -163,15 +164,6 @@ public static class Graphics
 
                 pixelBuffer[yActual * bitmap.Width + xActual] = color;
             }
-
-        var handle = GCHandle.Alloc(pixelBuffer, GCHandleType.Pinned);
-
-        bitmap.InstallPixels(
-            bitmap.Info,
-            handle.AddrOfPinnedObject(),
-            bitmap.RowBytes,
-            Helpers.FreeHandle,
-            handle);
 
         return SKImage.FromBitmap(bitmap);
     }
