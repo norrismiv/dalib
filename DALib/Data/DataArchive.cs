@@ -239,8 +239,12 @@ public class DataArchive : KeyedCollection<string, DataArchiveEntry>, ISavable, 
     {
         ThrowIfDisposed();
 
-        //if an entry exists with the same name, remove it
-        Remove(entryName);
+        //if an entry exists with the same name
+        //grab its index, so we can replace it and preserve order
+        var index = -1;
+
+        if (TryGetValue(entryName, out var existingEntry))
+            index = IndexOf(existingEntry);
 
         BaseStream.Seek(0, SeekOrigin.End);
         var address = (int)BaseStream.Length;
@@ -256,8 +260,11 @@ public class DataArchive : KeyedCollection<string, DataArchiveEntry>, ISavable, 
             address,
             length);
 
-        //add entry to archive
-        Add(entry);
+        //if index is not -1, replace the existing entry
+        if (index != -1)
+            this[index] = entry;
+        else //otherwise add new entry
+            Add(entry);
     }
 
     internal void ThrowIfDisposed() => ObjectDisposedException.ThrowIf(IsDisposed, this);
@@ -321,10 +328,9 @@ public class DataArchive : KeyedCollection<string, DataArchiveEntry>, ISavable, 
         //plus 4 bytes for the final entry's end address (which could also be considered the total number of bytes)
         var address = HEADER_LENGTH + Count * ENTRY_HEADER_LENGTH + 4;
 
-        var orderedEntries = this.OrderBy(entry => entry.EntryName)
-                                 .ToList();
+        var entries = this.ToList();
 
-        foreach (var entry in orderedEntries)
+        foreach (var entry in entries)
         {
             //reconstruct the name field with the required terminator
             var nameStr = entry.EntryName;
@@ -347,7 +353,7 @@ public class DataArchive : KeyedCollection<string, DataArchiveEntry>, ISavable, 
 
         writer.Write(address);
 
-        foreach (var entry in orderedEntries)
+        foreach (var entry in entries)
         {
             using var segment = entry.ToStreamSegment();
             segment.CopyTo(stream);

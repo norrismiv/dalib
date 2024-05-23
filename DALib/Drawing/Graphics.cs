@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Runtime.InteropServices;
 using System.Text;
 using DALib.Data;
 using DALib.Definitions;
@@ -348,9 +347,10 @@ public static class Graphics
         SKColor[] data)
     {
         using var bitmap = new SKBitmap(width + left, height + top);
+        using var pixMap = bitmap.PeekPixels();
 
-        var pixelBuffer = new SKColor[bitmap.Width * bitmap.Height];
-        Array.Fill(pixelBuffer, CONSTANTS.Transparent);
+        var pixelBuffer = pixMap.GetPixelSpan<SKColor>();
+        pixelBuffer.Fill(CONSTANTS.Transparent);
 
         for (var y = 0; y < height; y++)
             for (var x = 0; x < width; x++)
@@ -367,15 +367,6 @@ public static class Graphics
                 pixelBuffer[yActual * bitmap.Width + xActual] = color;
             }
 
-        var handle = GCHandle.Alloc(pixelBuffer, GCHandleType.Pinned);
-
-        bitmap.InstallPixels(
-            bitmap.Info,
-            handle.AddrOfPinnedObject(),
-            bitmap.RowBytes,
-            Helpers.FreeHandle,
-            handle);
-
         return SKImage.FromBitmap(bitmap);
     }
 
@@ -388,9 +379,10 @@ public static class Graphics
         Palette palette)
     {
         using var bitmap = new SKBitmap(width + left, height + top);
+        using var pixMap = bitmap.PeekPixels();
 
-        var pixelBuffer = new SKColor[bitmap.Width * bitmap.Height];
-        Array.Fill(pixelBuffer, CONSTANTS.Transparent);
+        var pixelBuffer = pixMap.GetPixelSpan<SKColor>();
+        pixelBuffer.Fill(CONSTANTS.Transparent);
 
         for (var y = 0; y < height; y++)
             for (var x = 0; x < width; x++)
@@ -406,15 +398,6 @@ public static class Graphics
 
                 pixelBuffer[yActual * bitmap.Width + xActual] = color;
             }
-
-        var handle = GCHandle.Alloc(pixelBuffer, GCHandleType.Pinned);
-
-        bitmap.InstallPixels(
-            bitmap.Info,
-            handle.AddrOfPinnedObject(),
-            bitmap.RowBytes,
-            Helpers.FreeHandle,
-            handle);
 
         return SKImage.FromBitmap(bitmap);
     }
