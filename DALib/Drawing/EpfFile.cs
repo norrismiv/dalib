@@ -28,16 +28,19 @@ public sealed class EpfFile : Collection<EpfFrame>, ISavable
     public short PixelWidth { get; set; }
 
     /// <summary>
-    ///     A value that has an unknown use
-    ///     LI: figure out what this is for
+    ///     A value that has an unknown use LI: figure out what this is for
     /// </summary>
     public byte[] UnknownBytes { get; set; }
 
     /// <summary>
     ///     Initializes a new instance of the EpfFile class with the specified width and height.
     /// </summary>
-    /// <param name="width">The width of the EpfFile.</param>
-    /// <param name="height">The height of the EpfFile.</param>
+    /// <param name="width">
+    ///     The width of the EpfFile.
+    /// </param>
+    /// <param name="height">
+    ///     The height of the EpfFile.
+    /// </param>
     public EpfFile(short width, short height)
     {
         PixelHeight = height;
@@ -163,8 +166,12 @@ public sealed class EpfFile : Collection<EpfFrame>, ISavable
     /// <summary>
     ///     Loads an EpfFile with the specified fileName from the specified archive
     /// </summary>
-    /// <param name="fileName">The name of the EPF file to extract from the archive.</param>
-    /// <param name="archive">The DataArchive from which to retrieve the EPF file.</param>
+    /// <param name="fileName">
+    ///     The name of the EPF file to extract from the archive.
+    /// </param>
+    /// <param name="archive">
+    ///     The DataArchive from which to retrieve the EPF file.
+    /// </param>
     /// <exception cref="FileNotFoundException">
     ///     Thrown if the EPF file with the specified name is not found in the archive.
     /// </exception>
@@ -179,7 +186,9 @@ public sealed class EpfFile : Collection<EpfFrame>, ISavable
     /// <summary>
     ///     Loads an EpfFile from the specified archive entry
     /// </summary>
-    /// <param name="entry">The DataArchiveEntry to load the EpfFile from</param>
+    /// <param name="entry">
+    ///     The DataArchiveEntry to load the EpfFile from
+    /// </param>
     public static EpfFile FromEntry(DataArchiveEntry entry)
     {
         using var segment = entry.ToStreamSegment();
@@ -190,7 +199,9 @@ public sealed class EpfFile : Collection<EpfFrame>, ISavable
     /// <summary>
     ///     Loads an EpfFile from the specified path
     /// </summary>
-    /// <param name="path">The path of the file to be read.</param>
+    /// <param name="path">
+    ///     The path of the file to be read.
+    /// </param>
     public static EpfFile FromFile(string path)
     {
         using var stream = File.Open(
@@ -210,10 +221,12 @@ public sealed class EpfFile : Collection<EpfFrame>, ISavable
     ///     Converts a sequence of fully colored images to an EpfFile.
     /// </summary>
     /// <param name="options">
-    ///     Options to be used for quantization. EpfFiles can only have a maximum of 256 colors due to being
-    ///     a palettized format
+    ///     Options to be used for quantization. EpfFiles can only have a maximum of 256 colors due to being a palettized
+    ///     format
     /// </param>
-    /// <param name="orderedFrames">The ordered collection of SKImage frames.</param>
+    /// <param name="orderedFrames">
+    ///     The ordered collection of SKImage frames.
+    /// </param>
     public static Palettized<EpfFile> FromImages(QuantizerOptions options, IEnumerable<SKImage> orderedFrames)
         => FromImages(options, orderedFrames.ToArray());
 
@@ -221,10 +234,12 @@ public sealed class EpfFile : Collection<EpfFrame>, ISavable
     ///     Converts a collection of fully colored images to an EpfFile
     /// </summary>
     /// <param name="options">
-    ///     Options to be used for quantization. EpfFiles can only have a maximum of 256 colors due to being
-    ///     a palettized format
+    ///     Options to be used for quantization. EpfFiles can only have a maximum of 256 colors due to being a palettized
+    ///     format
     /// </param>
-    /// <param name="orderedFrames">The ordered array of SKImage frames.</param>
+    /// <param name="orderedFrames">
+    ///     The ordered array of SKImage frames.
+    /// </param>
     public static Palettized<EpfFile> FromImages(QuantizerOptions options, params SKImage[] orderedFrames)
     {
         ImageProcessor.PreserveNonTransparentBlacks(orderedFrames);

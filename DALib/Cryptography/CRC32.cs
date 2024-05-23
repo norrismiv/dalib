@@ -6,7 +6,7 @@
 public static class CRC32
 {
     private static readonly uint[] CRC32_TABLE =
-    {
+    [
         0x00000000,
         0x77073096,
         0xEE0E612C,
@@ -263,20 +263,28 @@ public static class CRC32
         0xC30C8EA1,
         0x5A05DF1B,
         0x2D02EF8D
-    };
+    ];
 
     /// <summary>
     ///     Calculates the 32bit checksum of the specified buffer
     /// </summary>
-    /// <param name="buffer">The buffer to calculate the checksum of</param>
+    /// <param name="buffer">
+    ///     The buffer to calculate the checksum of
+    /// </param>
     public static uint Calculate(byte[] buffer) => Calculate(buffer, 0, buffer.Length);
 
     /// <summary>
     ///     Calculates the 32bit checksum of the specified buffer
     /// </summary>
-    /// <param name="buffer">The buffer to calculate the checksum of</param>
-    /// <param name="offset">The offset within the buffer to start at</param>
-    /// <param name="count">The number of bytes within the buffer to calculate for</param>
+    /// <param name="buffer">
+    ///     The buffer to calculate the checksum of
+    /// </param>
+    /// <param name="offset">
+    ///     The offset within the buffer to start at
+    /// </param>
+    /// <param name="count">
+    ///     The number of bytes within the buffer to calculate for
+    /// </param>
     public static uint Calculate(byte[] buffer, int offset, int count)
     {
         var result = 0xFFFFFFFF;

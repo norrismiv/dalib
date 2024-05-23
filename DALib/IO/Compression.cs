@@ -10,7 +10,9 @@ public static class Compression
     /// <summary>
     ///     Decompresses HPF data in-place.
     /// </summary>
-    /// <param name="buffer">The buffer containing the HPF data to decompress.</param>
+    /// <param name="buffer">
+    ///     The buffer containing the HPF data to decompress.
+    /// </param>
     public static void DecompressHpf(ref Span<byte> buffer)
     {
         // method written by Eru/illuvatar

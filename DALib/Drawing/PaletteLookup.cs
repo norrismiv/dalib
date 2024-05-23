@@ -41,10 +41,12 @@ public class PaletteLookup
     /// <summary>
     ///     Gets the palette for the specified id
     /// </summary>
-    /// <param name="id">The external id to look up the palette for</param>
+    /// <param name="id">
+    ///     The external id to look up the palette for
+    /// </param>
     /// <param name="khanPalOverrideType">
-    ///     An optional override used when working with KHAN archives that indicates if the
-    ///     lookup should favor male or female overrides
+    ///     An optional override used when working with KHAN archives that indicates if the lookup should favor male or female
+    ///     overrides
     /// </param>
     public Palette GetPaletteForId(int id, KhanPalOverrideType khanPalOverrideType = KhanPalOverrideType.None)
     {
@@ -93,8 +95,12 @@ public class PaletteLookup
     ///     Loads a PaletteLookup from the specified archive by searching for Palettes and PaletteTables that match the given
     ///     pattern
     /// </summary>
-    /// <param name="pattern">The pattern used to find Palettes and PaletteTables for this lookup</param>
-    /// <param name="archive">The archive to extract Palettes and PaletteTables from</param>
+    /// <param name="pattern">
+    ///     The pattern used to find Palettes and PaletteTables for this lookup
+    /// </param>
+    /// <param name="archive">
+    ///     The archive to extract Palettes and PaletteTables from
+    /// </param>
     public static PaletteLookup FromArchive(string pattern, DataArchive archive)
         => new(Palette.FromArchive(pattern, archive), PaletteTable.FromArchive(pattern, archive));
 
@@ -102,9 +108,15 @@ public class PaletteLookup
     ///     Loads a PaletteLookup from the specified archive by searching for Palettes and PaletteTables that match the given
     ///     tablePattern and palettePattern
     /// </summary>
-    /// <param name="tablePattern">The pattern used to find paletteTables for this lookup</param>
-    /// <param name="palettePattern">The pattern used to find palettes for this lookup</param>
-    /// <param name="archive">The archive to extract Palettes and PaletteTables from</param>
+    /// <param name="tablePattern">
+    ///     The pattern used to find paletteTables for this lookup
+    /// </param>
+    /// <param name="palettePattern">
+    ///     The pattern used to find palettes for this lookup
+    /// </param>
+    /// <param name="archive">
+    ///     The archive to extract Palettes and PaletteTables from
+    /// </param>
     public static PaletteLookup FromArchive(string tablePattern, string palettePattern, DataArchive archive)
         => new(Palette.FromArchive(palettePattern, archive), PaletteTable.FromArchive(tablePattern, archive));
     #endregion

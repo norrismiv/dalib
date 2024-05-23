@@ -50,10 +50,18 @@ public class StreamSegment : Stream
     /// <summary>
     ///     Initializes a new instance of the <see cref="StreamSegment" /> class.
     /// </summary>
-    /// <param name="baseStream">The base stream.</param>
-    /// <param name="offset">The offset within the base stream where the segment starts.</param>
-    /// <param name="segmentLength">The length of the segment.</param>
-    /// <param name="leaveOpen">Whether to leave the base stream open when disposing the segment.</param>
+    /// <param name="baseStream">
+    ///     The base stream.
+    /// </param>
+    /// <param name="offset">
+    ///     The offset within the base stream where the segment starts.
+    /// </param>
+    /// <param name="segmentLength">
+    ///     The length of the segment.
+    /// </param>
+    /// <param name="leaveOpen">
+    ///     Whether to leave the base stream open when disposing the segment.
+    /// </param>
     public StreamSegment(
         Stream baseStream,
         long offset,
@@ -79,7 +87,7 @@ public class StreamSegment : Stream
     }
 
     /// <inheritdoc />
-    public override void Flush() { BaseStream.Flush(); }
+    public override void Flush() => BaseStream.Flush();
 
     /// <inheritdoc />
     public override int Read(byte[] buffer, int offset, int count)
@@ -113,18 +121,21 @@ public class StreamSegment : Stream
     }
 
     /// <inheritdoc />
-    public override void SetLength(long value) { throw new NotImplementedException(); }
+    public override void SetLength(long value) => throw new NotImplementedException();
 
     /// <summary>
     ///     Updates the current position of the segment based on the base stream's position.
     /// </summary>
-    protected virtual void SetPositionFromBaseStream() { Position = BaseStream.Position - BaseOffset; }
+    protected virtual void SetPositionFromBaseStream() => Position = BaseStream.Position - BaseOffset;
 
     /// <inheritdoc />
     public override void Write(byte[] buffer, int offset, int count)
     {
         if (BaseStream.Position != OffsetPosition)
             BaseStream.Seek(OffsetPosition, SeekOrigin.Begin);
+
+        if ((Position + count) > Length)
+            throw new ArgumentOutOfRangeException(nameof(count), count, null);
 
         BaseStream.Write(buffer, offset, count);
 

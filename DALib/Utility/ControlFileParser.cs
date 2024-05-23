@@ -121,8 +121,12 @@ public sealed class ControlFileParser
     /// <summary>
     ///     Parses Controls from a stream, adding them to the specified controlFile
     /// </summary>
-    /// <param name="controlFile">The control file object to populate with data.</param>
-    /// <param name="stream">The stream containing the control file data.</param>
+    /// <param name="controlFile">
+    ///     The control file object to populate with data.
+    /// </param>
+    /// <param name="stream">
+    ///     The stream containing the control file data.
+    /// </param>
     public void Parse(ControlFile controlFile, Stream stream)
     {
         using var reader = new StreamReader(stream, leaveOpen: true);

@@ -1,7 +1,8 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
+using System.IO.MemoryMappedFiles;
 using System.Linq;
 using System.Text;
 using DALib.Abstractions;
@@ -13,17 +14,24 @@ namespace DALib.Data;
 /// <summary>
 ///     Represents a DarkAges data archive that can be used for storing and manipulating data entries.
 /// </summary>
-public sealed class DataArchive() : KeyedCollection<string, DataArchiveEntry>(StringComparer.OrdinalIgnoreCase), ISavable, IDisposable
+public class DataArchive : KeyedCollection<string, DataArchiveEntry>, ISavable, IDisposable
 {
     private bool IsDisposed;
-    internal Stream? DataStream { get; set; }
 
-    private DataArchive(Stream stream, bool newFormat = false)
-        : this()
+    /// <summary>
+    ///     The base stream of the archive
+    /// </summary>
+    protected Stream BaseStream { get; set; }
+
+    /// <summary>
+    ///     Initializes a new instance of the <see cref="DataArchive" /> class.
+    /// </summary>
+    protected DataArchive(Stream stream, bool newFormat = false)
+        : base(StringComparer.OrdinalIgnoreCase)
     {
-        DataStream = stream;
+        BaseStream = stream;
 
-        using var reader = new BinaryReader(stream, Encoding.Default, true);
+        using var reader = new BinaryReader(BaseStream, Encoding.Default, true);
 
         var expectedNumberOfEntries = reader.ReadInt32() - 1;
 
@@ -58,13 +66,120 @@ public sealed class DataArchive() : KeyedCollection<string, DataArchiveEntry>(St
         }
     }
 
+    /// <inheritdoc />
+    public virtual void Dispose()
+    {
+        GC.SuppressFinalize(this);
+
+        BaseStream.Dispose();
+        IsDisposed = true;
+    }
+
+    /// <summary>
+    ///     Compiles the contents of the specified directory into a new archive.
+    /// </summary>
+    /// <param name="fromDir">
+    ///     The directory to compile into an archive
+    /// </param>
+    /// <param name="toPath">
+    ///     The destination path of the archive
+    /// </param>
+    public static void Compile(string fromDir, string toPath)
+    {
+        const int HEADER_LENGTH = 4;
+        const int ENTRY_HEADER_LENGTH = 4 + CONSTANTS.DATA_ARCHIVE_ENTRY_NAME_LENGTH;
+
+        var files = Directory.GetFiles(fromDir);
+        var dataStreams = new List<Stream>();
+
+        using var dat = File.Create(toPath.WithExtension(".dat"));
+        using var writer = new BinaryWriter(dat, Encoding.Default, true);
+
+        writer.Write(files.Length + 1);
+
+        //add the file header length
+        //plus the entry header length * number of entries
+        //plus 4 bytes for the final entry's end address (which could also be considered the total number of bytes)
+        var address = HEADER_LENGTH + files.Length * ENTRY_HEADER_LENGTH + 4;
+
+        foreach (var file in files)
+        {
+            var nameStr = Path.GetFileName(file);
+
+            // ReSharper disable once ConvertIfStatementToSwitchStatement
+            if (nameStr.Length > CONSTANTS.DATA_ARCHIVE_ENTRY_NAME_LENGTH)
+                throw new InvalidOperationException("Entry name is too long, must be 13 characters or less");
+
+            if (nameStr.Length < CONSTANTS.DATA_ARCHIVE_ENTRY_NAME_LENGTH)
+                nameStr = nameStr.PadRight(CONSTANTS.DATA_ARCHIVE_ENTRY_NAME_LENGTH, '\0');
+
+            //get bytes for the name field (binaryWriter.Write(string) doesn't work for this)
+            var nameStrBytes = Encoding.ASCII.GetBytes(nameStr);
+
+            writer.Write(address);
+            writer.Write(nameStrBytes);
+
+            var dataStream = File.Open(
+                file,
+                new FileStreamOptions
+                {
+                    Access = FileAccess.Read,
+                    Mode = FileMode.Open,
+                    Options = FileOptions.SequentialScan,
+                    Share = FileShare.ReadWrite,
+                    BufferSize = 8192
+                });
+            dataStreams.Add(dataStream);
+
+            address += (int)dataStream.Length;
+        }
+
+        writer.Write(address);
+
+        foreach (var stream in dataStreams)
+        {
+            stream.CopyTo(dat);
+            stream.Dispose();
+        }
+    }
+
+    /// <summary>
+    ///     Extracts the contents of the current archive to the specified directory.
+    /// </summary>
+    /// <param name="dir">
+    ///     The directory to which the contents will be extracted.
+    /// </param>
+    /// <exception cref="InvalidOperationException">
+    ///     Thrown when the archive is already disposed.
+    /// </exception>
+    public virtual void ExtractTo(string dir)
+    {
+        ThrowIfDisposed();
+
+        foreach (var entry in this)
+        {
+            var path = Path.Combine(dir, entry.EntryName);
+
+            using var stream = File.Create(path);
+            using var segment = GetEntryStream(entry);
+
+            segment.CopyTo(stream);
+        }
+    }
+
     /// <summary>
     ///     Returns a collection of data archive entries that match the given pattern and extension.
     /// </summary>
-    /// <param name="pattern">The pattern to match the entry name against.</param>
-    /// <param name="extension">The extension to match the entry name against.</param>
-    /// <returns>A collection of <see cref="DataArchiveEntry" /> objects that match the pattern and extension.</returns>
-    public IEnumerable<DataArchiveEntry> GetEntries(string pattern, string extension)
+    /// <param name="pattern">
+    ///     The pattern to match the entry name against.
+    /// </param>
+    /// <param name="extension">
+    ///     The extension to match the entry name against.
+    /// </param>
+    /// <returns>
+    ///     A collection of <see cref="DataArchiveEntry" /> objects that match the pattern and extension.
+    /// </returns>
+    public virtual IEnumerable<DataArchiveEntry> GetEntries(string pattern, string extension)
     {
         foreach (var entry in this)
         {
@@ -81,12 +196,14 @@ public sealed class DataArchive() : KeyedCollection<string, DataArchiveEntry>(St
     /// <summary>
     ///     Retrieves all entries with a specified extension.
     /// </summary>
-    /// <param name="extension">The extension to filter the entries with.</param>
+    /// <param name="extension">
+    ///     The extension to filter the entries with.
+    /// </param>
     /// <returns>
     ///     An <see cref="IEnumerable{T}" /> of <see cref="DataArchiveEntry" /> containing all entries with the specified
     ///     extension.
     /// </returns>
-    public IEnumerable<DataArchiveEntry> GetEntries(string extension)
+    public virtual IEnumerable<DataArchiveEntry> GetEntries(string extension)
     {
         foreach (var entry in this)
         {
@@ -97,58 +214,83 @@ public sealed class DataArchive() : KeyedCollection<string, DataArchiveEntry>(St
         }
     }
 
-    #region KeyedCollection implementation
+    /// <summary>
+    ///     Gets a stream that contains the data for the specified entry.
+    /// </summary>
+    public virtual Stream GetEntryStream(DataArchiveEntry entry) => BaseStream.Slice(entry.Address, entry.FileSize);
+
     /// <inheritdoc />
     protected override string GetKeyForItem(DataArchiveEntry item) => item.EntryName;
-    #endregion
 
     /// <summary>
     ///     Patches the DataArchive by appending a new entry that replaces an existing entry with the same name, or adds a new
     ///     entry if no existing entry has the same name.
     /// </summary>
-    /// <param name="entryName">The name of the entry to be patched.</param>
-    /// <param name="item">The item to be patched.</param>
-    /// <exception cref="InvalidOperationException">Thrown if the DataArchive is not in memory.</exception>
-    public void Patch(string entryName, ISavable item)
+    /// <param name="entryName">
+    ///     The name of the entry to be patched.
+    /// </param>
+    /// <param name="item">
+    ///     The item to be patched.
+    /// </param>
+    /// <exception cref="InvalidOperationException">
+    ///     Thrown if the DataArchive is not in memory.
+    /// </exception>
+    public virtual void Patch(string entryName, ISavable item)
     {
         ThrowIfDisposed();
 
-        if (DataStream is not MemoryStream)
-            throw new InvalidOperationException("DataArchive must be in memory to patch (use cacheArchive=true)");
+        //if an entry exists with the same name
+        //grab its index, so we can replace it and preserve order
+        var index = -1;
 
-        //if an entry exists with the same name, remove it
-        Remove(entryName);
+        if (TryGetValue(entryName, out var existingEntry))
+            index = IndexOf(existingEntry);
 
-        using var buffer = new MemoryStream();
-        item.Save(buffer);
+        BaseStream.Seek(0, SeekOrigin.End);
+        var address = (int)BaseStream.Length;
+
+        item.Save(BaseStream);
+
+        var length = (int)BaseStream.Length - address;
 
         //create a new entry (this entry will be appended to the end of the archive)
         var entry = new DataArchiveEntry(
             this,
             entryName,
-            (int)DataStream!.Length,
-            (int)buffer.Length);
+            address,
+            length);
 
-        //seek to the end of the archive and append the new entry
-        DataStream!.Seek(0, SeekOrigin.End);
-        buffer.Seek(0, SeekOrigin.Begin);
-
-        buffer.CopyTo(DataStream);
-
-        //add entry to archive
-        Add(entry);
+        //if index is not -1, replace the existing entry
+        if (index != -1)
+            this[index] = entry;
+        else //otherwise add new entry
+            Add(entry);
     }
+
+    internal void ThrowIfDisposed() => ObjectDisposedException.ThrowIf(IsDisposed, this);
 
     #region SaveTo
     /// <inheritdoc />
-    /// <exception cref="ObjectDisposedException">Thrown if the object is already disposed.</exception>
-    /// <exception cref="ArgumentNullException">Thrown if the path is null.</exception>
-    /// <exception cref="ArgumentException">Thrown if the path is empty or contains invalid characters.</exception>
-    /// <exception cref="PathTooLongException">Thrown if the path exceeds the maximum length allowed.</exception>
-    public void Save(string path)
+    /// <exception cref="ObjectDisposedException">
+    ///     Thrown if the object is already disposed.
+    /// </exception>
+    /// <exception cref="ArgumentNullException">
+    ///     Thrown if the path is null.
+    /// </exception>
+    /// <exception cref="ArgumentException">
+    ///     Thrown if the path is empty or contains invalid characters.
+    /// </exception>
+    /// <exception cref="PathTooLongException">
+    ///     Thrown if the path exceeds the maximum length allowed.
+    /// </exception>
+    public virtual void Save(string path)
     {
         ThrowIfDisposed();
 
+        using var buffer = new MemoryStream();
+        Save(buffer);
+
+        // ReSharper disable once ConvertToUsingDeclaration
         using var stream = File.Open(
             path.WithExtension(".dat"),
             new FileStreamOptions
@@ -160,13 +302,18 @@ public sealed class DataArchive() : KeyedCollection<string, DataArchiveEntry>(St
                 BufferSize = 81920
             });
 
-        Save(stream);
+        buffer.Seek(0, SeekOrigin.Begin);
+        buffer.CopyTo(stream);
     }
 
     /// <inheritdoc />
-    /// <exception cref="ObjectDisposedException">Thrown if the object has been disposed.</exception>
-    /// <exception cref="InvalidOperationException">Thrown if an entry name is too long (must be 13 characters or less).</exception>
-    public void Save(Stream stream)
+    /// <exception cref="ObjectDisposedException">
+    ///     Thrown if the object has been disposed.
+    /// </exception>
+    /// <exception cref="InvalidOperationException">
+    ///     Thrown if an entry name is too long (must be 13 characters or less).
+    /// </exception>
+    public virtual void Save(Stream stream)
     {
         ThrowIfDisposed();
 
@@ -181,10 +328,9 @@ public sealed class DataArchive() : KeyedCollection<string, DataArchiveEntry>(St
         //plus 4 bytes for the final entry's end address (which could also be considered the total number of bytes)
         var address = HEADER_LENGTH + Count * ENTRY_HEADER_LENGTH + 4;
 
-        var orderedEntries = this.OrderBy(entry => entry.EntryName)
-                                 .ToList();
+        var entries = this.ToList();
 
-        foreach (var entry in orderedEntries)
+        foreach (var entry in entries)
         {
             //reconstruct the name field with the required terminator
             var nameStr = entry.EntryName;
@@ -207,29 +353,9 @@ public sealed class DataArchive() : KeyedCollection<string, DataArchiveEntry>(St
 
         writer.Write(address);
 
-        foreach (var entry in orderedEntries)
+        foreach (var entry in entries)
         {
             using var segment = entry.ToStreamSegment();
-            segment.CopyTo(stream);
-        }
-    }
-
-    /// <summary>
-    ///     Extracts the contents of the current archive to the specified directory.
-    /// </summary>
-    /// <param name="dir">The directory to which the contents will be extracted.</param>
-    /// <exception cref="InvalidOperationException">Thrown when the archive is already disposed.</exception>
-    public void ExtractTo(string dir)
-    {
-        ThrowIfDisposed();
-
-        foreach (var entry in this)
-        {
-            var path = Path.Combine(dir, entry.EntryName);
-
-            using var stream = File.Create(path);
-            using var segment = entry.ToStreamSegment();
-
             segment.CopyTo(stream);
         }
     }
@@ -237,20 +363,32 @@ public sealed class DataArchive() : KeyedCollection<string, DataArchiveEntry>(St
 
     #region LoadFrom
     /// <summary>
-    ///     Loads a DataArchive from a directory that contains already extracted entries
+    ///     Loads a DataArchive from a directory that contains already extracted entries. The resulting archive is not memory
+    ///     mapped, and will be fully loaded into memory
     /// </summary>
-    /// <param name="dir">The directory path.</param>
-    /// <returns>A new DataArchive object.</returns>
+    /// <param name="dir">
+    ///     The directory path.
+    /// </param>
+    /// <returns>
+    ///     A new DataArchive object.
+    /// </returns>
     public static DataArchive FromDirectory(string dir)
     {
-        //create a new in-memory archive
-        var archive = new DataArchive();
-        archive.DataStream = new MemoryStream();
+        //create a buffer with a count of 0 entries
+        var buffer = new MemoryStream();
+        buffer.Write(new byte[4]);
+        buffer.Seek(0, SeekOrigin.Begin);
 
-        var address = 0;
+        //create a new in-memory archive
+        //this will read the stream, finding 0 entries
+        var archive = new DataArchive(buffer);
+        buffer.Seek(0, SeekOrigin.End); //just incase
+
+        //start the address at 4, since the first 4 bytes are the entry count
+        var address = 4;
 
         //enumerate the directory, copying each file into the memory archive
-        //maintain accurate address offsets for each file so that the archive is useable
+        //maintain accurate address offsets for each file so that the archive is usable
         foreach (var file in Directory.EnumerateFiles(dir))
         {
             using var stream = File.Open(
@@ -264,7 +402,7 @@ public sealed class DataArchive() : KeyedCollection<string, DataArchiveEntry>(St
                     BufferSize = 8192
                 });
 
-            stream.CopyTo(archive.DataStream);
+            stream.CopyTo(buffer);
 
             var entryName = Path.GetFileName(file);
             var length = (int)stream.Length;
@@ -280,68 +418,73 @@ public sealed class DataArchive() : KeyedCollection<string, DataArchiveEntry>(St
             archive.Add(entry);
         }
 
+        buffer.Seek(0, SeekOrigin.Begin);
+
         return archive;
     }
 
     /// <summary>
     ///     Loads a DataArchive from the specified path
     /// </summary>
-    /// <param name="path">The path to the file to create the DataArchive from.</param>
-    /// <param name="cacheArchive">
-    ///     Indicates whether to cache the archive in memory or read from file using pointers. Default
-    ///     is false.
+    /// <param name="path">
+    ///     The path to the file to create the DataArchive from.
     /// </param>
-    /// <param name="newformat">Indicates whether to use the new format when reading the archive. Default is false.</param>
-    /// <returns>A new instance of the DataArchive class.</returns>
-    public static DataArchive FromFile(string path, bool cacheArchive = false, bool newformat = false)
+    /// <param name="memoryMapped">
+    ///     Indicates whether to open the archive using a <see cref="MemoryMappedFile" />. An archive opened this way is not
+    ///     fully loaded into memory, and can not be patched or saved. Using a memory mapped file is more performant for reads,
+    ///     and uses less memory. Default is true, set it to false if you want to patch or save the archive.
+    /// </param>
+    /// <param name="newformat">
+    ///     Indicates whether to use the new format when reading the archive. Default is false.
+    /// </param>
+    /// <returns>
+    ///     A new instance of the DataArchive class.
+    /// </returns>
+    public static DataArchive FromFile(string path, bool memoryMapped = true, bool newformat = false)
     {
-        //if we don't want to cache the archive
-        //return an archive that reads using pointers from an open file handle
-        if (!cacheArchive)
-            return new DataArchive(
-                File.Open(
-                    path.WithExtension(".dat"),
-                    new FileStreamOptions
-                    {
-                        Access = FileAccess.Read,
-                        Mode = FileMode.Open,
-                        Options = FileOptions.RandomAccess,
-                        Share = FileShare.ReadWrite,
-                        BufferSize = 8192
-                    }),
-                newformat);
+        if (memoryMapped)
+        {
+            //use a memory mapped file
+            var fs = File.Open(
+                path.WithExtension(".dat"),
+                new FileStreamOptions
+                {
+                    Access = FileAccess.Read,
+                    Mode = FileMode.Open,
+                    Options = FileOptions.RandomAccess,
+                    Share = FileShare.ReadWrite,
+                    BufferSize = 8192
+                });
 
-        //if we do want to cache the archive
-        //copy the whole file into a memorystream and use that
-        //pointers will still be used, but the data will be cached in memory
-        using var stream = File.Open(
+            var mappedFile = MemoryMappedFile.CreateFromFile(
+                fs,
+                null,
+                0,
+                MemoryMappedFileAccess.Read,
+                HandleInheritability.None,
+                false);
+
+            return new MemoryMappedDataArchive(mappedFile, newformat);
+        }
+
+        //load the file into memory
+        using var fileStream = File.Open(
             path.WithExtension(".dat"),
             new FileStreamOptions
             {
                 Access = FileAccess.Read,
                 Mode = FileMode.Open,
-                Options = FileOptions.SequentialScan,
+                Options = FileOptions.RandomAccess,
                 Share = FileShare.ReadWrite,
-                BufferSize = 81920
+                BufferSize = 8192
             });
 
-        var memory = new MemoryStream((int)stream.Length);
-        stream.CopyTo(memory);
+        var buffer = new MemoryStream((int)fileStream.Length);
+        fileStream.CopyTo(buffer);
 
-        memory.Seek(0, SeekOrigin.Begin);
+        buffer.Seek(0, SeekOrigin.Begin);
 
-        return new DataArchive(memory, newformat);
+        return new DataArchive(buffer, newformat);
     }
-    #endregion
-
-    #region IDisposable implementation
-    /// <inheritdoc />
-    public void Dispose()
-    {
-        DataStream?.Dispose();
-        IsDisposed = true;
-    }
-
-    internal void ThrowIfDisposed() => ObjectDisposedException.ThrowIf(IsDisposed, this);
     #endregion
 }

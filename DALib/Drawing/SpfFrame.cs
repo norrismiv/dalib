@@ -16,7 +16,8 @@ public sealed class SpfFrame
     ///     The number of bytes of image data this frame contains
     /// </summary>
     /// <remarks>
-    ///     For Palettized images, this will be equal to Height * Width <br />
+    ///     For Palettized images, this will be equal to Height * Width
+    ///     <br />
     ///     For Colorized images, this will be equal to Height * Width * 4 (2 bytes per pixel, 2 copies of the image data)
     /// </remarks>
     public uint ByteCount { get; set; }
@@ -25,7 +26,8 @@ public sealed class SpfFrame
     ///     The width of the image in bytes.
     /// </summary>
     /// <remarks>
-    ///     For Palettized images, this will be equal to Width <br />
+    ///     For Palettized images, this will be equal to Width
+    ///     <br />
     ///     For Colorized images, this will be equal to Width * 2 (2 bytes per pixel)
     /// </remarks>
     public uint ByteWidth { get; set; }
@@ -44,7 +46,8 @@ public sealed class SpfFrame
     ///     The number of byte per image
     /// </summary>
     /// <remarks>
-    ///     For Palettized images, this will be equal to Height * Width <br />
+    ///     For Palettized images, this will be equal to Height * Width
+    ///     <br />
     ///     For Colorized images, this will be equal to Height * Width * 2 (2 bytes per pixel)
     /// </remarks>
     public uint ImageByteCount { get; set; }
@@ -70,8 +73,7 @@ public sealed class SpfFrame
     public ushort Top { get; set; }
 
     /// <summary>
-    ///     A value that has an unknown use
-    ///     LI: figure out what this is for
+    ///     A value that has an unknown use LI: figure out what this is for
     /// </summary>
     public uint Unknown2 { get; set; }
 
@@ -86,8 +88,7 @@ public sealed class SpfFrame
     public int PixelWidth => Right - Left;
 
     /// <summary>
-    ///     A value that has an unknown use
-    ///     LI: figure out what this is for
+    ///     A value that has an unknown use LI: figure out what this is for
     /// </summary>
     public static uint Unknown1 => 0xCCCCCCCC; // Every SPF has this value associated with it
 }

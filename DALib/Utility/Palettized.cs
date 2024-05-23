@@ -6,13 +6,17 @@ namespace DALib.Utility;
 /// <summary>
 ///     Represents a palettized object that associates an entity with a palette.
 /// </summary>
-/// <typeparam name="T">The type of the entity.</typeparam>
+/// <typeparam name="T">
+///     The type of the entity.
+/// </typeparam>
 public sealed class Palettized<T> : IDisposable
 {
     /// <summary>
     ///     The entity with which the palette is associated.
     /// </summary>
-    /// <typeparam name="T">The type of the Entity.</typeparam>
+    /// <typeparam name="T">
+    ///     The type of the Entity.
+    /// </typeparam>
     public required T Entity { get; init; }
 
     /// <summary>
