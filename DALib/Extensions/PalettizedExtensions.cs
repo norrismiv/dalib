@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Frozen;
 using System.Linq;
 using DALib.Definitions;
 using DALib.Drawing;
@@ -69,6 +70,31 @@ public static class PalettizedExtensions
             //set the remapped frame data for the frames
             frame.Data = newFrameData;
         }
+
+        //return the epffile with the new palette
+        return new Palettized<EpfFile>
+        {
+            Entity = epf,
+            Palette = newPalette
+        };
+    }
+
+    /// <summary>
+    ///     Remaps the frame data of the given palettized epf file to use the indexes of the new palette, assuming the colors
+    ///     are the same
+    /// </summary>
+    public static Palettized<EpfFile> RemapPalette(this Palettized<EpfFile> palettized, Palette newPalette)
+    {
+        (var epf, var palette) = palettized;
+
+        //create a dictionary that maps the old color indexes to the new color indexes
+        var colorIndexMap = palette.Select((c, i) => (c, i))
+                                   .DistinctBy(set => set.c)
+                                   .ToFrozenDictionary(set => (byte)set.i, set => (byte)newPalette.IndexOf(set.c));
+
+        foreach (var frame in epf)
+            for (var i = 0; i < frame.Data.Length; i++)
+                frame.Data[i] = colorIndexMap[frame.Data[i]];
 
         //return the epffile with the new palette
         return new Palettized<EpfFile>

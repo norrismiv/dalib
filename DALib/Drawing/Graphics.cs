@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Runtime.InteropServices;
 using System.Text;
 using DALib.Data;
 using DALib.Definitions;
@@ -60,10 +59,13 @@ public static class Graphics
     /// <param name="palette">
     ///     A palette containing colors used by the frame
     /// </param>
-    public static SKImage RenderImage(HpfFile hpf, Palette palette)
+    /// <param name="yOffset">
+    ///     An optional custom offset used to move the image down, since these images are rendered from the bottom up
+    /// </param>
+    public static SKImage RenderImage(HpfFile hpf, Palette palette, int yOffset = 0)
         => SimpleRender(
             0,
-            0,
+            yOffset,
             hpf.PixelWidth,
             hpf.PixelHeight,
             hpf.Data,
@@ -114,8 +116,9 @@ public static class Graphics
     {
         using var bitmap = new SKBitmap(efa.ImagePixelWidth, efa.ImagePixelHeight);
 
-        var pixelBuffer = new SKColor[bitmap.Width * bitmap.Height];
-        Array.Fill(pixelBuffer, CONSTANTS.Transparent);
+        using var pixMap = bitmap.PeekPixels();
+        var pixelBuffer = pixMap.GetPixelSpan<SKColor>();
+        pixelBuffer.Fill(CONSTANTS.Transparent);
 
         if (efa.ByteCount == 0)
             return SKImage.FromBitmap(bitmap);
@@ -160,15 +163,6 @@ public static class Graphics
 
                 pixelBuffer[yActual * bitmap.Width + xActual] = color;
             }
-
-        var handle = GCHandle.Alloc(pixelBuffer, GCHandleType.Pinned);
-
-        bitmap.InstallPixels(
-            bitmap.Info,
-            handle.AddrOfPinnedObject(),
-            bitmap.RowBytes,
-            Helpers.FreeHandle,
-            handle);
 
         return SKImage.FromBitmap(bitmap);
     }
@@ -353,9 +347,10 @@ public static class Graphics
         SKColor[] data)
     {
         using var bitmap = new SKBitmap(width + left, height + top);
+        using var pixMap = bitmap.PeekPixels();
 
-        var pixelBuffer = new SKColor[bitmap.Width * bitmap.Height];
-        Array.Fill(pixelBuffer, CONSTANTS.Transparent);
+        var pixelBuffer = pixMap.GetPixelSpan<SKColor>();
+        pixelBuffer.Fill(CONSTANTS.Transparent);
 
         for (var y = 0; y < height; y++)
             for (var x = 0; x < width; x++)
@@ -372,30 +367,22 @@ public static class Graphics
                 pixelBuffer[yActual * bitmap.Width + xActual] = color;
             }
 
-        var handle = GCHandle.Alloc(pixelBuffer, GCHandleType.Pinned);
-
-        bitmap.InstallPixels(
-            bitmap.Info,
-            handle.AddrOfPinnedObject(),
-            bitmap.RowBytes,
-            Helpers.FreeHandle,
-            handle);
-
         return SKImage.FromBitmap(bitmap);
     }
 
     private static SKImage SimpleRender(
-        int top,
         int left,
+        int top,
         int width,
         int height,
         byte[] data,
         Palette palette)
     {
         using var bitmap = new SKBitmap(width + left, height + top);
+        using var pixMap = bitmap.PeekPixels();
 
-        var pixelBuffer = new SKColor[bitmap.Width * bitmap.Height];
-        Array.Fill(pixelBuffer, CONSTANTS.Transparent);
+        var pixelBuffer = pixMap.GetPixelSpan<SKColor>();
+        pixelBuffer.Fill(CONSTANTS.Transparent);
 
         for (var y = 0; y < height; y++)
             for (var x = 0; x < width; x++)
@@ -411,15 +398,6 @@ public static class Graphics
 
                 pixelBuffer[yActual * bitmap.Width + xActual] = color;
             }
-
-        var handle = GCHandle.Alloc(pixelBuffer, GCHandleType.Pinned);
-
-        bitmap.InstallPixels(
-            bitmap.Info,
-            handle.AddrOfPinnedObject(),
-            bitmap.RowBytes,
-            Helpers.FreeHandle,
-            handle);
 
         return SKImage.FromBitmap(bitmap);
     }

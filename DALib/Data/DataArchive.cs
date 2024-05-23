@@ -76,6 +76,74 @@ public class DataArchive : KeyedCollection<string, DataArchiveEntry>, ISavable, 
     }
 
     /// <summary>
+    ///     Compiles the contents of the specified directory into a new archive.
+    /// </summary>
+    /// <param name="fromDir">
+    ///     The directory to compile into an archive
+    /// </param>
+    /// <param name="toPath">
+    ///     The destination path of the archive
+    /// </param>
+    public static void Compile(string fromDir, string toPath)
+    {
+        const int HEADER_LENGTH = 4;
+        const int ENTRY_HEADER_LENGTH = 4 + CONSTANTS.DATA_ARCHIVE_ENTRY_NAME_LENGTH;
+
+        var files = Directory.GetFiles(fromDir);
+        var dataStreams = new List<Stream>();
+
+        using var dat = File.Create(toPath.WithExtension(".dat"));
+        using var writer = new BinaryWriter(dat, Encoding.Default, true);
+
+        writer.Write(files.Length + 1);
+
+        //add the file header length
+        //plus the entry header length * number of entries
+        //plus 4 bytes for the final entry's end address (which could also be considered the total number of bytes)
+        var address = HEADER_LENGTH + files.Length * ENTRY_HEADER_LENGTH + 4;
+
+        foreach (var file in files)
+        {
+            var nameStr = Path.GetFileName(file);
+
+            // ReSharper disable once ConvertIfStatementToSwitchStatement
+            if (nameStr.Length > CONSTANTS.DATA_ARCHIVE_ENTRY_NAME_LENGTH)
+                throw new InvalidOperationException("Entry name is too long, must be 13 characters or less");
+
+            if (nameStr.Length < CONSTANTS.DATA_ARCHIVE_ENTRY_NAME_LENGTH)
+                nameStr = nameStr.PadRight(CONSTANTS.DATA_ARCHIVE_ENTRY_NAME_LENGTH, '\0');
+
+            //get bytes for the name field (binaryWriter.Write(string) doesn't work for this)
+            var nameStrBytes = Encoding.ASCII.GetBytes(nameStr);
+
+            writer.Write(address);
+            writer.Write(nameStrBytes);
+
+            var dataStream = File.Open(
+                file,
+                new FileStreamOptions
+                {
+                    Access = FileAccess.Read,
+                    Mode = FileMode.Open,
+                    Options = FileOptions.SequentialScan,
+                    Share = FileShare.ReadWrite,
+                    BufferSize = 8192
+                });
+            dataStreams.Add(dataStream);
+
+            address += (int)dataStream.Length;
+        }
+
+        writer.Write(address);
+
+        foreach (var stream in dataStreams)
+        {
+            stream.CopyTo(dat);
+            stream.Dispose();
+        }
+    }
+
+    /// <summary>
     ///     Extracts the contents of the current archive to the specified directory.
     /// </summary>
     /// <param name="dir">
@@ -171,8 +239,12 @@ public class DataArchive : KeyedCollection<string, DataArchiveEntry>, ISavable, 
     {
         ThrowIfDisposed();
 
-        //if an entry exists with the same name, remove it
-        Remove(entryName);
+        //if an entry exists with the same name
+        //grab its index, so we can replace it and preserve order
+        var index = -1;
+
+        if (TryGetValue(entryName, out var existingEntry))
+            index = IndexOf(existingEntry);
 
         BaseStream.Seek(0, SeekOrigin.End);
         var address = (int)BaseStream.Length;
@@ -188,8 +260,11 @@ public class DataArchive : KeyedCollection<string, DataArchiveEntry>, ISavable, 
             address,
             length);
 
-        //add entry to archive
-        Add(entry);
+        //if index is not -1, replace the existing entry
+        if (index != -1)
+            this[index] = entry;
+        else //otherwise add new entry
+            Add(entry);
     }
 
     internal void ThrowIfDisposed() => ObjectDisposedException.ThrowIf(IsDisposed, this);
@@ -253,10 +328,9 @@ public class DataArchive : KeyedCollection<string, DataArchiveEntry>, ISavable, 
         //plus 4 bytes for the final entry's end address (which could also be considered the total number of bytes)
         var address = HEADER_LENGTH + Count * ENTRY_HEADER_LENGTH + 4;
 
-        var orderedEntries = this.OrderBy(entry => entry.EntryName)
-                                 .ToList();
+        var entries = this.ToList();
 
-        foreach (var entry in orderedEntries)
+        foreach (var entry in entries)
         {
             //reconstruct the name field with the required terminator
             var nameStr = entry.EntryName;
@@ -279,7 +353,7 @@ public class DataArchive : KeyedCollection<string, DataArchiveEntry>, ISavable, 
 
         writer.Write(address);
 
-        foreach (var entry in orderedEntries)
+        foreach (var entry in entries)
         {
             using var segment = entry.ToStreamSegment();
             segment.CopyTo(stream);
@@ -300,15 +374,21 @@ public class DataArchive : KeyedCollection<string, DataArchiveEntry>, ISavable, 
     /// </returns>
     public static DataArchive FromDirectory(string dir)
     {
+        //create a buffer with a count of 0 entries
         var buffer = new MemoryStream();
+        buffer.Write(new byte[4]);
+        buffer.Seek(0, SeekOrigin.Begin);
 
         //create a new in-memory archive
+        //this will read the stream, finding 0 entries
         var archive = new DataArchive(buffer);
+        buffer.Seek(0, SeekOrigin.End); //just incase
 
-        var address = 0;
+        //start the address at 4, since the first 4 bytes are the entry count
+        var address = 4;
 
         //enumerate the directory, copying each file into the memory archive
-        //maintain accurate address offsets for each file so that the archive is useable
+        //maintain accurate address offsets for each file so that the archive is usable
         foreach (var file in Directory.EnumerateFiles(dir))
         {
             using var stream = File.Open(
@@ -337,6 +417,8 @@ public class DataArchive : KeyedCollection<string, DataArchiveEntry>, ISavable, 
 
             archive.Add(entry);
         }
+
+        buffer.Seek(0, SeekOrigin.Begin);
 
         return archive;
     }

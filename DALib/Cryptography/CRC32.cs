@@ -6,7 +6,7 @@
 public static class CRC32
 {
     private static readonly uint[] CRC32_TABLE =
-    {
+    [
         0x00000000,
         0x77073096,
         0xEE0E612C,
@@ -263,7 +263,7 @@ public static class CRC32
         0xC30C8EA1,
         0x5A05DF1B,
         0x2D02EF8D
-    };
+    ];
 
     /// <summary>
     ///     Calculates the 32bit checksum of the specified buffer

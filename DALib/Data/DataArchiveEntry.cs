@@ -7,7 +7,7 @@ namespace DALib.Data;
 /// <summary>
 ///     Represents an entry in a data archive.
 /// </summary>
-public sealed class DataArchiveEntry(
+public class DataArchiveEntry(
     DataArchive archive,
     string entryName,
     int address,

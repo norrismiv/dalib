@@ -138,7 +138,7 @@ public sealed class MpfFile : Collection<MpfFrame>, ISavable
     {
         HeaderType = headerType;
         FormatType = formatType;
-        UnknownHeaderBytes = HeaderType == MpfHeaderType.Unknown ? new byte[4] : Array.Empty<byte>();
+        UnknownHeaderBytes = HeaderType == MpfHeaderType.Unknown ? new byte[4] : [];
         PixelWidth = width;
         PixelHeight = height;
     }
@@ -173,7 +173,7 @@ public sealed class MpfFile : Collection<MpfFrame>, ISavable
             default:
                 stream.Seek(-4, SeekOrigin.Current);
 
-                UnknownHeaderBytes = Array.Empty<byte>();
+                UnknownHeaderBytes = [];
 
                 break;
         }

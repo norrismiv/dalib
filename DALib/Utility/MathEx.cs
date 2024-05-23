@@ -39,13 +39,27 @@ public static class MathEx
         T2 newMin,
         T2 newMax) where T1: INumber<T1>
                    where T2: INumber<T2>
-        => T2.CreateTruncating(
-            ScaleRange(
-                double.CreateTruncating(num),
-                double.CreateTruncating(min),
-                double.CreateTruncating(max),
-                double.CreateTruncating(newMin),
-                double.CreateTruncating(newMax)));
+    {
+        var ret = ScaleRange(
+            double.CreateTruncating(num),
+            double.CreateTruncating(min),
+            double.CreateTruncating(max),
+            double.CreateTruncating(newMin),
+            double.CreateTruncating(newMax));
+
+        //get a rounded value and a truncated value
+        var roundedValue = Math.Round(ret, MidpointRounding.AwayFromZero);
+        var truncatedValue = T2.CreateTruncating(ret);
+
+        //take whichever value is closer to the true value
+        var roundedDiff = Math.Abs(roundedValue - ret);
+        var truncatedDiff = Math.Abs(double.CreateTruncating(truncatedValue) - ret);
+
+        if (roundedDiff < truncatedDiff)
+            return T2.CreateTruncating(roundedValue);
+
+        return truncatedValue;
+    }
 
     /// <summary>
     ///     Scales a number from one range to another range.
