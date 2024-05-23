@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -13,7 +14,7 @@ namespace DALib.Drawing;
 /// </summary>
 public class EffectTable : ISavable
 {
-    private readonly List<List<int>> Entries = [];
+    private readonly List<EffectTableEntry> Entries = [];
 
     /// <summary>
     ///     Initializes a new instance of the EffectTable class.
@@ -53,7 +54,11 @@ public class EffectTable : ISavable
                 frameOrder.Add(frameIndex);
             }
 
-            Entries.Add(frameOrder);
+            var entry = new EffectTableEntry
+            {
+                FrameSequence = frameOrder
+            };
+            Entries.Add(entry);
         }
     }
 
@@ -63,12 +68,22 @@ public class EffectTable : ISavable
     /// <param name="frameOrder">
     ///     The frame order to add
     /// </param>
-    public void Add(IEnumerable<int> frameOrder) => Entries.Add(frameOrder.ToList());
+    public void Add(IEnumerable<int> frameOrder)
+        => Entries.Add(
+            new EffectTableEntry
+            {
+                FrameSequence = frameOrder.ToList()
+            });
 
     /// <summary>
     ///     Adds a new EFA frame order ("0") to the end of the table (effect number would be Entries.Count after the add)
     /// </summary>
-    public void AddEfa() => Entries.Add([0]);
+    public void AddEfa()
+        => Entries.Add(
+            new EffectTableEntry
+            {
+                FrameSequence = [0]
+            });
 
     /// <summary>
     ///     Gets the next available effect id
@@ -84,12 +99,26 @@ public class EffectTable : ISavable
     /// <param name="frameOrder">
     ///     The frame order for the effect
     /// </param>
-    public void Insert(int effectNum, IEnumerable<int> frameOrder) => Entries.Insert(effectNum - 1, frameOrder.ToList());
+    public void Insert(int effectNum, IEnumerable<int> frameOrder)
+    {
+        var entry = new EffectTableEntry
+        {
+            FrameSequence = frameOrder.ToList()
+        };
+        Entries.Insert(effectNum - 1, entry);
+    }
 
     /// <summary>
     ///     Inserts an EFA frame order ("0") for the specified effect number
     /// </summary>
-    public void InsertEfa() => Entries.Insert(0, [0]);
+    public void InsertEfa()
+    {
+        var entry = new EffectTableEntry
+        {
+            FrameSequence = [0]
+        };
+        Entries.Insert(0, entry);
+    }
 
     /// <summary>
     ///     Clears the frame order for the specified effect id
@@ -98,6 +127,29 @@ public class EffectTable : ISavable
     ///     The effect number to clear the frame order for. (1-indexed)
     /// </param>
     public void Remove(int effectNum) => Entries[effectNum - 1] = [];
+
+    /// <summary>
+    ///     Retrieves the frame order for the specified effect number
+    /// </summary>
+    /// <param name="effectId">
+    ///     The effect id to get the frame order for
+    /// </param>
+    /// <param name="entry">
+    ///     A table entry containing the frame order for the specified effect id
+    /// </param>
+    public bool TryGetEntry(int effectId, [NotNullWhen(true)] out EffectTableEntry? entry)
+    {
+        if ((effectId < 1) || (effectId > Entries.Count))
+        {
+            entry = default;
+
+            return false;
+        }
+
+        entry = Entries[effectId - 1];
+
+        return true;
+    }
 
     #region SaveTo
     /// <inheritdoc />
