@@ -25,16 +25,16 @@ public static class SKImageExtensions
                               .DistinctBy(set => set.c)
                               .ToDictionary(set => set.c, c => (byte)c.i);
         var pixelData = new byte[image.Width * image.Height];
+        using var pixels = image.PeekPixels();
 
         for (var y = 0; y < image.Height; ++y)
         {
             for (var x = 0; x < image.Width; ++x)
             {
                 var pixelIndex = y * image.Width + x;
-                using var pixels = image.PeekPixels();
 
-                var color = pixels.GetPixelColor(x, y)
-                                  .WithAlpha(byte.MaxValue);
+                var trueColor = pixels.GetPixelColor(x, y);
+                var color = trueColor.WithAlpha(byte.MaxValue);
 
                 if (!colorMap.TryGetValue(color, out var colorIndex))
                     throw new InvalidOperationException("Color not found in palette.");
