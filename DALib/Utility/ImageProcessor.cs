@@ -52,11 +52,17 @@ public static class ImageProcessor
     /// <param name="image">
     ///     The image whose black pixels to preserve
     /// </param>
-    public static void PreserveNonTransparentBlacks(SKImage image)
+    public static SKImage PreserveNonTransparentBlacks(SKImage image)
     {
         using var bitmap = SKBitmap.FromImage(image);
 
         PreserveNonTransparentBlacks(bitmap);
+
+        var ret = SKImage.FromBitmap(bitmap);
+
+        image.Dispose();
+
+        return ret;
     }
 
     /// <summary>
@@ -85,10 +91,10 @@ public static class ImageProcessor
     /// <param name="images">
     ///     The images whose black pixels to preserve
     /// </param>
-    public static void PreserveNonTransparentBlacks(IEnumerable<SKImage> images)
+    public static void PreserveNonTransparentBlacks(IList<SKImage> images)
     {
-        foreach (var image in images)
-            PreserveNonTransparentBlacks(image);
+        for (var i = 0; i < images.Count; i++)
+            images[i] = PreserveNonTransparentBlacks(images[i]);
     }
 
     /// <summary>
