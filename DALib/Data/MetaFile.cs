@@ -69,7 +69,7 @@ public sealed class MetaFile : Collection<MetaFileEntry>, ISavable
         if (!isCompressed)
             return new MetaFile(stream);
 
-        using var decompressor = new DeflateStream(stream, CompressionMode.Decompress);
+        using var decompressor = new ZLibStream(stream, CompressionMode.Decompress);
 
         return new MetaFile(decompressor);
     }
@@ -80,7 +80,7 @@ public sealed class MetaFile : Collection<MetaFileEntry>, ISavable
     public void Save(string path)
     {
         using var stream = File.Open(
-            path.WithExtension(".meta"),
+            path,
             new FileStreamOptions
             {
                 Access = FileAccess.Write,
@@ -88,8 +88,9 @@ public sealed class MetaFile : Collection<MetaFileEntry>, ISavable
                 Options = FileOptions.SequentialScan,
                 Share = FileShare.ReadWrite
             });
+        using var compressor = new ZLibStream(stream, CompressionMode.Compress);
 
-        Save(stream);
+        Save(compressor);
     }
 
     /// <inheritdoc />

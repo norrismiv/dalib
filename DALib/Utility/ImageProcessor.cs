@@ -1,12 +1,12 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.InteropServices;
 using DALib.Definitions;
 using DALib.Extensions;
 using KGySoft.Drawing.Imaging;
 using KGySoft.Drawing.SkiaSharp;
 using SkiaSharp;
+using Palette = DALib.Drawing.Palette;
 
 namespace DALib.Utility;
 
@@ -52,11 +52,17 @@ public static class ImageProcessor
     /// <param name="image">
     ///     The image whose black pixels to preserve
     /// </param>
-    public static void PreserveNonTransparentBlacks(SKImage image)
+    public static SKImage PreserveNonTransparentBlacks(SKImage image)
     {
         using var bitmap = SKBitmap.FromImage(image);
 
         PreserveNonTransparentBlacks(bitmap);
+
+        var ret = SKImage.FromBitmap(bitmap);
+
+        image.Dispose();
+
+        return ret;
     }
 
     /// <summary>
@@ -85,10 +91,10 @@ public static class ImageProcessor
     /// <param name="images">
     ///     The images whose black pixels to preserve
     /// </param>
-    public static void PreserveNonTransparentBlacks(IEnumerable<SKImage> images)
+    public static void PreserveNonTransparentBlacks(IList<SKImage> images)
     {
-        foreach (var image in images)
-            PreserveNonTransparentBlacks(image);
+        for (var i = 0; i < images.Count; i++)
+            images[i] = PreserveNonTransparentBlacks(images[i]);
     }
 
     /// <summary>
@@ -116,11 +122,14 @@ public static class ImageProcessor
         var colorCount = existingPixels.Distinct()
                                        .Count();
 
-        var pixelBuffer = new SKColor[quantizedBitmap.Width * quantizedBitmap.Height];
+        using var quantizedPixMap = quantizedBitmap.PeekPixels();
 
-        //dont quantize/dither if the image already has less than maximum number of colors
+        var pixelBuffer = quantizedPixMap.GetPixelSpan<SKColor>();
+        pixelBuffer.Fill(CONSTANTS.Transparent);
+
+        //don't quantize/dither if the image already has less than maximum number of colors
         if (colorCount <= options.MaxColors)
-            existingPixels.CopyTo(pixelBuffer.AsSpan());
+            existingPixels.CopyTo(pixelBuffer);
         else if (options.Ditherer is not null)
         {
             using var dSession = options.Ditherer!.Initialize(source, qSession);
@@ -149,21 +158,30 @@ public static class ImageProcessor
                 }
             }
 
-        var handle = GCHandle.Alloc(pixelBuffer, GCHandleType.Pinned);
-
-        quantizedBitmap.InstallPixels(
-            quantizedBitmap.Info,
-            handle.AddrOfPinnedObject(),
-            quantizedBitmap.RowBytes,
-            Helpers.FreeHandle,
-            handle);
-
         var quantizedImage = SKImage.FromBitmap(quantizedBitmap);
+        Palette? palette;
+
+        if (colorCount <= options.MaxColors)
+            palette = new Palette(
+                existingPixels.Select(
+                                  c =>
+                                  {
+                                      //normally the quantizer would set all fully transparent pixels to black
+                                      //but since we didn't quantize the image, we have to do it manually
+                                      if (c.Alpha == 0)
+                                          return SKColors.Black;
+
+                                      return c;
+                                  })
+                              .Distinct()
+                              .OrderBy(c => c.GetLuminance()));
+        else
+            palette = qSession.Palette!.ToDALibPalette();
 
         return new Palettized<SKImage>
         {
             Entity = quantizedImage,
-            Palette = qSession.Palette!.ToDALibPalette()
+            Palette = palette
         };
     }
 
@@ -184,7 +202,7 @@ public static class ImageProcessor
     {
         const int PADDING = 1;
 
-        //create a mosaic of all of the individual images
+        //create a mosaic of all the individual images
         using var mosaic = CreateMosaic(PADDING, images);
         using var quantizedMosaic = Quantize(options, mosaic);
         using var bitmap = SKBitmap.FromImage(quantizedMosaic.Entity);
