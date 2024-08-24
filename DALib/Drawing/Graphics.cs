@@ -1,11 +1,11 @@
-﻿using System;
-using System.Text;
-using DALib.Data;
+﻿using DALib.Data;
 using DALib.Definitions;
 using DALib.Extensions;
 using DALib.Memory;
 using DALib.Utility;
 using SkiaSharp;
+using System;
+using System.Text;
 
 namespace DALib.Drawing;
 
@@ -193,43 +193,50 @@ public static class Graphics
     ///     Renders a MapFile, given already extracted information
     /// </summary>
     /// <param name="map">
-    ///     The MapFile to render
+    ///     The <see cref="MapFile"/> to render
     /// </param>
     /// <param name="tiles">
-    ///     A collection of background tiles
+    ///     A <see cref="Tileset"/> representing a collection of background tiles
     /// </param>
     /// <param name="bgPaletteLookup">
-    ///     PaletteLookup for background tiles
+    ///     <see cref="PaletteLookup"/> for background tiles
     /// </param>
     /// <param name="fgPaletteLookup">
-    ///     PaletteLookup for foreground tiles
+    ///     <see cref="PaletteLookup"/> for foreground tiles
     /// </param>
     /// <param name="iaDat">
-    ///     IA archive for reading foreground tile files
+    ///     IA <see cref="DataArchive"/> for reading foreground tile files
+    /// </param>
+    /// <param name="foregroundPadding">
+    ///     The amount of padding to add to the height of the file and beginning rendering position
+    /// </param>
+    /// <param name="cache">
+    ///     A <see cref="MapImageCache"/> that can be reused to share <see cref="SKImageCache{TKey}"/> caches between multiple map renderings.
     /// </param>
     public static SKImage RenderMap(
         MapFile map,
         Tileset tiles,
         PaletteLookup bgPaletteLookup,
         PaletteLookup fgPaletteLookup,
-        DataArchive iaDat)
+        DataArchive iaDat, 
+        int foregroundPadding = 512,
+        MapImageCache? cache = null)
     {
-        const int FOREGROUND_PADDING = 512;
 
         //create lookups so we only render each tile piece once
         using var bgCache = new SKImageCache<int>();
         using var lfgCache = new SKImageCache<int>();
         using var rfgCache = new SKImageCache<int>();
 
-        //calculate width and height based on isometric view
-        var width = map.Width * CONSTANTS.TILE_WIDTH;
-        var height = map.Height * (CONSTANTS.TILE_HEIGHT + 1) + FOREGROUND_PADDING;
+        //calculate width and height
+        var width = (map.Width + map.Height + 1) * CONSTANTS.HALF_TILE_WIDTH;
+        var height = (map.Width + map.Height) * CONSTANTS.HALF_TILE_HEIGHT + foregroundPadding;
         using var bitmap = new SKBitmap(width, height);
         using var canvas = new SKCanvas(bitmap);
 
         //the first tile drawn is the center tile at the top (0, 0)
-        var bgInitialDrawX = width / 2 - CONSTANTS.HALF_TILE_WIDTH;
-        var bgInitialDrawY = FOREGROUND_PADDING;
+        var bgInitialDrawX = map.Height * CONSTANTS.HALF_TILE_WIDTH;
+        var bgInitialDrawY = foregroundPadding;
 
         //render background tiles and draw them to the canvas
         for (var y = 0; y < map.Height; y++)
@@ -241,7 +248,8 @@ public static class Graphics
                 if (bgIndex > 0)
                     --bgIndex;
 
-                var bgImage = bgCache.GetOrCreate(
+                
+                var bgImage = (cache == null ? bgCache : cache.BackgroundCache).GetOrCreate(
                     bgIndex,
                     index =>
                     {
@@ -263,8 +271,8 @@ public static class Graphics
         }
 
         //render left and right foreground tiles and draw them to the canvas
-        var fgInitialDrawX = width / 2 - CONSTANTS.HALF_TILE_WIDTH;
-        var fgInitialDrawY = FOREGROUND_PADDING;
+        var fgInitialDrawX = map.Height * CONSTANTS.HALF_TILE_WIDTH;
+        var fgInitialDrawY = foregroundPadding;
 
         for (var y = 0; y < map.Height; y++)
         {
@@ -275,7 +283,7 @@ public static class Graphics
                 var rfgIndex = tile.RightForeground;
 
                 //render left foreground
-                var lfgImage = lfgCache.GetOrCreate(
+                var lfgImage = (cache == null ? lfgCache : cache.LeftForegroundCache).GetOrCreate(
                     lfgIndex,
                     index =>
                     {
@@ -294,7 +302,7 @@ public static class Graphics
                     canvas.DrawImage(lfgImage, lfgDrawX, lfgDrawY);
 
                 //render right foreground
-                var rfgImage = rfgCache.GetOrCreate(
+                var rfgImage = (cache == null ? rfgCache : cache.RightForegroundCache).GetOrCreate(
                     rfgIndex,
                     index =>
                     {

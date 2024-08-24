@@ -1,8 +1,8 @@
-﻿using System.IO;
-using System.Text;
-using DALib.Abstractions;
+﻿using DALib.Abstractions;
 using DALib.Drawing;
 using DALib.Extensions;
+using System.IO;
+using System.Text;
 
 namespace DALib.Data;
 
@@ -29,6 +29,9 @@ public sealed class MapFile(int width, int height) : ISavable
     private MapFile(Stream stream, int width, int height)
         : this(width, height)
     {
+        if (stream.Length != width * height * 6)
+            throw new InvalidDataException("Invalid map file");
+
         using var reader = new BinaryReader(stream, Encoding.Default, true);
 
         for (var y = 0; y < Height; ++y)
