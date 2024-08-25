@@ -240,12 +240,12 @@ public static class Graphics
 
         //calculate width and height
         var width = (map.Width + map.Height + 1) * CONSTANTS.HALF_TILE_WIDTH;
-        var height = (map.Width + map.Height +1 ) * CONSTANTS.HALF_TILE_HEIGHT + foregroundPadding;
+        var height = (map.Width + map.Height + 1 ) * CONSTANTS.HALF_TILE_HEIGHT + foregroundPadding;
         using var bitmap = new SKBitmap(width, height);
         using var canvas = new SKCanvas(bitmap);
 
         //the first tile drawn is the center tile at the top (0, 0)
-        var bgInitialDrawX = map.Height - 1 * CONSTANTS.HALF_TILE_WIDTH;
+        var bgInitialDrawX = (map.Height - 1) * CONSTANTS.HALF_TILE_WIDTH;
         var bgInitialDrawY = foregroundPadding;
         try
         {
@@ -280,7 +280,7 @@ public static class Graphics
             }
 
             //render left and right foreground tiles and draw them to the canvas
-            var fgInitialDrawX = map.Height * CONSTANTS.HALF_TILE_WIDTH;
+            var fgInitialDrawX = (map.Height - 1) * CONSTANTS.HALF_TILE_WIDTH;
             var fgInitialDrawY = foregroundPadding;
 
             for (var y = 0; y < map.Height; y++)
