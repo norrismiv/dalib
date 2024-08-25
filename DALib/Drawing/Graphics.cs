@@ -187,7 +187,7 @@ public static class Graphics
     /// </param>
 
     public static SKImage RenderMap(MapFile map, DataArchive seoDat, DataArchive iaDat, int foregroundPadding = 512,
-        MapImageCache? cache = null, bool dotGuides = false)
+        MapImageCache? cache = null)
         => RenderMap(
             map,
             Tileset.FromArchive("tilea", seoDat),
@@ -195,7 +195,7 @@ public static class Graphics
                 .Freeze(),
             PaletteLookup.FromArchive("stc", iaDat)
                 .Freeze(),
-            iaDat, foregroundPadding, cache, dotGuides);
+            iaDat, foregroundPadding, cache);
 
     /// <summary>
     ///     Renders a MapFile, given already extracted information
