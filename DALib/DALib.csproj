@@ -30,8 +30,8 @@
         <None Include="hybrasyl-512x512.png" Pack="true" PackagePath=""/>
     </ItemGroup>
     <ItemGroup>
-        <PackageReference Include="KGySoft.Drawing.SkiaSharp" Version="7.2.0"/>
-        <PackageReference Include="SkiaSharp" Version="2.88.6"/>
+        <PackageReference Include="KGySoft.Drawing.SkiaSharp" Version="8.1.0" />
+        <PackageReference Include="SkiaSharp" Version="3.116.0" />
     </ItemGroup>
     <ItemGroup>
         <SupportedPlatform Include="Linux"/>

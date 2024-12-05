@@ -207,7 +207,7 @@ public static class ImageProcessor
         using var quantizedMosaic = Quantize(options, mosaic);
         using var bitmap = SKBitmap.FromImage(quantizedMosaic.Entity);
 
-        var quantizedImages = new List<SKImage>();
+        var quantizedImages = new SKImageCollection([]);
         var x = 0;
 
         for (var i = 0; i < images.Length; i++)
@@ -232,7 +232,7 @@ public static class ImageProcessor
 
         return new Palettized<SKImageCollection>
         {
-            Entity = new SKImageCollection(quantizedImages),
+            Entity = quantizedImages,
             Palette = quantizedMosaic.Palette
         };
     }

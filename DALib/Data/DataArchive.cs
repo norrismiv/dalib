@@ -5,6 +5,7 @@ using System.IO;
 using System.IO.MemoryMappedFiles;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using DALib.Abstractions;
 using DALib.Definitions;
 using DALib.Extensions;
@@ -16,7 +17,10 @@ namespace DALib.Data;
 /// </summary>
 public class DataArchive : KeyedCollection<string, DataArchiveEntry>, ISavable, IDisposable
 {
-    private bool IsDisposed;
+    /// <summary>
+    ///     Whether the archive has been disposed.
+    /// </summary>
+    private int Disposed;
 
     /// <summary>
     ///     The base stream of the archive
@@ -69,10 +73,12 @@ public class DataArchive : KeyedCollection<string, DataArchiveEntry>, ISavable, 
     /// <inheritdoc />
     public virtual void Dispose()
     {
-        GC.SuppressFinalize(this);
+        if (Interlocked.CompareExchange(ref Disposed, 1, 0) == 1)
+            return;
 
         BaseStream.Dispose();
-        IsDisposed = true;
+
+        GC.SuppressFinalize(this);
     }
 
     /// <summary>
@@ -267,7 +273,7 @@ public class DataArchive : KeyedCollection<string, DataArchiveEntry>, ISavable, 
             Add(entry);
     }
 
-    internal void ThrowIfDisposed() => ObjectDisposedException.ThrowIf(IsDisposed, this);
+    internal void ThrowIfDisposed() => ObjectDisposedException.ThrowIf(Disposed == 1, this);
 
     #region SaveTo
     /// <inheritdoc />
