@@ -334,7 +334,8 @@ public class DataArchive : KeyedCollection<string, DataArchiveEntry>, ISavable, 
         //plus 4 bytes for the final entry's end address (which could also be considered the total number of bytes)
         var address = HEADER_LENGTH + Count * ENTRY_HEADER_LENGTH + 4;
 
-        var entries = this.ToList();
+        var entries = this.OrderBy(entry => entry.EntryName, NaturalStringComparer.Instance)
+                          .ToList();
 
         foreach (var entry in entries)
         {

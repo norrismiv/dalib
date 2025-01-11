@@ -97,10 +97,9 @@ public static class MathEx
         if (min == max)
             throw new ArgumentOutOfRangeException(nameof(min), "Min and max cannot be the same value");
 
-        // add (max - min) here for rounding
         var numerator = (num - min) * (newMax - newMin) + (max - min) / 2;
         var scaledValue = numerator / (max - min) + newMin;
 
-        return (byte)scaledValue; // no bounds checking
+        return (byte)scaledValue;
     }
 }
