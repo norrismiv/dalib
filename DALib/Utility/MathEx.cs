@@ -97,9 +97,10 @@ public static class MathEx
         if (min == max)
             throw new ArgumentOutOfRangeException(nameof(min), "Min and max cannot be the same value");
 
-        var numerator = (num - min) * (newMax - newMin) + (max - min) / 2;
-        var scaledValue = numerator / (max - min) + newMin;
+        // Cast to float (or double) to avoid truncation
+        var ratio = (float)(num - min) / (max - min);
+        var newValue = (newMax - newMin) * ratio + newMin;
 
-        return (byte)scaledValue;
+        return (byte)Math.Round(newValue);
     }
 }
