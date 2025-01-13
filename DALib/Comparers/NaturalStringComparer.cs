@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace DALib;
+namespace DALib.Comparers;
 
 /// <summary>
 ///     A natural string comparer intended to work similarly to how windows orders files. Strings with numbers will be
@@ -11,8 +11,10 @@ public sealed class NaturalStringComparer : IComparer<string>
     public static IComparer<string> Instance { get; } = new NaturalStringComparer();
 
     /// <inheritdoc />
+    /// <inheritdoc />
     public int Compare(string? x, string? y)
     {
+        // ReSharper disable once ConvertIfStatementToSwitchStatement
         if ((x == null) && (y == null))
             return 0;
 
@@ -45,11 +47,15 @@ public sealed class NaturalStringComparer : IComparer<string>
 
                 if (lx != ly)
                     return lx.CompareTo(ly);
-            } else
+            }
+            else
             {
-                if (x[ix] != y[iy])
-                    return x[ix]
-                        .CompareTo(y[iy]);
+                // Convert both characters to lower case for case-insensitive comparison
+                var cx = char.ToLowerInvariant(x[ix]);
+                var cy = char.ToLowerInvariant(y[iy]);
+
+                if (cx != cy)
+                    return cx.CompareTo(cy);
 
                 ix++;
                 iy++;
@@ -57,4 +63,5 @@ public sealed class NaturalStringComparer : IComparer<string>
 
         return x.Length.CompareTo(y.Length);
     }
+
 }
