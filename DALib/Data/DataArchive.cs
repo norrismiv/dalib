@@ -340,6 +340,9 @@ public class DataArchive : KeyedCollection<string, DataArchiveEntry>, ISavable, 
     {
         ThrowIfDisposed();
 
+        //split entries entry names based on a regex
+        //group the entries by their "prefix"
+        //the prefix is all of the letters in the entry name up till the first digit
         var entryPartsGroupedByPrefix = Items.Select(
                                                  entry =>
                                                  {
@@ -373,15 +376,20 @@ public class DataArchive : KeyedCollection<string, DataArchiveEntry>, ISavable, 
                                              .GroupBy(parts => parts.Prefix, StringComparer.OrdinalIgnoreCase)
                                              .ToList();
 
+        //look at each prefix grouping and extract a common length for the numeric part of the entry name
+        //sometimes there will be a combination of entries with and without numeric identifiers
+        //we prefer to store a non-zero length if possible
         var prefixToCommonIdentifierLength = entryPartsGroupedByPrefix.ToDictionary(
             group => group.Key,
             group =>
             {
+                //order by numeric id length, take the first 3 entries
                 var first3 = group.Select(parts => parts.NumericId.Length)
                                   .OrderBy(len => len)
                                   .Take(3)
                                   .ToList();
 
+                //prefer to store a non-zero id length
                 return first3 switch
                 {
                     { Count: 0 }      => 0,
@@ -392,13 +400,16 @@ public class DataArchive : KeyedCollection<string, DataArchiveEntry>, ISavable, 
             },
             StringComparer.OrdinalIgnoreCase);
 
-        //for each entry... correct the common identifier to be the correct length and move any extra to the tail
+        //now that we know the common length for the id for each prefix
+        //adjust the numeric id and tail to have the correct pieces of the entry name
         var correctedParts = entryPartsGroupedByPrefix.SelectMany(group => group)
                                                       .Select(
                                                           parts =>
                                                           {
                                                               var commonLength = prefixToCommonIdentifierLength[parts.Prefix];
 
+                                                              //regex parsed more digits for this entry than some of the others with same prefix
+                                                              //so we move those extra digits to the tail
                                                               if (parts.NumericId.Length > commonLength)
                                                                   return parts with
                                                                   {
@@ -413,45 +424,34 @@ public class DataArchive : KeyedCollection<string, DataArchiveEntry>, ISavable, 
 
         var orderedEntries = correctedParts
 
-                             //SORT BY PREFIX
+                             //SORT BY PREFIX, UNDERSCORES ARE SPECIAL
                              .OrderBy(parts => parts.Prefix, PreferUnderscoreIgnoreCaseStringComparer.Instance)
 
                              //THEN BY COMMON NUMERIC IDENTIFIER
                              .ThenBy(
                                  parts =>
                                  {
-                                     var commonLength = prefixToCommonIdentifierLength[parts.Prefix];
+                                     //grab the common length of the identifier for the prefix
+                                     var commonIdentifierLength = prefixToCommonIdentifierLength[parts.Prefix];
 
-                                     //if we did not find a common identifier
-                                     if (commonLength == 0)
-                                     {
-                                         //check the tail for a number
-                                         //one could still be there if one of the entries has no identifier, but the others did
-                                         if (parts.Tail.Length == 0)
-                                             return -1;
-
-                                         //starting with the first char, grab chars till we run into a non-digit
-                                         var tailDigits = new string(
-                                             parts.Tail
-                                                  .TakeWhile(char.IsDigit)
-                                                  .ToArray());
-
-                                         //if no digits were found, return 0
-                                         if (tailDigits.Length == 0)
-                                             return -1;
-
-                                         //parts those digits into an identifier and return it
-                                         return int.Parse(tailDigits);
-                                     }
-
-                                     if (parts.NumericId.Length < commonLength)
+                                     //if it's 0, or the numeric id is shorter than the common length, return -1
+                                     //the numeric id can be shorter than the length if...
+                                     //an entry was found WITH a numeric id, and another entry was found WITHOUT a numeric id
+                                     //we prefer to take a numeric id if one seems like it exists
+                                     if ((commonIdentifierLength == 0) || (parts.NumericId.Length < commonIdentifierLength))
                                          return -1;
 
-                                     return int.Parse(parts.NumericId[..commonLength]);
+                                     //parse the numeric id and sort by it
+                                     return int.Parse(parts.NumericId);
                                  })
+
+                             //THEN BY TAIL, UNDERSCORES ARE SPECIAL
                              .ThenBy(parts => parts.Tail, PreferUnderscoreIgnoreCaseStringComparer.Instance)
+
+                             //THEN BY EXTENSION, UNDERSCORES ARE SPECIAL BUT PROBABLY DONT ACTUALLY MATTER
                              .ThenBy(parts => parts.Extension, PreferUnderscoreIgnoreCaseStringComparer.Instance)
-                             .Select(parts => parts.Entry);
+                             .Select(parts => parts.Entry)
+                             .ToList();
 
         Items.AddRange(orderedEntries);
     }
