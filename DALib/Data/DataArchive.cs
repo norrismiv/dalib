@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.IO;
 using System.IO.MemoryMappedFiles;
 using System.Linq;
@@ -10,6 +11,7 @@ using DALib.Abstractions;
 using DALib.Comparers;
 using DALib.Definitions;
 using DALib.Extensions;
+using KGySoft.CoreLibraries;
 
 namespace DALib.Data;
 
@@ -277,6 +279,183 @@ public class DataArchive : KeyedCollection<string, DataArchiveEntry>, ISavable, 
     internal void ThrowIfDisposed() => ObjectDisposedException.ThrowIf(Disposed == 1, this);
 
     #region SaveTo
+    /// <summary>
+    ///     Sorts the archive entries in a custom ordering
+    /// </summary>
+    /// <remarks>
+    ///     This all looks really complicated, but what's happening is conceptually simple...
+    ///     <list type="number">
+    ///         <item>
+    ///             <description>
+    ///                 if the entry name is parsable as an integer, sort it as an integer
+    ///             </description>
+    ///         </item>
+    ///         <item>
+    ///             <description>
+    ///                 analyze the all entries in the archive and group them by their "prefix"
+    ///             </description>
+    ///         </item>
+    ///         <item>
+    ///             <description>
+    ///                 for each group, find the common numeric identifier length
+    ///                 <list type="bullet">
+    ///                     <item>
+    ///                         <description>
+    ///                             this isnt an exact process because there can be entries with /no/ numbers, and entries
+    ///                             /with/ numbers for the same prefix
+    ///                         </description>
+    ///                     </item>
+    ///                     <item>
+    ///                         <description>
+    ///                             there can also be entries with different lengths of numeric identifiers because they have
+    ///                             numeric tails (think khan archive entries ending in 01, 02, etc)
+    ///                         </description>
+    ///                     </item>
+    ///                 </list>
+    ///             </description>
+    ///         </item>
+    ///         <item>
+    ///             <description>
+    ///                 sort by prefix (underscore are considered "less than" other characters)
+    ///             </description>
+    ///         </item>
+    ///         <item>
+    ///             <description>
+    ///                 then by common numeric identifier (no identifier is smallest)
+    ///             </description>
+    ///         </item>
+    ///         <item>
+    ///             <description>
+    ///                 then by tail (if there is a tail)
+    ///             </description>
+    ///         </item>
+    ///         <item>
+    ///             <description>
+    ///                 then by extension
+    ///             </description>
+    ///         </item>
+    ///     </list>
+    /// </remarks>
+    public void Sort()
+    {
+        ThrowIfDisposed();
+
+        var entryPartsGroupedByPrefix = Items.Select(
+                                                 entry =>
+                                                 {
+                                                     var entryName = Path.GetFileNameWithoutExtension(entry.EntryName);
+                                                     var extension = Path.GetExtension(entry.EntryName);
+
+                                                     //if the entry name is a number, we can't split it
+                                                     //just sort it based on that number as a string
+                                                     if (int.TryParse(entryName, out _))
+                                                         return new
+                                                         {
+                                                             Entry = entry,
+                                                             Prefix = entryName,
+                                                             NumericId = "",
+                                                             Tail = "",
+                                                             Extension = extension
+                                                         };
+
+                                                     var parts = RegexCache.EntryNameRegex
+                                                                           .Matches(entryName)[0].Groups;
+
+                                                     return new
+                                                     {
+                                                         Entry = entry,
+                                                         Prefix = parts[1].Value,
+                                                         NumericId = parts[2].Value,
+                                                         Tail = parts[3].Value,
+                                                         Extension = extension
+                                                     };
+                                                 })
+                                             .GroupBy(parts => parts.Prefix, StringComparer.OrdinalIgnoreCase)
+                                             .ToList();
+
+        var prefixToCommonIdentifierLength = entryPartsGroupedByPrefix.ToDictionary(
+            group => group.Key,
+            group =>
+            {
+                var first3 = group.Select(parts => parts.NumericId.Length)
+                                  .OrderBy(len => len)
+                                  .Take(3)
+                                  .ToList();
+
+                return first3 switch
+                {
+                    { Count: 0 }      => 0,
+                    { Count: 1 }      => first3[0],
+                    { Count: 2 or 3 } => first3.FirstOrDefault(num => num > 0),
+                    _                 => throw new UnreachableException("We take 3, handling counts 0-3 should be all conditions")
+                };
+            },
+            StringComparer.OrdinalIgnoreCase);
+
+        //for each entry... correct the common identifier to be the correct length and move any extra to the tail
+        var correctedParts = entryPartsGroupedByPrefix.SelectMany(group => group)
+                                                      .Select(
+                                                          parts =>
+                                                          {
+                                                              var commonLength = prefixToCommonIdentifierLength[parts.Prefix];
+
+                                                              if (parts.NumericId.Length > commonLength)
+                                                                  return parts with
+                                                                  {
+                                                                      NumericId = parts.NumericId[..commonLength],
+                                                                      Tail = parts.NumericId[commonLength..] + parts.Tail
+                                                                  };
+
+                                                              return parts;
+                                                          });
+
+        Items.Clear();
+
+        var orderedEntries = correctedParts
+
+                             //SORT BY PREFIX
+                             .OrderBy(parts => parts.Prefix, PreferUnderscoreIgnoreCaseStringComparer.Instance)
+
+                             //THEN BY COMMON NUMERIC IDENTIFIER
+                             .ThenBy(
+                                 parts =>
+                                 {
+                                     var commonLength = prefixToCommonIdentifierLength[parts.Prefix];
+
+                                     //if we did not find a common identifier
+                                     if (commonLength == 0)
+                                     {
+                                         //check the tail for a number
+                                         //one could still be there if one of the entries has no identifier, but the others did
+                                         if (parts.Tail.Length == 0)
+                                             return -1;
+
+                                         //starting with the first char, grab chars till we run into a non-digit
+                                         var tailDigits = new string(
+                                             parts.Tail
+                                                  .TakeWhile(char.IsDigit)
+                                                  .ToArray());
+
+                                         //if no digits were found, return 0
+                                         if (tailDigits.Length == 0)
+                                             return -1;
+
+                                         //parts those digits into an identifier and return it
+                                         return int.Parse(tailDigits);
+                                     }
+
+                                     if (parts.NumericId.Length < commonLength)
+                                         return -1;
+
+                                     return int.Parse(parts.NumericId[..commonLength]);
+                                 })
+                             .ThenBy(parts => parts.Tail, PreferUnderscoreIgnoreCaseStringComparer.Instance)
+                             .ThenBy(parts => parts.Extension, PreferUnderscoreIgnoreCaseStringComparer.Instance)
+                             .Select(parts => parts.Entry);
+
+        Items.AddRange(orderedEntries);
+    }
+
     /// <inheritdoc />
     /// <exception cref="ObjectDisposedException">
     ///     Thrown if the object is already disposed.
@@ -335,10 +514,9 @@ public class DataArchive : KeyedCollection<string, DataArchiveEntry>, ISavable, 
         //plus 4 bytes for the final entry's end address (which could also be considered the total number of bytes)
         var address = HEADER_LENGTH + Count * ENTRY_HEADER_LENGTH + 4;
 
-        var entries = this.OrderBy(entry => entry.EntryName, StringComparer.OrdinalIgnoreCase)
-                          .ToList();
+        Sort();
 
-        foreach (var entry in entries)
+        foreach (var entry in Items)
         {
             //reconstruct the name field with the required terminator
             var nameStr = entry.EntryName;
@@ -361,7 +539,7 @@ public class DataArchive : KeyedCollection<string, DataArchiveEntry>, ISavable, 
 
         writer.Write(address);
 
-        foreach (var entry in entries)
+        foreach (var entry in Items)
         {
             using var segment = entry.ToStreamSegment();
             segment.CopyTo(stream);
