@@ -332,7 +332,7 @@ public static class Graphics
                     var rfgIndex = tile.RightForeground;
 
                     //render left foreground
-                    var lfgImage = cache.LeftForegroundCache.GetOrCreate(
+                    var lfgImage = cache.ForegroundCache.GetOrCreate(
                         lfgIndex,
                         index =>
                         {
@@ -351,7 +351,7 @@ public static class Graphics
                         canvas.DrawImage(lfgImage, lfgDrawX, lfgDrawY);
 
                     //render right foreground
-                    var rfgImage = cache.RightForegroundCache.GetOrCreate(
+                    var rfgImage = cache.ForegroundCache.GetOrCreate(
                         rfgIndex,
                         index =>
                         {

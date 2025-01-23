@@ -16,12 +16,7 @@ public sealed class MapImageCache : IDisposable
     /// <summary>
     ///     The left foreground cache
     /// </summary>
-    public SKImageCache<int> LeftForegroundCache { get; }
-
-    /// <summary>
-    ///     The right foreground cache
-    /// </summary>
-    public SKImageCache<int> RightForegroundCache { get; }
+    public SKImageCache<int> ForegroundCache { get; }
 
     /// <summary>
     ///     Initializes a new instance of the <see cref="MapImageCache" /> class.
@@ -29,8 +24,7 @@ public sealed class MapImageCache : IDisposable
     public MapImageCache()
     {
         BackgroundCache = new SKImageCache<int>();
-        LeftForegroundCache = new SKImageCache<int>();
-        RightForegroundCache = new SKImageCache<int>();
+        ForegroundCache = new SKImageCache<int>();
     }
 
     /// <summary>
@@ -39,24 +33,22 @@ public sealed class MapImageCache : IDisposable
     /// <param name="bgCache">
     ///     The background cache
     /// </param>
-    /// <param name="lfgCache">
+    /// <param name="fgCache">
     ///     The left foreground cache
     /// </param>
     /// <param name="rfgCache">
     ///     The right foreground cache
     /// </param>
-    public MapImageCache(SKImageCache<int> bgCache, SKImageCache<int> lfgCache, SKImageCache<int> rfgCache)
+    public MapImageCache(SKImageCache<int> bgCache, SKImageCache<int> fgCache)
     {
         BackgroundCache = bgCache;
-        LeftForegroundCache = lfgCache;
-        RightForegroundCache = rfgCache;
+        ForegroundCache = fgCache;
     }
 
     /// <inheritdoc />
     public void Dispose()
     {
         BackgroundCache.Dispose();
-        LeftForegroundCache.Dispose();
-        RightForegroundCache.Dispose();
+        ForegroundCache.Dispose();
     }
 }
