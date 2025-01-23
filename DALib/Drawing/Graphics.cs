@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Text;
 using DALib.Data;
 using DALib.Definitions;
@@ -62,14 +63,30 @@ public static class Graphics
     /// <param name="yOffset">
     ///     An optional custom offset used to move the image down, since these images are rendered from the bottom up
     /// </param>
-    public static SKImage RenderImage(HpfFile hpf, Palette palette, int yOffset = 0)
-        => SimpleRender(
+    /// <param name="transparency">
+    ///     An optional flag to enable transparency. Some foreground images has luminosity based transparency. This is
+    ///     controlled via SOTP with the <see cref="TileFlags.Transparent" /> flag
+    /// </param>
+    public static SKImage RenderImage(
+        HpfFile hpf,
+        Palette palette,
+        int yOffset = 0,
+        bool transparency = false)
+    {
+        if (transparency)
+        {
+            var semiTransparentColors = palette.Select(color => color.WithLuminanceAlpha());
+            palette = new Palette(semiTransparentColors);
+        }
+
+        return SimpleRender(
             0,
             yOffset,
             hpf.PixelWidth,
             hpf.PixelHeight,
             hpf.Data,
             palette);
+    }
 
     /// <summary>
     ///     Renders a palettized SPF frame
