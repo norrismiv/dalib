@@ -364,7 +364,7 @@ public static class Graphics
 
                     var lfgDrawY = fgInitialDrawY + (x + 1) * CONSTANTS.HALF_TILE_HEIGHT - lfgImage.Height + CONSTANTS.HALF_TILE_HEIGHT;
 
-                    if ((lfgIndex % 10000) > 1)
+                    if (lfgIndex.IsRenderedTileIndex())
                         canvas.DrawImage(lfgImage, lfgDrawX, lfgDrawY);
 
                     //render right foreground
@@ -383,7 +383,7 @@ public static class Graphics
 
                     var rfgDrawY = fgInitialDrawY + (x + 1) * CONSTANTS.HALF_TILE_HEIGHT - rfgImage.Height + CONSTANTS.HALF_TILE_HEIGHT;
 
-                    if ((rfgIndex % 10000) > 1)
+                    if (rfgIndex.IsRenderedTileIndex())
                         canvas.DrawImage(rfgImage, rfgDrawX, rfgDrawY);
                 }
 
